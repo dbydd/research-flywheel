@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Locks and process files
+*.lock
+
+# Environment and OS files
+.DS_Store
+*.tmp
+*.swp
+*~

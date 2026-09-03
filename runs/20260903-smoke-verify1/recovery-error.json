@@ -1,0 +1,7 @@
+{
+  "run_id": "20260903-smoke-verify1",
+  "error_class": "recovery",
+  "message": "cached mirrors disagree on terminal identity (idea_id/outcome/keep)",
+  "stage": "resume",
+  "recoverable": true
+}

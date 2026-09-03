@@ -1,0 +1,3 @@
+{"ts": "2026-09-03T02:03:55+00:00", "run_id": "20260903-050700-e7a1", "idea_id": "idea-1788401035-e827", "event": "started", "stage": "full", "phase": "experiment", "requested": {"cost_type": "compute", "resource_class": "cpu", "count": 1}, "backend": "git-branch"}
+{"ts": "2026-09-03T02:03:55+00:00", "run_id": "20260903-050700-e7a1", "idea_id": "idea-1788401035-e827", "event": "completed", "stage": "full", "phase": "experiment", "actual": {"wall_clock_seconds": 5e-06, "cpu_seconds": 0.016704, "tokens": 0, "material_cost": 0}, "wall_clock_seconds": 0.020881792006548494}
+{"ts": "2026-09-03T02:03:55+00:00", "run_id": "20260903-050700-e7a1", "idea_id": "idea-1788401035-e827", "event": "completed", "stage": "full", "outcome": "discard", "keep": false}

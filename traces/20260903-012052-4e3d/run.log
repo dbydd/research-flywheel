@@ -1,0 +1,11 @@
+=== experiment ===
+
+---stderr---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys; sys.path.insert(0, '.'); import nonexistent_module_xyz_987654  # deterministic import failure
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'nonexistent_module_xyz_987654'
+
+---exit:1 wall:0.019236---
+

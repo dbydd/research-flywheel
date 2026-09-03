@@ -1,0 +1,22 @@
+{
+  "run_id": "20260903-022417-0bca",
+  "idea_id": "idea-008",
+  "calls": [
+    {
+      "tool": "experiment/run.py",
+      "stage": "full",
+      "state": "completed",
+      "stdout": "traces/20260903-022417-0bca/experiment-stdout.log",
+      "stderr": "traces/20260903-022417-0bca/experiment-stderr.log"
+    },
+    {
+      "tool": "evaluation/prepare.py",
+      "state": "completed"
+    },
+    {
+      "tool": "reproduction",
+      "state": "completed"
+    }
+  ],
+  "failure_mode": null
+}

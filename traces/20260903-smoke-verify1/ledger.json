@@ -1,0 +1,16 @@
+{
+  "ts": "2026-09-03T06:42:10+00:00",
+  "run_id": "20260903-smoke-verify1",
+  "idea_id": "idea-013",
+  "profile": "reference-linear-regression",
+  "metric_main": {
+    "name": "mse",
+    "value": 0.2400000000000002,
+    "higher_is_better": false
+  },
+  "outcome": "discard",
+  "evidence_refs": [
+    "traces/20260903-smoke-verify1/metrics.json",
+    "traces/20260903-smoke-verify1/verification.json"
+  ]
+}

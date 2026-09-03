@@ -1,0 +1,22 @@
+{
+  "run_id": "20260903-050500-d0a2",
+  "idea_id": "idea-1788401023-7741",
+  "calls": [
+    {
+      "tool": "experiment/run.py",
+      "stage": "full",
+      "state": "failed",
+      "stdout": "traces/20260903-050500-d0a2/experiment-stdout.log",
+      "stderr": "traces/20260903-050500-d0a2/experiment-stderr.log"
+    },
+    {
+      "tool": "evaluation/prepare.py",
+      "state": "failed"
+    },
+    {
+      "tool": "reproduction",
+      "state": "skipped"
+    }
+  ],
+  "failure_mode": "import"
+}

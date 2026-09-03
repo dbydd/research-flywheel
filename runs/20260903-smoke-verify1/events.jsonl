@@ -1,0 +1,10 @@
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "idea_id": "idea-013", "event": "started", "stage": "full", "phase": "experiment", "requested": {"cost_type": "compute", "resource_class": "cpu", "count": 1}, "backend": "git-branch"}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "idea_id": "idea-013", "event": "completed", "stage": "full", "phase": "experiment", "actual": {"wall_clock_seconds": 5e-06, "cpu_seconds": 0.016238, "tokens": 0, "material_cost": 0}, "wall_clock_seconds": 0.020017874980112538}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "idea_id": "idea-013", "event": "completed", "stage": "full", "outcome": "discard", "keep": false}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "inspiration", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "modeling", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "experiment", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "evaluation", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "writing", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "review", "event": "completed", "outcome": null}
+{"ts": "2026-09-03T06:42:10+00:00", "run_id": "20260903-smoke-verify1", "phase": "archive", "event": "completed", "outcome": "discard"}

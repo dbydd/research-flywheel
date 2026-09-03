@@ -1,0 +1,44 @@
+{
+  "run_id": "20260903-050000-b2c2",
+  "idea_id": "idea-1788400994-b382",
+  "parent_run": "reference-bootstrap",
+  "metric_main": {
+    "name": "mse",
+    "value": null,
+    "higher_is_better": false
+  },
+  "metric_aux": {},
+  "execution": {
+    "stage": "full",
+    "state": "failed",
+    "requested": {
+      "cost_type": "compute",
+      "resource_class": "cpu",
+      "count": 1
+    },
+    "actual": {
+      "wall_clock_seconds": 0.018430500000249594,
+      "cpu_seconds": 0,
+      "tokens": 0,
+      "material_cost": 0
+    }
+  },
+  "fingerprint": {
+    "device": {
+      "kind": "cpu",
+      "count": 1
+    },
+    "environment": {
+      "python_version": "3.13.15",
+      "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "package_lock_hash": "no-lock"
+    }
+  },
+  "evaluation": {
+    "state": "failed",
+    "evaluator_hash": "sha256:d3f34786b87f86956815668e321a95b1dc9f01544df6b714d1d349621baae76a"
+  },
+  "keep": false,
+  "reason": "execution_error: Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import sys; sys.path.insert(0, '.'); import nonexistent_module_xyz_987654  # deterministic import failure\n                ",
+  "outcome": "execution_error"
+}

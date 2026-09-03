@@ -1,0 +1,48 @@
+{
+  "run_id": "20260903-050700-e7a1",
+  "idea_id": "idea-1788401035-e827",
+  "parent_run": "reference-bootstrap",
+  "metric_main": {
+    "name": "mse",
+    "value": 0.2400000000000002,
+    "higher_is_better": false
+  },
+  "metric_aux": {
+    "samples": 5,
+    "slope": 1.8,
+    "intercept": 1.0
+  },
+  "execution": {
+    "stage": "full",
+    "state": "completed",
+    "requested": {
+      "cost_type": "compute",
+      "resource_class": "cpu",
+      "count": 1
+    },
+    "actual": {
+      "wall_clock_seconds": 5e-06,
+      "cpu_seconds": 0.016704,
+      "tokens": 0,
+      "material_cost": 0
+    }
+  },
+  "fingerprint": {
+    "device": {
+      "kind": "cpu",
+      "count": 1
+    },
+    "environment": {
+      "python_version": "3.14.7",
+      "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "package_lock_hash": "no-lock"
+    }
+  },
+  "evaluation": {
+    "state": "completed",
+    "evaluator_hash": "sha256:d3f34786b87f86956815668e321a95b1dc9f01544df6b714d1d349621baae76a"
+  },
+  "keep": false,
+  "reason": "discard: mse baseline 0.0 -> candidate 0.2400000000000002 delta -0.2400000000000002 epsilon 0.0001",
+  "outcome": "discard"
+}

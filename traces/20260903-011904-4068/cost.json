@@ -1,0 +1,16 @@
+{
+  "run_id": "20260903-011904-4068",
+  "idea_id": "idea-1788398344-ae27",
+  "requested": {
+    "cost_type": "compute",
+    "resource_class": "cpu",
+    "count": 1
+  },
+  "actual": {
+    "wall_clock_seconds": 5e-06,
+    "cpu_seconds": 0.016686,
+    "tokens": 0,
+    "material_cost": 0
+  },
+  "reproduction_state": "completed"
+}

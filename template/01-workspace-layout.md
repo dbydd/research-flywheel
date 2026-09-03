@@ -4,19 +4,19 @@
 
 ## 1. 设计原则
 
-- 单一可变区：只有 `run.py` 与 `archive/ideas.jsonl` 可被实验 agent 频繁改写，其余目录有写入门禁。该约束复刻 Karpathy autoresearch 的三文件分离。
-- 隔离执行：每轮实验产物落在 `traces/<ts>/`，不污染主分支，失败可原子回滚。
-- 固定评估器：`prepare.py` 为只读，所有度量经由它产生，保证跨轮可比。
-- 归档即证据：`archive/` 固化成功或失败的完整快照，含可复现脚本与 git patch。
+- 不可变 baseline：每轮固定 Git SHA、`program.md`、`prepare.py` 与 capability registry 的 hash，候选运行引用同一组评估资产。
+- 隔离可变面：experiment profile 以 `mutable_paths` 声明本轮可编辑路径，`task` 在 disposable merged view 中支持跨文件修改。
+- 生命周期可恢复：runtime 记录 started、heartbeat、checkpoint、paused 与终态事件，执行产物落在 `traces/<ts>/`。
+- 归档即证据：`archive/` 固化成功、丢弃与未完成终态的完整快照；候选 patch 作为可选审计产物。
 
 ## 2. 完整目录树
 
 ```
 research-flywheel/
-  program.md              # 任务定义，冻结的研究目标、约束、预算
+  program.md              # 冻结目标、experiment profile、baseline 引用
   inspiration.md          # 人类入口灵感，一句或一段，空时触发自动灵感
-  prepare.py              # 数据与评估固定，不可被 agent 编辑
-  run.py                  # 唯一可变执行单元（模型/优化器/训练循环）
+  prepare.py              # baseline 数据与评估器，候选运行内保持完整
+  run.py                  # 默认可变入口；profile 可开放其他实现路径
   capabilities/            # capability 注册表（Biomni 工具检索轻量版）
     registry.json         # 工具清单：名称、输入 schema、成本、沙箱策略
     tools/*.py            # 可调用工具包装
@@ -25,10 +25,14 @@ research-flywheel/
     evidence/*.json       # 带溯源的证据片段
   traces/                 # 执行轨迹，每轮隔离
     2026-09-02T13-00-00/
+      baseline.json       # baseline SHA、integrity_paths 与 hash
+      mutation.json       # isolation backend、候选分支、changed_paths
+      lifecycle.jsonl     # runtime 生命周期事件
       run.log
       metrics.json
       cost.json
-      git.patch
+      error.json          # 失败时生成
+      git.patch           # 可选审计或恢复产物
   reports/
     report.md             # 本轮报告
     failure.md            # 失败结论（失败路径）
@@ -42,13 +46,13 @@ research-flywheel/
     tasks/*.json          # DeepResearch Bench 子集
     scores.jsonl
   orchestration/
-    flywheel.py           # 主循环（常驻 eval 内核）
+    flywheel.py           # 状态机、完整性门控与 lifecycle 协调
     scaffold.sh           # 一键建仓脚本
     schedule.json         # schedule_prompt 配置
-    hooks/pre-run.sh      # 禁写区校验
+    hooks/pre-run.sh      # baseline hash 与 mutable_paths 校验
     hooks/post-eval.sh    # keep/discard 与归档
   .omp/
-    config.toml           # OMP 配置与 schedule 注册
+    config.yml           # task isolation 与 OMP 项目配置
   traces.jsonl            # 全局追加追踪（可选聚合）
   status.md               # 人类看板
   reproduce.sh            # 一键复现最新 keep
@@ -56,16 +60,17 @@ research-flywheel/
 
 ```mermaid
 flowchart TD
-    Prog[program.md<br/>冻结定义] --> Ideas[archive/ideas.jsonl<br/>灵感池]
+    Prog[program.md<br/>冻结目标与 profile] --> Ideas[archive/ideas.jsonl<br/>灵感池]
     Ideas --> Nav[navigator/<br/>证据]
-    Nav --> Run[run.py<br/>可变执行]
-    Prep[prepare.py<br/>固定评估] --> Run
-    Run --> Traces[traces/&lt;ts&gt;/<br/>隔离执行]
+    Nav --> Iso[task isolation<br/>merged view]
+    Prep[prepare.py<br/>baseline 评估] --> Gate[完整性门控]
+    Prog --> Gate
+    Iso --> Gate --> Traces[traces/&lt;ts&gt;/<br/>生命周期与度量]
     Traces --> Reports[reports/<br/>报告与审稿]
     Reports --> Archive[archive/<br/>固化]
     Traces --> Archive
-    Cap[capabilities/<br/>工具注册] -.受控调用.-> Run
-    Orch[orchestration/] -.调度.-> Traces
+    Cap[capabilities/<br/>工具注册] -.受控调用.-> Iso
+    Orch[orchestration/] -.调度与归并.-> Traces
     Traces -.trace.-> Status[status.md]
 ```
 
@@ -73,39 +78,53 @@ flowchart TD
 
 | 路径 | 职责 | 创建者 | 可写者 | 只读者 | 备注 |
 |------|------|--------|--------|--------|------|
-| `program.md` | 任务、度量、预算、基线 | 人类/scaffold | 人类 | 全部 | 冻结，变更需开新分支，首段目标、末段约束、中间为 plan DAG |
+| `program.md` | 任务、度量、experiment profile、baseline | 人类/scaffold | 人类 | 全部 | 每个 run 冻结；frontmatter 声明 `mutable_paths`、`integrity_paths` 与 stage resources |
 | `inspiration.md` | 单句人类灵感入口 | 人类 | 人类 | orchestration | 为空时触发自动灵感 |
-| `prepare.py` | 固定数据与评估器 | 人类 | 人类 | evaluation | 禁止实验 agent 修改，签名 `load_data()`, `evaluate(pred,target)->metrics` 固定 |
-| `run.py` | 唯一可变资产 | scaffold | modeling agent | experiment | 每次 run 产生 patch，不直接覆盖 main，需导出 `main()` |
-| `capabilities/registry.json` | 工具注册表 | 人类 | 人类 | 所有 agent | 需显式申请变更，含成本与沙箱策略 |
+| `prepare.py` | baseline 数据与评估器 | 人类 | 人类 | evaluation | 候选运行保持 hash 不变，签名 `load_data()`, `evaluate(pred,target)->metrics` 固定 |
+| `run.py` | 默认实验入口 | scaffold | modeling agent | experiment | 在隔离 merged view 中编辑，需导出 profile 指定入口 |
+| `capabilities/registry.json` | 工具注册表 | 人类 | 人类 | 所有 agent | baseline 完整性路径；治理批准后形成新 baseline |
 | `navigator/evidence/*.json` | 带溯源证据 | navigator agent | navigator agent | modeling/writing | 追加，含引用与可信度 |
-| `traces/<ts>/` | 单轮产物 | orchestration | experiment | 全部 | 分支隔离，main 不可见直到 keep |
+| `traces/<ts>/` | 单轮证据包 | orchestration | experiment/runtime/orchestration | 全部 | parent checkout 外部收集，候选归并决策前持续可见 |
+| `traces/<ts>/baseline.json` | baseline manifest | orchestration | orchestration | 全部 | SHA、integrity hash 与 profile snapshot |
+| `traces/<ts>/mutation.json` | 候选变更清单 | orchestration | orchestration | evaluation | backend、branch、changed_paths 与 gate 结果 |
+| `traces/<ts>/lifecycle.jsonl` | runtime 生命周期 | runtime | runtime | evaluation | 追加状态事件与 checkpoint 引用 |
+| `traces/<ts>/error.json` | 语言中立错误信封 | runtime | runtime | repair/review | 失败运行生成 |
 | `reports/report.md` | 报告正文 | writing agent | writing agent | review | 覆盖，引用来自 navigator |
 | `reports/failure.md` | 失败结论 | review agent | review agent | archive | 失败路径必产，结构化归因 |
 | `archive/ideas.jsonl` | 灵感池全量 | inspiration-engine | inspiration-engine | orchestration | 追加不改历史 |
 | `archive/failed.jsonl` | 失败归因库 | orchestration | orchestration | 人类 | 追加，支撑下一轮灵感 |
-| `traces.jsonl` | 全局追加日志 | orchestration | orchestration | 人类 | 每行含 run_id/idea_id/metric/timestamp |
+| `traces.jsonl` | 全局追加日志 | orchestration | orchestration | 人类 | 每行含 run_id/idea_id/event/actual_cost/timestamp |
 
 ### 3.1 program.md 契约
 
-首段为目标陈述，中间为 plan DAG（可用 mermaid），末段为约束与预算。示例：
+`program.md` 的 YAML frontmatter 固化机器可读 experiment profile，正文保存目标、假设与 plan DAG。示例：
 
 ```markdown
+---
+experiment_profile:
+  baseline_ref: main
+  mutable_paths: [run.py, "models/**", "configs/experiment/**"]
+  integrity_paths: [program.md, prepare.py, capabilities/registry.json]
+  stages:
+    coarse:
+      requested: {cost_type: compute, resource_class: gpu, count: 1}
+      deadline_seconds: null
+---
 # Program: Gated Attention Exploration
-目标：在 5 分钟墙钟内将 val_bpb 从 1.45 降至 1.40。
-约束：仅改 run.py，禁止改 prepare.py；单轮预算 300 秒。
+目标：在同一 baseline evaluator 与完整指纹下，将 val_bpb 从 1.45 降至 1.40。
 Plan: inspiration → modeling → experiment → evaluation → writing → review → archive
 ```
 
-### 3.2 run.py 契约
+### 3.2 实验入口契约
+
+默认 Python profile 使用：
 
 ```python
-# run.py 必须满足
-def main(budget_seconds: int = 300) -> dict:
-    """执行训练/仿真，返回 metrics 字典，超时前写 traces/<ts>/metrics.json"""
+def main(run_context: dict) -> dict:
+    """使用 runtime 租约执行候选，并返回原始 metrics。"""
 ```
 
-`prepare.py` 暴露 `load_data()` 与 `evaluate(pred, target) -> metrics`，签名固定，任何 agent 不可修改其文件。
+`run_context` 提供 `run_id`、`trace_dir`、stage profile 与 resource lease。runtime 负责生命周期事件、checkpoint 和 actual cost。其他语言 profile 可声明等价入口。`prepare.py` 暴露 `load_data()` 与 `evaluate(pred, target) -> metrics`；本轮 baseline manifest 固化其 hash。
 
 ### 3.3 metrics.json 契约
 
@@ -115,41 +134,54 @@ def main(budget_seconds: int = 300) -> dict:
   "idea_id": "idea-007",
   "metric_main": {"name": "val_bpb", "value": 1.42, "higher_is_better": false},
   "metric_aux": {"acc": 0.81},
-  "budget": {"seconds": 300},
+  "execution": {
+    "stage": "coarse",
+    "state": "completed",
+    "requested": {"cost_type": "compute", "resource_class": "gpu", "count": 1},
+    "actual": {"wall_clock_seconds": 342.8, "gpu_seconds": 342.8, "tokens": 0, "material_cost": 0}
+  },
+  "fingerprint": {
+    "device": {"kind": "gpu", "model": "H100", "count": 1},
+    "environment": {"python_version": "3.13.7", "package_lock_hash": "sha256:d5579c46dfcc7e8c39d6f069c86005184d6e804a0560ec89323c817860aa4b14"}
+  },
+  "evaluation": {"state": "completed", "evaluator_hash": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"},
   "keep": true,
-  "reason": "val_bpb 1.45 -> 1.42, delta 0.03 > epsilon 0.01"
+  "reason": "completed evaluation: val_bpb 1.45 -> 1.42, delta 0.03 > epsilon 0.01"
 }
 ```
 
 ## 4. Agent 可编辑边界
 
-- **modeling agent**：仅可写 `run.py` 的 patch 与 `traces/<ts>/git.patch`，不可碰 `prepare.py`、`capabilities/registry.json`、`archive/`。通过系统提示与 `hooks/pre-run.sh` 双重约束。
-- **experiment agent**：仅可写 `traces/<ts>/`，只读 `run.py` 的当前 patch 版本。
-- **navigator agent**：仅可写 `navigator/`，只读 `archive/ideas.jsonl` 与 `program.md`。
-- **writing/review agent**：仅可写 `reports/`，只读 `traces/` 与 `navigator/`。
-- **orchestration**：唯一可写 `traces.jsonl`、`status.md`、`archive/` 的主体，负责 git 分支操作。
+- **modeling agent**：在 `isolated: true` 的 merged view 中直接编辑 `experiment_profile.mutable_paths`。候选可包含 `run.py`、模型模块与实验配置等跨文件变更。
+- **experiment agent**：执行已通过完整性门控的 candidate branch，写入 `traces/<ts>/` 证据包和 checkpoint。
+- **navigator agent**：写入 `navigator/`，读取 `archive/ideas.jsonl` 与冻结 `program.md`。
+- **writing/review agent**：写入 `reports/`，读取 completed metrics、clean reproduction 与 `navigator/`。
+- **orchestration**：生成 baseline manifest，校验 changed paths 与 integrity hash，记录生命周期，决定候选归并和归档。
 
-违规检测在 `orchestration/hooks/pre-run.sh` 中执行：
+`orchestration/hooks/pre-run.sh` 实现以下确定性门控：
 
-```bash
-if git diff --name-only | grep -qE "^(prepare\.py|capabilities/registry\.json)"; then
-  echo "forbidden write to frozen file" >&2; exit 1
-fi
-```
+1. 从 `baseline.json` 读取 baseline SHA、profile snapshot 与 integrity hash。
+2. 从 candidate branch 计算 changed paths 并写入 `mutation.json`。
+3. 校验每个 changed path 均匹配 `mutable_paths`。
+4. 重算 `program.md`、`prepare.py`、`capabilities/registry.json` 的 hash 并与 manifest 对照。
+5. 将 gate 结果写入 `mutation.json`；通过后进入 compile/smoke。
 
-## 5. Git 分支与 keep/discard
+OMP approval mode 处理工具调用的 tier、用户策略与安全 prompt。headless subagent 的普通 tier 审批由 parent `task` 授权；显式 per-tool `deny` 保持生效。文件级边界由 isolation、manifest 与归并门控执行。
 
-- `main` 始终为可复现的最新 keep 状态。
-- 每轮 `run/<id>` 分支从 `main` 拉出，实验结束后由 `hooks/post-eval.sh` 判定。
-- `keep`：`git merge --no-ff run/<id>` 到 main，打 tag `keep-<id>`，固化 `traces/<id>/` 到 `archive/`。
-- `discard`：保留 `traces/<id>/` 到 `archive/discard-<id>/` 后删除分支，不合并。
-- 每次 experiment 前后各一次 `git commit`，失败自动 `git reset --hard` 回滚 `run.py`。
-- `status.md` 展示最近 5 个 keep/discard 的 delta，便于人类快速判断。
+## 5. 候选分支与 keep/discard
+
+- `main` 保存可复现的最新 keep baseline。
+- `.omp/config.yml` 设置 `task.isolation.mode: auto`、`task.isolation.apply: false`、`task.isolation.merge: branch`。
+- 每轮 task 从 baseline 生成 disposable merged view；成功任务把候选提交到 `omp/task/<id>`，parent checkout 保持原 baseline。
+- `keep`：clean reproduction 与 evaluation 均 completed 后，由 orchestration 将候选分支归并到 main，打 tag `keep-<id>`，固化证据包。
+- `discard|inconclusive|execution_error`：先固化 `traces/<id>/`，再删除候选分支；parent checkout 无需 reset。
+- `git.patch` 来自 `isoDiff` 或 patch capture，承担可选审计与恢复职责。
+- `status.md` 展示最近候选的 state、delta、actual cost 与 fingerprint，便于人类复核。
 
 ## 6. 一键 scaffold
 
 ```bash
-bash orchestration/scaffold.sh --idea "gated attention with learned temperature" --budget 300
+bash orchestration/scaffold.sh --idea "gated attention with learned temperature"
 ```
 
-`scaffold.sh` 行为：创建目录树、写入 `program.md` 模板、初始化 `prepare.py` 与 `run.py` 最小可跑版本、注册 `capabilities/registry.json`、创建 `navigator/` 与 `bench/` 骨架、注册 `schedule.json`、初始化 git 仓库并提交首版。
+`scaffold.sh` 行为：创建目录树、写入含 experiment profile 的 `program.md`、初始化 `prepare.py` 与 `run.py` 最小可跑版本、注册 `capabilities/registry.json`、创建 `navigator/` 与 `bench/` 骨架、写入 `.omp/config.yml` 的 task isolation 配置、初始化 Git 仓库并提交 baseline。

@@ -1,0 +1,47 @@
+{
+  "run_id": "20260903-022600-4020",
+  "idea_id": "idea-009",
+  "captured_at": "2026-09-03T02:26:53+00:00",
+  "workspace": "/workspace/research-flywheel",
+  "git": {
+    "branch": "main",
+    "head": "446445bada41c67f86df9a1aae6d2c99fa8283bd"
+  },
+  "integrity_paths": [
+    "program.md",
+    "evaluation/prepare.py",
+    "capabilities/registry.json"
+  ],
+  "integrity_hashes": {
+    "program.md": "sha256:dd8e2a6b98f46b0178b067f9f714a21619ca81c2bef008b7a678b3c5b8072d0c",
+    "evaluation/prepare.py": "sha256:d3f34786b87f86956815668e321a95b1dc9f01544df6b714d1d349621baae76a",
+    "capabilities/registry.json": "sha256:30d7bd67864264fac782845c2bb30a7af5391b4b99f5d672d8d301eaf43e6fdb"
+  },
+  "profile": {
+    "name": "reference-linear-regression",
+    "mutable_paths": [
+      "experiment/run.py"
+    ],
+    "integrity_paths": [
+      "program.md",
+      "evaluation/prepare.py",
+      "capabilities/registry.json"
+    ],
+    "stages": {
+      "full": {
+        "requested": {
+          "cost_type": "compute",
+          "resource_class": "cpu",
+          "count": 1
+        }
+      }
+    },
+    "evaluation": {
+      "evaluator": "evaluation/prepare.py",
+      "metric": "mse",
+      "direction": "lower",
+      "epsilon": 0.0001,
+      "baseline_artifact": "traces/baseline-metrics.json"
+    }
+  }
+}
