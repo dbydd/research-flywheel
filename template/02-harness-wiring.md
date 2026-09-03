@@ -6,130 +6,178 @@
 
 | 飞轮需求 | OMP/PI 原生能力 | 接线方式 | 备注 |
 |----------|-----------------|----------|------|
-| 并行探索多假设 | `task` | 每个 idea 一个 task，独立 git worktree | 互不污染，共享 trace |
-| 常驻实验内核 | `eval` | Python 持久 kernel，热重载 run.py | 避免每轮冷启动，复用数据加载 |
-| 多 task 协调 | `hub` | 队列锁、keep 广播、review 投票 | 轻量消息，不传大文件 |
-| 定时无人值守 | `schedule_prompt` | cron 触发 orchestration/flywheel.py | 30-60 分钟一轮，8 点晨报 |
-| 版本分歧管理 | `git` 分支 keep/discard | run/<id> 分支，keep 合并 main | 复刻 Karpathy git 语义 |
-| 全链路审计 | `traces/` + `trace.jsonl` | 结构化追加，status.md 聚合 | 可回放可复盘 |
+| 并行探索多假设 | `task` isolation | 每个 idea 以 `isolated: true` 进入独立 merged view | parent checkout 保持 baseline |
+| 探索与复现运行时 | `eval` | retained runtime 加速探索，clean runtime 执行 compile/smoke 与 keeper 复现 | `reset` 明确状态边界 |
+| 多 task 协调 | `hub` | 队列锁、lifecycle 摘要、keep 广播、review 投票 | 轻量消息，大产物写 trace |
+| 定时无人值守 | `schedule_prompt` | 定时检查 queued/paused run 与 checkpoint | runtime 管理实验生命周期 |
+| 候选分歧管理 | isolation branch + git | `omp/task/<id>` 候选经门控后归并或归档 | patch 为可选审计产物 |
+| 全链路审计 | `traces/` + `traces.jsonl` | baseline、mutation、lifecycle、cost、fingerprint 结构化追加 | 可回放可复盘 |
 
 ```mermaid
 flowchart TB
-    Sched[schedule_prompt<br/>30-60m 唤醒]
+    Sched[schedule_prompt<br/>定时唤醒]
     Human[人类输入 inspiration.md]
     Pool[(archive/ideas.jsonl<br/>分数队列)]
-    Fly[orchestration/flywheel.py<br/>常驻 eval 内核]
+    Fly[orchestration/flywheel.py<br/>状态机与 lifecycle]
 
     Sched --> Fly
     Human --> Pool
     Fly --> Pool
 
-    Pool --> T1[task: modeling<br/>产 patch]
-    Pool --> T2[task: literature<br/>补证据]
-    T1 --> Eval[eval 内核<br/>exec run.py]
-    Eval --> Metrics[traces/&lt;ts&gt;/metrics.json]
-    Metrics --> Gate{keep?}
-    Gate -->|delta > epsilon| Merge[git commit → main<br/>tag keep-&lt;id&gt;]
-    Gate -->|discard| Drop[archive/discard<br/>git reset]
-    Merge --> TW[task: writing]
-    TW --> TR[task: review Elo]
+    Pool --> T1[task agent=modeler<br/>isolated 编辑 mutable_paths]
+    Pool --> T2[task agent=literature-scout<br/>补证据]
+    T2 --> Pool
+    T1 --> Gate[baseline hash<br/>changed_paths 门控]
+    Gate --> Explore[eval retained<br/>探索执行]
+    Explore --> Clean[eval reset<br/>干净复现]
+    Clean --> Metrics[metrics + lifecycle<br/>actual cost]
+    Metrics --> Keep{keeper gate}
+    Keep -->|completed + pass| Merge[归并候选分支<br/>tag keep-ID]
+    Keep -->|discard| Drop[archive/discard]
+    Keep -->|unfinished| Unfinished[inconclusive<br/>execution_error]
+    Merge --> TW[task agent=paper-writer]
+    TW --> TR[task reviewer 面板<br/>meta-reviewer 汇总]
     TR --> Archive[archive/<br/>papers 或 failed.jsonl]
     Drop --> Archive
+    Unfinished --> Archive
     Archive --> Pool
     Merge --> Trace[(traces.jsonl)]
     Drop --> Trace
+    Unfinished --> Trace
     Trace --> Status[status.md<br/>晨间看板]
 ```
 
-## 2. 角色映射
+## 2. 角色映射（论文工厂分工）
 
-- Supervisor（PI 主 task）：读取 `program.md` 与 `inspiration.md`，产出 plan DAG，决定并发分支数与预算。
-- Generation agents（并行 task）：基于 plan DAG 编辑 `run.py` 变体，每个变体对应一个 idea 的 method sketch。
-- Experiment workers（并行 eval 内核）：在固定墙钟预算内执行 `run.py`，产出 `traces/<ts>/metrics.json` 与 `run.log`。
-- Reviewer/Critic（审稿 task）：对 keep 候选做结构化审稿，产出分数与评语，Elo 排序决定最终 keep。
-- Archivist（归档）：固化成功或失败快照，回注入灵感池。
+角色以项目级 agent 定义 `.omp/agents/*.md` 承载（OMP 原生发现，`task` 的 `agent` 参数直接引用）。按现代论文工厂分工，keeper gate 保持 runtime 确定性裁决，review 面板只可否决、不可放行未过门控的候选。
+
+| 论文工厂角色 | agent 名 | 阶段 | 权限要点 |
+|--------------|----------|------|----------|
+| Editor-in-Chief / PI | 主会话 Supervisor | 全程 | 读冻结 program.md 与 ideas 池，派发全部 task |
+| Literature scout | `literature-scout` | inspiration 前置 | 只读；产出 prior_art/gaps/dead_ends |
+| Hypothesis generator | `idea-generator` | inspiration | 写 ideas.jsonl 与 inspiration.md；受 PI 门禁约束 |
+| Experiment designer | `modeler` | modeling | isolated task；仅编辑 mutable_paths；写 mutation.json |
+| Analyst | `analyst` | evaluation | 只读+eval；审计 delta/epsilon/fingerprint，产 audit verdict |
+| Paper writer | `paper-writer` | writing | 仅 keeper 路径；只写 reports/report.md |
+| Review panel | `reviewer-methodology` / `reviewer-skeptic` / `reviewer-reproducibility` | review | 三视角并行；repro 复现失败=blocking |
+| Meta-reviewer / AC | `meta-reviewer` | review 汇总 | 聚合三票写 review.md 与 review_vote |
+| Archive | 无角色 | archive | flywheel.py runtime 确定性完成，不设第二套 |
 
 ```mermaid
 flowchart TD
-  P[program.md] --> SUP[Supervisor task]
+  P[program.md] --> SUP[Supervisor 主会话]
   I[inspiration.md] --> SUP
-  SUP --> DAG[plan DAG]
-  DAG --> G1[Gen agent A]
-  DAG --> G2[Gen agent B]
-  DAG --> G3[Gen agent N]
-  G1 --> R1[run.py variant A]
-  G2 --> R2[run.py variant B]
-  G3 --> R3[run.py variant N]
-  R1 --> E1[eval fixed budget]
-  R2 --> E2[eval fixed budget]
-  R3 --> E3[eval fixed budget]
-  E1 --> M[metrics.json]
-  E2 --> M
-  E3 --> M
-  M --> REV[Reviewer Elo]
-  REV --> ARC[archive]
-  ARC --> NEXT{keep or discard}
-  NEXT -->|keep| GIT[git commit]
-  NEXT -->|discard| RST[git reset]
-  REV --> INS[inspiration engine]
-  INS --> P
+  SUP --> LS[literature-scout<br/>prior_art + gaps]
+  LS --> IG[idea-generator<br/>5 ideas 去重自评]
+  IG --> POOL[(archive/ideas.jsonl<br/>queued)]
+  POOL --> M1[modeler A<br/>isolated]
+  POOL --> M2[modeler B<br/>isolated]
+  M1 --> GATE[baseline hash +<br/>changed_paths 门控]
+  M2 --> GATE
+  GATE --> EVAL[eval retained 探索]
+  EVAL --> REPRO[eval reset 冷启动复现]
+  REPRO --> AN[analyst<br/>审计 verdict]
+  AN --> KEEP{runtime keeper gate<br/>确定性裁决}
+  KEEP -->|pass| PW[paper-writer<br/>reports/report.md]
+  KEEP -->|fail| ARCHF[archive failure 路径]
+  PW --> RV1[reviewer-methodology]
+  PW --> RV2[reviewer-skeptic]
+  PW --> RV3[reviewer-reproducibility<br/>亲自复现]
+  RV1 --> MR[meta-reviewer<br/>blocking 一票否决]
+  RV2 --> MR
+  RV3 --> MR
+  MR --> ARCH[archive papers + review.md]
+  ARCH --> POOL
 ```
+
 
 ## 3. 组件详解
 
-### 3.1 task 并行探索
+### 3.1 task 并行隔离探索
 
-每个 idea 独立 task，通过隔离 worktree 避免文件污染。Supervisor 不直接改 `run.py`，而是让 modeling task 产 patch，由 orchestration 统一应用与验证。
+隔离执行以 Git baseline 为前提。scaffold 先初始化仓库并提交 baseline，再写入项目配置：
 
-```python
-# orchestration/flywheel.py 片段：并发派发
-from pathlib import Path
-import json, subprocess
-
-def dispatch(idea_paths, concurrency=3):
-    # 用 OMP task 并行派发，实际由上层 prompt 触发 task 工具
-    for idea in idea_paths[:concurrency]:
-        call_omp_task(
-            name=f"modeling-{idea.stem}",
-            prompt=f"阅读 {idea} 与 program.md、navigator/evidence，"
-                   f"产出对 run.py 的 patch，写入 traces/<id>/git.patch，"
-                   f"禁止修改 prepare.py 与 capabilities/registry.json",
-            worktree=f"traces/{new_run_id()}"
-        )
+```yaml
+# .omp/config.yml
+task:
+  isolation:
+    mode: auto
+    apply: false
+    merge: branch
 ```
 
-约束：task 之间通过 `hub` 传递小消息（idea_id、score、keep 决策），大产物走文件系统 `traces/<id>/`。同一时刻最多 3 个 modeling task，避免资源争抢，execution 阶段串行或按可用内核并行。
+每个候选通过真实 `task` 工具参数请求隔离：
 
-### 3.2 eval 持久内核
-
-`eval` 是 PI/OMP 的常驻 Python 内核，适合把 `run.py` 的修改热加载后立即执行。对比每次 `bash python run.py` 的冷启动，持久内核可复用已加载的数据与模型权重。
-
-```python
-# 在 eval 持久内核中常驻的代码 orchestration/kernel.py
-import importlib.util, json, traceback
-from pathlib import Path
-
-def hot_run(run_id: str, patch_path: str):
-    apply_patch(patch_path, target="run.py")
-    spec = importlib.util.spec_from_file_location("run", "run.py")
-    mod = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(mod)
-        metrics = mod.main(budget_seconds=300)
-        Path(f"traces/{run_id}/metrics.json").write_text(json.dumps(metrics, indent=2))
-        return metrics
-    except Exception as e:
-        Path(f"traces/{run_id}/run.log").write_text(traceback.format_exc())
-        return {"error": str(e), "keep": False}
+```json
+{
+  "context": "使用 program.md 的冻结 experiment profile；完整性门控读取 traces/<run_id>/baseline.json。",
+  "tasks": [
+    {
+      "name": "modeling-idea-007",
+      "agent": "modeler",
+      "isolated": true,
+      "task": "run_id=20260902-031502-a3f9 idea=idea-007。读取 baseline.json 与 idea 记录，在 merged view 中编辑 mutable_paths，跑 compile/smoke 门控，写 mutation.json，返回候选分支、changed_paths、门控结果和 trace 路径。"
+    }
+  ]
+}
 ```
 
-启动：
+`runIsolatedSubprocess` 在顶层调用开始时捕获 baseline，经 `isoResolve` 选择后端并由 `isoStart` 物化 merged view。macOS 的 APFS 后端使用 `clonefile` CoW；后端不可用时 resolver 按候选顺序降级，`rcopy` 提供最终路径。成功候选在 branch mode 提交到 `omp/task/<id>`。`apply: false` 将归并决定留给 orchestration。`isoDiff` 与 patch capture 可生成审计或恢复产物，候选主路径保持 branch/commit。
 
-```bash
-eval --kernel python --file orchestration/kernel.py --persist
-# 后续每轮
-eval --exec "hot_run('20260902-031502-a3f9', 'traces/xxx/git.patch')"
+experiment profile 的 `mutable_paths` 决定可接受的 changed paths。`program.md`、`prepare.py`、`capabilities/registry.json` 的 hash 来自 `baseline.json`。orchestration 在 full run 前校验路径集合与完整性 hash，并将 resolved backend、fallback reason、branch name 和 gate 结果写入 `mutation.json`。
+
+OMP approval mode 管理工具调用 tier 和 per-tool 策略。headless subagent 由 parent `task` 提供调用授权，显式 `deny` 策略保持有效。文件级完整性由 isolation、baseline manifest 与归并门控执行。task 之间通过 `hub` 传递 idea_id、score、lifecycle state 与 keeper 决策；大产物写入 `traces/<id>/`。
+
+### 3.2 eval 持久探索与干净复现
+
+OMP `eval` 的一次工具调用对应一个 cell。Python、JavaScript、Ruby 与 Julia runtime 按语言保留状态，`reset: true` 重建当前语言 runtime。工作区直接使用工具协议，无需 Python 专用 kernel 守护脚本或额外 CLI。
+
+三类运行使用明确状态边界：
+
+1. compile/smoke gate 使用 `reset: true` 或 `python.kernelMode: per-call`，消除先前导入、全局变量与 cache 影响。
+2. exploratory full run 在同一 isolated task 内使用 retained runtime。第一格以 `reset: true` 初始化，后续格以 `reset: false` 复用数据与权重。`cost.json` 记录 cache/state manifest。
+3. keeper 候选在新 runtime 中 cold-start reproduction。该轮重新加载候选分支、数据和依赖，结果独立记录为 `clean_reproduction_passed`。
+
+clean compile gate 的真实工具参数：
+
+```json
+{
+  "language": "py",
+  "title": "clean compile gate",
+  "reset": true,
+  "timeout": 0,
+  "code": "from pathlib import Path\nsource = Path('run.py').read_text()\ncompile(source, 'run.py', 'exec')\nprint({'gate': 'compile', 'passed': True})"
+}
 ```
+
+retained exploration 的首次及后续调用：
+
+```json
+{"language":"py","title":"initialize exploration","reset":true,"timeout":0,"code":"from prepare import load_data\ndata = load_data()\nprint({'cache': 'data', 'loaded': True})"}
+```
+
+```json
+{"language":"py","title":"run exploration iteration","reset":false,"timeout":0,"code":"from importlib import import_module, reload\nmodule = import_module('run') if 'module' not in globals() else reload(module)\nmetrics = module.main({'run_id':'20260902-031502-a3f9','stage':'full','trace_dir':'traces/20260902-031502-a3f9'})\nprint(metrics)"}
+```
+
+keeper reproduction 使用同一 wire shape，并设置 `reset: true`。`timeout: 0` 关闭通用 eval watchdog；experiment profile 可为具体 stage 声明 deadline，runtime 将 deadline 结果写为 lifecycle event 与 error envelope。
+
+失败统一写入 `traces/<id>/error.json`：
+
+```json
+{
+  "error_class": "resource",
+  "message": "CUDA out of memory during optimizer step",
+  "frames": [
+    {"file": "run.py", "line": 84, "symbol": "train_step"},
+    {"file": "models/attention.py", "line": 129, "symbol": "forward"}
+  ],
+  "stderr_tail": "RuntimeError: CUDA out of memory",
+  "stage": "full"
+}
+```
+
+`error_class` 枚举为 `syntax|import|runtime|timeout|resource|assert`，`stage` 枚举为 `compile|smoke|full`。repair prompt 读取该信封与原始 `run.log`，优先修改命中 frame 的局部块。`cost.json` 分开记录 `compile_clean_passed`、`smoke_clean_passed`、`repair_scope`、`repair_passed`、`exploration_state_manifest` 与 `clean_reproduction_passed`。keeper gate 读取 clean reproduction 结果。
 
 ### 3.3 hub 协调
 
@@ -151,149 +199,177 @@ def claim_idea(pool_path="archive/ideas.jsonl"):
         return idea
 ```
 
-常用频道：`idea-claimed`（避免重复认领）、`keep-decision`（writing/review 订阅）、`review-score`（orchestration 决定回退或归档）。
+常用频道：`idea-claimed`（避免重复认领）、`lifecycle-state`（广播 paused/completed/failed 与 checkpoint 引用）、`keep-decision`（writing/review 订阅）、`review-score`（orchestration 决定回退或归档）。
 
-### 3.4 git keep/discard
+### 3.4 候选分支 keep/discard
 
-复刻 Karpathy 语义，每轮一个分支，评估器判定后决定合并或丢弃。
-
-```bash
-# orchestration/hooks/post-eval.sh
-RUN_ID=$1
-KEEP=$(jq -r .keep traces/$RUN_ID/metrics.json)
-BRANCH="run/$RUN_ID"
-
-if [ "$KEEP" = "true" ]; then
-  git add traces/$RUN_ID run.py
-  git commit -m "keep $RUN_ID $(jq -r .idea_id traces/$RUN_ID/metrics.json)"
-  git checkout main
-  git merge --no-ff $BRANCH -m "merge $RUN_ID"
-  git tag "keep-$RUN_ID"
-  mkdir -p archive/papers
-  cp -r traces/$RUN_ID archive/papers/$RUN_ID
-else
-  mkdir -p archive/discard-$RUN_ID
-  cp -r traces/$RUN_ID archive/discard-$RUN_ID/
-  git checkout main
-  git reset --hard HEAD
-fi
-git branch -D $BRANCH 2>/dev/null || true
-echo "{\"run_id\":\"$RUN_ID\",\"keep\":$KEEP,\"ts\":\"$(date -u +%FT%TZ)\"}" >> traces.jsonl
-```
-
-### 3.5 schedule_prompt 夜间循环
-
-`orchestration/schedule.json` 注册两条 cron：夜间轮询与晨间复盘。
+task isolation 的 branch mode 产出 `omp/task/<id>`。orchestration 将候选元数据写入 `traces/<run_id>/mutation.json`：
 
 ```json
 {
-  "schedules": [
-    {
-      "id": "night-flywheel",
-      "cron": "0 */30 * * * *",
-      "prompt": "你是夜间飞轮值班员。执行：1) 读取 archive/ideas.jsonl 选最高分 queued idea；若为空则调用 inspiration-engine 生成 3 个新 idea；2) 调用 orchestration/flywheel.py:run_once 执行一轮 modeling→experiment→evaluation；3) 按 keep/discard 归档并更新 traces.jsonl 与 status.md；4) 若连续 3 轮无提升，降低温度重采样 idea 池。",
-      "mode": "flywheel-night",
-      "timeout": 900
-    },
-    {
-      "id": "morning-report",
-      "cron": "0 0 8 * * *",
-      "prompt": "生成晨间复盘：读取 traces.jsonl 与 archive/，更新 status.md，顶部展示最近 3 个 keep 的 delta 与最近 2 个 failure 的 root cause，列出待人工 retain 的新假设。",
-      "mode": "morning-report"
-    }
-  ]
+  "run_id": "20260902-031502-a3f9",
+  "baseline_sha": "a1c5f7258fd7a6ab2dfb25c2a2d7f6af6f5d4b1e",
+  "branch_name": "omp/task/modeling-idea-007",
+  "resolved_backend": "apfs",
+  "fallback_reason": null,
+  "changed_paths": ["run.py", "models/attention.py"],
+  "integrity_gate": "pass"
 }
 ```
 
-注册：
+归并规则：
 
-```bash
-schedule_prompt add --file orchestration/schedule.json
-schedule_prompt list
+1. `apply: false` 保持 parent checkout 与 baseline 一致。
+2. `integrity_gate == pass` 后执行 compile、smoke、exploratory full run 与 clean reproduction。
+3. keep 要求 execution、clean reproduction 与 evaluation 均为 `completed`，fingerprint 与 actual cost 完整，keeper vote 通过。
+4. keep 候选由 orchestration 归并到 main 并打 `keep-<id>` tag，证据包固化到 `archive/papers/<id>/`。
+5. discard、inconclusive、execution_error 候选先固化证据包，再删除候选分支。parent checkout 无需回滚。
+6. patch mode 或 `isoDiff` 产物承担审计与冲突恢复职责。branch/commit 保持正常候选路径。
+
+`traces.jsonl` 同时记录 candidate branch、terminal state、keeper votes 与归并结果。
+
+### 3.5 schedule_prompt 夜间循环
+
+`orchestration/schedule.json` 保存以下两份 `schedule_prompt` 请求。agent 通过 `write` 向 `xd://schedule_prompt` 写入单份 JSON 内容完成注册。
+
+夜间轮询：
+
+```json
+{
+  "action": "add",
+  "name": "night-flywheel",
+  "schedule": "0 */30 * * * *",
+  "prompt": "检查 queued/paused run 与 lifecycle checkpoint。恢复可运行的 paused run；队列空时派发 task agent=idea-generator 补 3 个可证伪 idea；认领最高分 queued idea 并派发 task agent=modeler（isolated）按 experiment profile 启动候选。记录 baseline、mutation、requested/actual cost、lifecycle 与终态。连续 3 轮 completed evaluation 无提升时提高采样温度。",
+  "type": "cron"
+}
 ```
 
-或 TOML 形式：
+晨间复盘：
 
-```toml
-# .omp/schedule.toml
-[[prompt]]
-cron = "*/45 * * * *"
-command = "omp run --task research-flywheel:next-cycle"
+```json
+{
+  "action": "add",
+  "name": "morning-report",
+  "schedule": "0 0 8 * * *",
+  "prompt": "读取 traces.jsonl 与 archive/，更新 status.md。展示最近 completed keep/discard、inconclusive、execution_error、actual cost、checkpoint 与待人工复核项。",
+  "type": "cron"
+}
 ```
+
+查询注册结果时向同一设备写入 `{"action":"list"}`。schedule 负责唤醒与状态检查，runtime 负责实验 deadline、暂停、恢复和终止。night job 的 prompt 仅自动执行 `hardware_dependency_level == 0` 且未命中 `WATCHDOG.yml` human gate 的任务。
 
 夜间状态机：
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Sleep: cron 30m
-    Sleep --> CheckQueue: 唤醒
-    CheckQueue --> GenerateIdea: 队列空
+    [*] --> Sleep: schedule
+    Sleep --> CheckState: 唤醒
+    CheckState --> Resume: paused + checkpoint
+    CheckState --> GenerateIdea: 队列空
     GenerateIdea --> ClaimIdea
-    CheckQueue --> ClaimIdea: 队列非空
+    CheckState --> ClaimIdea: queued 存在
+    Resume --> Experiment
     ClaimIdea --> Modeling: hub 加锁认领
-    Modeling --> Experiment: patch 就绪
-    Experiment --> Evaluation: metrics.json
-    Evaluation --> Keep: delta > epsilon
-    Evaluation --> Discard: delta <= epsilon
-    Keep --> Writing: git commit
+    Modeling --> IntegrityGate: candidate branch
+    IntegrityGate --> Experiment: pass
+    IntegrityGate --> ArchiveError: fail
+    Experiment --> Paused: paused + checkpoint
+    Paused --> Sleep
+    Experiment --> Evaluation: completed + metrics
+    Experiment --> ArchiveError: failed / cancelled
+    Evaluation --> Keep: completed + keeper pass
+    Evaluation --> Discard: completed + keeper fail
+    Keep --> Writing: merge candidate
     Writing --> Review: draft 完成
-    Review --> ArchiveSuccess: score >= 6
-    Review --> ArchiveFailure: score < 6 且预算耗尽
+    Review --> ArchiveSuccess: score >= threshold
+    Review --> ArchiveFailure: profile envelope exhausted
     Discard --> ArchiveFailure
+    ArchiveError --> Sleep
     ArchiveSuccess --> Sleep
     ArchiveFailure --> Sleep
 ```
 
 ## 4. Trace 治理与伪代码
 
-每轮写 `traces/<ts>/`，含 `run.log`、`git.patch`、`cost.json`，`hub` 广播关键事件，便于比较与回放。全局 `traces.jsonl` 每行一个 JSON：
+每轮写 `traces/<ts>/baseline.json`、`mutation.json`、`lifecycle.jsonl`、`run.log`、`metrics.json`、`cost.json`，失败时增加 `error.json`，审计策略启用时增加 `git.patch`。`hub` 广播关键状态摘要，大产物保留在文件系统。全局 `traces.jsonl` 追加事件：
 
-```json
-{"ts":"2026-09-02T03:15:02Z","run_id":"20260902-031502-a3f9","idea_id":"idea-007","phase":"evaluation","metric":"val_bpb","value":1.42,"delta":-0.03,"keep":true}
+```jsonl
+{"ts":"2026-09-02T03:15:02Z","run_id":"20260902-031502-a3f9","idea_id":"idea-007","event":"started","stage":"full","requested":{"cost_type":"compute","resource_class":"gpu","count":1}}
+{"ts":"2026-09-02T03:20:45Z","run_id":"20260902-031502-a3f9","idea_id":"idea-007","event":"completed","stage":"full","actual":{"wall_clock_seconds":342.8,"gpu_seconds":342.8}}
+{"ts":"2026-09-02T03:21:12Z","run_id":"20260902-031502-a3f9","idea_id":"idea-007","event":"evaluation_completed","metric":"val_bpb","value":1.42,"delta":-0.03,"keep":true}
 ```
 
-端到端伪代码：
+端到端 wrapper 伪代码：
 
 ```python
-# orchestration/flywheel.py — 单轮入口
 def run_once():
-    idea = claim_idea()
-    if not idea:
-        idea = auto_inspiration()
+    idea = claim_idea() or auto_inspiration()
     run_id = new_run_id()
-    branch = f"run/{run_id}"
-    git(f"checkout -b {branch}")
-    patch = call_task("modeling", idea=idea["id"])
-    if not patch.syntactically_valid:
-        return archive_failure(run_id, idea, reason="patch invalid")
-    metrics = hot_run(run_id, patch.path)
-    keep = decide_keep(metrics)
-    post_eval(run_id, keep)
-    if keep:
-        draft = call_task("writing", run_id=run_id)
-        score = call_task("review", run_id=run_id)
-        if score < 6.0 and not budget_exhausted(idea):
-            return run_once_with_feedback(idea, critique=score.critique)
-        archive_success(run_id, idea, draft, score)
-    else:
-        maybe_archive_failure(run_id, idea, metrics)
-    return "next"
+    profile = freeze_experiment_profile(run_id, read_program_frontmatter())
+    baseline = capture_baseline(run_id, profile["integrity_paths"])
 
-# Supervisor 并行分支简化版
-plan = llm("parse", read("program.md"), read("inspiration.md"))
-variants = parallel([llm("edit run.py", plan, branch=i) for i in range(N)])
-results = parallel([eval(f"python run.py --budget 5m", worktree=v) for v in variants])
-ranked = elo_rank(results, reviewer_llm)
-best = ranked[0]
-if best.metrics["val_bpb"] < baseline:
-    git_commit(best.patch); write_report(best)
-else:
-    git_reset(); write_failure(best)
-archive(best, ranked); schedule_next_inspiration()
+    evidence = call_task(
+        agent="literature-scout",
+        prompt=f"idea={idea['id']} 收集 prior_art/gaps/dead_ends",
+    )
+
+    candidate = call_task(
+        agent="modeler",
+        isolated=True,
+        prompt=f"run_id={run_id} idea={idea['id']} 编辑 mutable_paths 并写 mutation.json",
+    )
+    gate = verify_candidate(candidate, baseline, profile["mutable_paths"])
+    write_mutation(run_id, candidate, gate)
+    if not gate["passed"]:
+        return archive_terminal(run_id, "execution_error", error_class="assert")
+
+    clean_gates = run_compile_and_smoke(candidate, eval_reset=True)
+    if not clean_gates["passed"]:
+        repair = repair_from_error(candidate, clean_gates["error_json"], scope="local")
+        return retry_or_archive(run_id, repair)
+
+    append_lifecycle(run_id, "started", requested=profile["stages"]["full"]["requested"])
+    exploratory = run_full(candidate, profile["stages"]["full"], retained_eval=True)
+    append_lifecycle(run_id, exploratory["state"], actual=exploratory["actual"])
+    if exploratory["state"] == "paused":
+        return record_checkpoint_and_wait(run_id, exploratory)
+    if exploratory["state"] in {"failed", "cancelled"}:
+        return archive_terminal(run_id, "execution_error", evidence=exploratory)
+
+    reproduction = clean_reproduce(candidate, eval_reset=True)
+    if reproduction["state"] != "completed":
+        return archive_terminal(run_id, "inconclusive", evidence=reproduction)
+
+    evaluation = evaluate_with_baseline(reproduction, baseline)
+    audit = call_task(
+        agent="analyst",
+        prompt=f"run_id={run_id} 审计 verification.json 的 delta/epsilon/fingerprint",
+    )
+    keep = (
+        evaluation["state"] == "completed"
+        and decide_keeper(evaluation)
+        and audit["verdict"] == "audit_pass"
+    )
+    write_metrics_and_cost(run_id, exploratory, reproduction, evaluation, keep)
+    if not keep:
+        return archive_terminal(run_id, "discard", evidence=evaluation)
+
+    merge_candidate(candidate["branch_name"])
+    call_task(agent="paper-writer", prompt=f"run_id={run_id} 起草 reports/report.md")
+    panel = parallel(
+        call_task(agent="reviewer-methodology", prompt=f"review run_id={run_id}"),
+        call_task(agent="reviewer-skeptic", prompt=f"review run_id={run_id}"),
+        call_task(agent="reviewer-reproducibility", prompt=f"review run_id={run_id}"),
+    )
+    review = call_task(
+        agent="meta-reviewer",
+        prompt=f"run_id={run_id} 聚合三票 panel={panel} 写 review.md 与 review_vote",
+    )
+    return archive_reviewed(run_id, review)
 ```
 
-失败与重试：实验崩溃记 discard，超时硬 kill，连续 3 轮无提升自动将 idea 温度从 0.7 升至 1.0 扩宽采样。
+失败与重试：`syntax|import|runtime|timeout|resource|assert` 写入 error envelope。runtime deadline 产生 `timeout` lifecycle 证据。`paused` 保留 checkpoint 等待恢复。`failed|cancelled` 进入 execution_error 归因。clean reproduction 未完成进入 inconclusive。任一未完成状态均不参与 keeper。
 
 ---
 
-> 验证：`bash orchestration/scaffold.sh --idea "test" && schedule_prompt list` 应显示两条调度；`python orchestration/flywheel.py --once` 应在 `traces/` 产生首轮 metrics 且 `traces.jsonl` 新增一行。
+> 验证：执行 `bash orchestration/scaffold.sh --idea "test"`，再通过 `schedule_prompt` 的 `action: list` 确认两条任务。在当前 experiment profile 的首轮执行窗口内，`traces/` 应出现 baseline、mutation、lifecycle 与 completed metrics 或结构化未完成终态；`traces.jsonl` 应新增对应事件。

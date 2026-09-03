@@ -1,0 +1,13 @@
+{
+  "schedules": [
+    {
+      "cron": "0 */30 * * * *",
+      "prompt": "检查 queued/paused run 与 lifecycle checkpoint。恢复可运行的 paused run；队列空时派发 task agent=idea-generator 补 3 个可证伪 idea；认领最高分 queued idea 并派发 task agent=modeler（isolated）按 experiment profile 启动候选。记录 baseline、mutation、requested/actual cost、lifecycle 与终态。"
+    },
+    {
+      "cron": "0 0 8 * * *",
+      "prompt": "生成晨间复盘 status.md，汇总 completed keep/discard、inconclusive、execution_error、actual cost 与待人工复核项。",
+      "mode": "morning-report"
+    }
+  ]
+}
