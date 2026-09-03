@@ -1,0 +1,10 @@
+[project]
+name = "research-flywheel"
+version = "0.1.0"
+description = "Portable research-flywheel workspace template"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false

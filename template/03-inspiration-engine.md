@@ -1,11 +1,11 @@
 # 灵感自动产生引擎 03-inspiration-engine
 
-> 本文档定义无人类输入时如何自动产生下一个可执行假设。对比 Sakana AI Scientist 的 idea generation、Google Co-Scientist 的 debate、Stanford Virtual Lab 的 PI/critic 机制，萃取可直接落到 OMP/PI 的实现。
+> 本文档定义无人类输入时如何自动产生下一个可执行假设。对比 Sakana AI Scientist 的 idea generation、Google Co-Scientist 的 debate、Stanford Virtual Lab 的 PI/critic 机制，萃取可直接落到 OMP/PI 的实现。默认 Python 调用均为 `uv run --frozen python ...`（`uv sync --frozen` 一次），无需持久内核。
 
 ## 1. 目标与约束
 
 - **目标**：当 `inspiration.md` 为空或 `archive/ideas.jsonl` 中 queued 数量低于阈值（默认 2）时，自动产生 3-5 个新 idea，写入 `archive/ideas.jsonl` 并同步到 `inspiration.md`，保证飞轮无需人类输入即可自转。
-- **约束**：每个 idea 必须可执行（对应 `run.py` 的具体 patch 方向）、可度量（关联 `prepare.py:evaluate` 的主度量）、可证伪（有明确失败判定与归因字段）。
+- **约束**：每个 idea 必须可执行（对应 `experiment/run.py` 的具体 patch 方向）、可度量（关联 `evaluation/prepare.py:evaluate` 的主度量）、可证伪（有明确失败判定与归因字段）。
 - **预算**：单次引擎调用至多 2 次 LLM 调用，控制在 2k tokens 内，避免夜间烧掉配额。
 - **记忆**：所有失败 idea 沉淀到 `archive/failed.jsonl`，后续生成时显式去重，避免语义重复。
 
@@ -14,7 +14,7 @@
 ### 2.1 Sakana AI Scientist — 模板出发的头脑风暴 + 查新
 
 - **做法**：给定 broad direction 与模板代码，LLM 批量脑暴数十个 idea，按 novelty、feasibility、expected gain 打分，取 top-k 进入 agentic tree search 并行实验，Semantic Scholar 去重，最后对产物做 AI peer review。
-- **输入**：当前 `run.py`、模板代码、`archive/failed.jsonl`。
+- **输入**：当前 `experiment/run.py`、模板代码、`archive/failed.jsonl`。
 - **适用**：ML 领域，idea 与代码变更强绑定。
 - **可借鉴**：广度优先脑暴与评分机制，与后续 tree search 天然衔接。
 - **潜在坑**：idea 质量方差大，低分 idea 浪费预算；评分依赖单模型自评，易高估新颖性。
@@ -34,7 +34,7 @@
 - **适用**：跨学科、需协作的复杂目标。
 - **可借鉴**：PI 的全局视角与 critic 的风险意识互补，职责分离清晰。
 - **潜在坑**：角色定义较重，轻量飞轮中引入全套实验室模拟会增加复杂度。
-- **OMP 落地**：Supervisor task 扮演 PI，`task` 并行模拟 lab meeting，critic 仅做门禁校验。
+- **OMP 落地**：Supervisor `task` 扮演 PI（显式 `agent: "idea-generator"` / `agent: "literature-scout"`），`task` 并行模拟 lab meeting，critic 仅做门禁校验。
 
 ### 2.4 本引擎的取舍
 
@@ -82,8 +82,7 @@ Seed 统一写入 `archive/ideas.jsonl` 的 seed 段或单独 `archive/_seed.jso
 ```
 系统：你是科研灵感生成器。输入为 program.md、最近 3 个 idea、最近 1 篇 reports/failure.md、navigator 证据摘要。
 任务：产生 5 个新 idea，每个含 hypothesis、method sketch、expected delta、risk、refs。
-约束：每个 method 必须能在 run.py 上用 < 50 行 patch 实现；expected delta 需关联 prepare.py:evaluate 的主度量（如 val_bpb）；refs 来自 navigator/evidence。
-
+约束：每个 method 必须能在 experiment/run.py 上用 < 50 行 patch 实现；expected delta 需关联 evaluation/prepare.py:evaluate 的主度量（如 val_bpb / mse）；refs 来自 navigator/evidence。
 输出：JSON 数组，元素含 title, hypothesis, method, expected_delta, risk, refs, score(0-1)。
 ```
 
@@ -96,7 +95,7 @@ Seed 统一写入 `archive/ideas.jsonl` 的 seed 段或单独 `archive/_seed.jso
 
 不引入常驻多 agent，用两次 LLM 调用模拟 Co-Scientist 的 Reflection + Ranking，每轮限制 1-2 轮防止发散：
 
-- **Round 1 — Critic**：对 5 个 idea 逐条挑错，输出 weaknesses 与 feasibility 评分（1-5），关注是否绕开 `prepare.py`、是否可复现、是否存在泄漏。
+- **Round 1 — Critic**：对 5 个 idea 逐条挑错，输出 weaknesses 与 feasibility 评分（1-5），关注是否绕开 `evaluation/prepare.py`、是否可复现、是否存在泄漏。
 - **Round 2 — Ranking**：综合 generation score 与 critic 分数，做轻量锦标赛排序，等价于 Elo 的简化版，取 top-3。
 
 ```python
@@ -118,7 +117,7 @@ def debate(ideas):
 复刻 Virtual Lab 的 PI 视角，做最终可行性门禁，避免把明显不可执行的 idea 送入实验。门禁为本地规则，无需 LLM：
 
 - `expected_delta` 未关联主度量 → 拒。
-- `method` 提及修改 `prepare.py` 或 `capabilities/registry.json` → 拒（与可编辑边界冲突）。
+- `method` 提及修改 `evaluation/prepare.py` 或 `capabilities/registry.json` → 拒（与可编辑边界冲突）。
 - `risk` 为空或 `weaknesses` 含 "leakage"、"unreproducible" → 拒。
 - 与最近 3 个 discard idea 的 hypothesis 相似度大于 0.9 → 拒（避免重复踩坑）。
 - 检索证据不支持且无失败报告背书的纯幻想 idea → 拒。
@@ -146,11 +145,16 @@ sequenceDiagram
 ### 4.1 触发方式
 
 ```bash
-# 手动触发一次
-python orchestration/inspiration.py --once
+# 同步环境（一次）
+uv sync --frozen
+
+# 手动触发一次（uv 管理，fresh 进程）
+uv run --frozen python orchestration/inspiration.py --once
+# bootstrap 回退（无 uv 时）
+python3 orchestration/inspiration.py --once
 
 # 被夜间调度自动触发（当 queued < 2 时）
-# 见 02-harness-wiring 的 night-flywheel prompt
+# 见 02-harness-wiring 的 night-flywheel prompt（内部同样走 uv run --frozen python）
 ```
 
 自动灵感产生在 `review → archive` 之后触发，写入 `inspiration.md` 并更新 `program.md` 的 plan 段，下一轮 Supervisor 读取即开始。
@@ -160,7 +164,7 @@ python orchestration/inspiration.py --once
 `archive/ideas.jsonl` 新增行：
 
 ```json
-{"id": "idea-008", "title": "Gated Temperature in Attention", "score": 0.74, "feasibility": 4, "hypothesis": "可学习 temperature 门控可降低 attention 熵，提升 val_bpb", "method": "在 run.py 的 attention 前插入 learnable scalar，sigmoid 门控", "expected_delta": "val_bpb -0.015", "risk": "训练初期不稳定，需 warmup", "weaknesses": "需调参，增量有限", "refs": ["ref-012", "ref-031"], "status": "queued", "created": "2026-09-02T03:00:00Z"}
+{"id": "idea-008", "title": "Gated Temperature in Attention", "score": 0.74, "feasibility": 4, "hypothesis": "可学习 temperature 门控可降低 attention 熵，提升 val_bpb", "method": "在 experiment/run.py 的 attention 前插入 learnable scalar，sigmoid 门控", "expected_delta": "val_bpb -0.015", "risk": "训练初期不稳定，需 warmup", "weaknesses": "需调参，增量有限", "refs": ["ref-012", "ref-031"], "status": "queued", "created": "2026-09-02T03:00:00Z"}
 ```
 
 同步写入的 `inspiration.md`：
@@ -172,7 +176,7 @@ Gated Temperature in Attention：可学习 temperature 门控降低 attention �
 
 ### 4.3 与飞轮的衔接
 
-- 夜间轮询发现 `queued < 2` 即调用 `inspiration.py --once` 补齐 3 个。
+- 夜间轮询发现 `queued < 2` 即调用 `uv run --frozen python orchestration/inspiration.py --once` 补齐 3 个（回退 `python3` 仅作 bootstrap）。
 - 连续 3 轮 discard 时，下一轮 generation 的 temperature 从 0.7 升至 1.0，强制扩宽。
 - 每个 `reports/failure.md` 的 `next hypotheses` 自动转为 seed，优先级高于随机扰动，保证失败知识被再利用。
 - 检索阶段显式比对 `archive/failed.jsonl`，避免语义重复；每轮 debate 限制 1-2 轮，防止发散。
@@ -184,13 +188,13 @@ Gated Temperature in Attention：可学习 temperature 门控降低 attention �
 | Sakana | 批量脑暴 + 评分，tree search 并行 | 评分自嗨，需外部校正 | 引入 critic 二次评分 |
 | Co-Scientist | 辩论与锦标赛提升假设质量 | 重型多 agent 不适合夜间轻量 | 压缩为 2 轮轻量批判 + 本地 Elo |
 | Virtual Lab | PI/critic 职责分离，门禁明确 | 角色过重 | 仅保留本地规则门禁 |
-| Karpathy | 固定评估器保证可比性 | idea 若绕开评估器则度量失真 | 门禁拦截修改 prepare.py 的 method |
+| Karpathy | 固定评估器保证可比性 | idea 若绕开评估器则度量失真 | 门禁拦截修改 evaluation/prepare.py 的 method |
 | Biomni | capability registry 嵌入检索 | 工具膨胀 | registry 显式申请变更 |
 
 ## 6. 最小可运行伪代码
 
 ```python
-# orchestration/inspiration.py
+# orchestration/inspiration.py — 以 uv run --frozen python  fresh 进程执行
 def run_once():
     seeds = collect_seeds()  # inspiration.md + failed.jsonl next hypotheses + navigator gaps
     ideas = call_llm_generation(seeds, n=5)  # 单次调用，输出 JSON 数组
@@ -211,9 +215,9 @@ flowchart TD
     D --> E[Elo rank]
     E --> F[pick 1-2 queued]
     F --> G[inspiration.md + ideas.jsonl]
-    G --> H[next cycle Supervisor]
+    G --> H[next cycle Supervisor<br/>uv run --frozen]
 ```
 
 ---
 
-> 验证：`python orchestration/inspiration.py --once` 应在 `archive/ideas.jsonl` 新增 2 行且 `inspiration.md` 被更新；`grep -c queued archive/ideas.jsonl` 计数增加；无触及 `prepare.py` 的非法 method；`navigator/queries.jsonl` 新增检索记录。
+> 验证：`uv sync --frozen` 后 `uv run --frozen python orchestration/inspiration.py --once` 应在 `archive/ideas.jsonl` 新增 2 行且 `inspiration.md` 被更新；`grep -c queued archive/ideas.jsonl` 计数增加；无触及 `evaluation/prepare.py` 的非法 method；`navigator/queries.jsonl` 新增检索记录。无需持久内核。

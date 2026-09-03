@@ -1,13 +1,25 @@
 #!/bin/sh
 # Research Flywheel scaffold — POSIX shell, stdlib only, safe for existing workspaces.
-# Portability (reversible): Python resolution prefers python3 then python (PY variable)
-# so scaffold works on macOS (python3) and minimal Linux (python). Revert the PY
-# block to a hard-coded python3 check if a pinned interpreter is required. No file
-# writes happen outside the workspace root.
+# Python via uv-first helper: prefers 'uv run --directory "$WORKSPACE" --frozen python' when uv and uv.lock exist, then python3, then python.
+# Preserves existing files and python3/python bootstrap fallback for portability.
+# No file writes happen outside the workspace root.
 # Runs from any cwd. Preserves existing user files. Handles existing Git baseline.
 # Resolve workspace from script location — works from any cwd without relying on BASH_SOURCE
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 WORKSPACE="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+
+# uv-first python helper — prefers uv when lock exists, falls back to python3/python
+run_python() {
+  if [ -f "$WORKSPACE/uv.lock" ] && command -v uv >/dev/null 2>&1; then
+    uv run --directory "$WORKSPACE" --frozen python "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 "$@"
+  elif command -v python >/dev/null 2>&1; then
+    python "$@"
+  else
+    return 127
+  fi
+}
 
 IDEA=""
 while [ $# -gt 0 ]; do
@@ -275,6 +287,30 @@ task:
 CFG_EOF
 fi
 
+if [ ! -f "$WORKSPACE/pyproject.toml" ]; then
+  cat > "$WORKSPACE/pyproject.toml" <<'PYPROJ_EOF'
+[project]
+name = "research-flywheel"
+version = "0.1.0"
+description = "Portable research-flywheel workspace template"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+PYPROJ_EOF
+fi
+
+if [ ! -f "$WORKSPACE/.python-version" ]; then
+  printf "3.11\n" > "$WORKSPACE/.python-version"
+fi
+
+# Create/update uv.lock through uv when available (preserve existing lock if uv absent)
+if command -v uv >/dev/null 2>&1; then
+  uv lock --directory "$WORKSPACE" >/dev/null 2>&1 || true
+fi
+
 # append-only logs — create empty if absent, never truncate existing
 for f in archive/ideas.jsonl navigator/queries.jsonl traces.jsonl research/ledger.jsonl archive/failed.jsonl; do
   if [ ! -f "$WORKSPACE/$f" ]; then
@@ -286,14 +322,8 @@ done
 # 4) Delegate baseline initialization safely — never overwrite existing user files or recommit without need
 INIT="$WORKSPACE/orchestration/init_workspace.py"
 if [ -f "$INIT" ]; then
-  # Determine python
-  PY=""
-  if command -v python3 >/dev/null 2>&1; then
-    PY="python3"
-  elif command -v python >/dev/null 2>&1; then
-    PY="python"
-  fi
-  if [ -n "$PY" ]; then
+  # Check if python available via uv-first helper probe
+  if run_python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
     NEED_INIT=0
     if [ ! -f "$WORKSPACE/traces/baseline-metrics.json" ]; then
       NEED_INIT=1
@@ -303,11 +333,11 @@ if [ -f "$INIT" ]; then
     fi
     if [ "$NEED_INIT" -eq 1 ]; then
       # Run init but tolerate already-committed or dirty workspace — never delete work
-      if ! "$PY" "$INIT" 2>&1; then
+      if ! run_python "$INIT" 2>&1; then
         echo "scaffold.sh: init_workspace.py reported an issue — workspace dirs still valid, check git status" >&2
       fi
     else
-      echo "scaffold.sh: baseline present — skipping init_workspace.py (use $PY orchestration/init_workspace.py to refresh)" >&2
+      echo "scaffold.sh: baseline present — skipping init_workspace.py (use uv run --frozen python orchestration/init_workspace.py to refresh)" >&2
     fi
   else
     # No python — ensure bare git repo if git available

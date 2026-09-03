@@ -10,7 +10,8 @@ This script does not pretend to be an OMP tool. It is the human/scaffold step th
 
 Run from the workspace root:
 
-    python orchestration/init_workspace.py
+    uv sync --frozen
+    uv run --frozen python orchestration/init_workspace.py
 """
 
 from __future__ import annotations
@@ -36,6 +37,9 @@ ARTIFACT_PATHS = [
     "experiment/run.py",
     "capabilities/registry.json",
     "program.md",
+    "pyproject.toml",
+    "uv.lock",
+    ".python-version",
 ]
 
 

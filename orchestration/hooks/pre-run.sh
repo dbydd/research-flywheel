@@ -1,15 +1,25 @@
 #!/bin/sh
 # pre-run.sh — deterministic integrity and mutable-path gate, POSIX shell + Python stdlib fallback.
-# Portability (reversible): every Python invocation prefers python3 then python, with
-# sha256sum/shasum as final fallback, so the gate works on macOS (python3) and
-# minimal Linux (python). Revert by collapsing python3/python branches to a single
-# hard-coded python3 branch; no functional change if python3 is guaranteed.
+# Python via uv-first helper: prefers 'uv run --directory "$WORKSPACE" --frozen python' when uv and uv.lock exist, then python3, then python; sha256sum/shasum fallback remains.
 # Usage: bash orchestration/hooks/pre-run.sh [traces/<run_id>/baseline.json]
 # Resolves workspace from script location; works from any cwd.
 set -eu
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 WORKSPACE="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+
+# uv-first python helper — prefers uv when lock exists, falls back to python3/python
+run_python() {
+  if [ -f "$WORKSPACE/uv.lock" ] && command -v uv >/dev/null 2>&1; then
+    uv run --directory "$WORKSPACE" --frozen python "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 "$@"
+  elif command -v python >/dev/null 2>&1; then
+    python "$@"
+  else
+    return 127
+  fi
+}
 
 BASELINE=""
 if [ $# -ge 1 ]; then
@@ -53,10 +63,8 @@ MUTATION="$TRACE_DIR/mutation.json"
 # Helpers: compute sha256 via python stdlib (fallback to sha256sum/shasum)
 sha256_of_file() {
   _f="$1"
-  if command -v python3 >/dev/null 2>&1; then
-    python3 -c "import hashlib,sys; print('sha256:'+hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$_f"
-  elif command -v python >/dev/null 2>&1; then
-    python -c "import hashlib,sys; print('sha256:'+hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$_f"
+  if run_python -c "import hashlib" >/dev/null 2>&1; then
+    run_python -c "import hashlib,sys; print('sha256:'+hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" "$_f"
   elif command -v sha256sum >/dev/null 2>&1; then
     printf "sha256:%s" "$(sha256sum "$_f" | cut -d' ' -f1)"
   elif command -v shasum >/dev/null 2>&1; then
@@ -74,33 +82,8 @@ BASELINE_HASHES_JSON=""
 MUTABLE_LIST=""
 BASELINE_OK=1
 
-if command -v python3 >/dev/null 2>&1; then
-  if PY_JSON="$(python3 - "$BASELINE" <<'PY'
-import json,sys
-p=sys.argv[1]
-data=json.loads(open(p,encoding='utf-8').read())
-profile=data.get('profile',{})
-integrity_paths=data.get('integrity_paths') or profile.get('integrity_paths') or ["program.md","evaluation/prepare.py","capabilities/registry.json"]
-mutable_paths=profile.get('mutable_paths') or ["experiment/run.py"]
-integrity_hashes=data.get('integrity_hashes',{})
-# print tab-separated for shell
-print(";".join(integrity_paths))
-print(json.dumps(integrity_hashes))
-print(";".join(mutable_paths))
-PY
-)"; then
-    INTEGRITY_LIST="$(printf "%s" "$PY_JSON" | sed -n '1p')"
-    BASELINE_HASHES_JSON="$(printf "%s" "$PY_JSON" | sed -n '2p')"
-    MUTABLE_LIST="$(printf "%s" "$PY_JSON" | sed -n '3p')"
-  else
-    echo "pre-run: malformed baseline.json — cannot parse baseline manifest (failing closed)" >&2
-    BASELINE_OK=0
-    INTEGRITY_LIST=""
-    MUTABLE_LIST=""
-    BASELINE_HASHES_JSON="{}"
-  fi
-elif command -v python >/dev/null 2>&1; then
-  if PY_JSON="$(python - "$BASELINE" <<'PY'
+if run_python -c "import sys" >/dev/null 2>&1; then
+  if PY_JSON="$(run_python - "$BASELINE" <<'PY'
 import json,sys
 p=sys.argv[1]
 data=json.loads(open(p,encoding='utf-8').read())
@@ -124,7 +107,7 @@ PY
     BASELINE_HASHES_JSON="{}"
   fi
 else
-  echo "pre-run: baseline parsing requires python3 or python for trustworthy verification — failing closed" >&2
+  echo "pre-run: baseline parsing requires python via uv, python3 or python for trustworthy verification — failing closed" >&2
   BASELINE_OK=0
   INTEGRITY_LIST=""
   MUTABLE_LIST=""
@@ -149,26 +132,8 @@ for rel in $(printf "%s" "$INTEGRITY_LIST" | tr ';' ' '); do
   # extract expected hash from baseline JSON via python if possible
   EXPECTED=""
   _EXPECTED_OK=0
-  if command -v python3 >/dev/null 2>&1; then
-    if EXPECTED="$(python3 - "$BASELINE" "$rel" <<'PY'
-import json,sys
-try:
-  baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
-  hashes=baseline.get('integrity_hashes',{})
-  print(hashes.get(sys.argv[2],""))
-except Exception as e:
-  print(f"pre-run: malformed baseline.json — cannot extract integrity hash for {sys.argv[2]}: {e}", file=sys.stderr)
-  sys.exit(1)
-PY
-)"; then
-      _EXPECTED_OK=1
-    else
-      echo "pre-run: malformed baseline.json — cannot verify integrity for $rel (failing closed)" >&2
-      INTEGRITY_PASSED=0
-      continue
-    fi
-  elif command -v python >/dev/null 2>&1; then
-    if EXPECTED="$(python - "$BASELINE" "$rel" <<'PY'
+  if run_python -c "import sys" >/dev/null 2>&1; then
+    if EXPECTED="$(run_python - "$BASELINE" "$rel" <<'PY'
 import json,sys
 try:
   baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
@@ -220,19 +185,8 @@ CHANGED=""
 MUTATION_PARSE_FAILED=0
 # 1) Prefer existing mutation.json changed_paths (flywheel writes this before pre-run)
 if [ -f "$MUTATION" ]; then
-  if command -v python3 >/dev/null 2>&1; then
-    if ! CHANGED="$(python3 - "$MUTATION" <<'PY'
-import json,sys
-data=json.loads(open(sys.argv[1],encoding='utf-8').read())
-print(";".join(data.get("changed_paths",[])))
-PY
-)"; then
-      echo "pre-run: malformed mutation.json — failing gate" >&2
-      MUTATION_PARSE_FAILED=1
-      CHANGED=""
-    fi
-  elif command -v python >/dev/null 2>&1; then
-    if ! CHANGED="$(python - "$MUTATION" <<'PY'
+  if run_python -c "import sys" >/dev/null 2>&1; then
+    if ! CHANGED="$(run_python - "$MUTATION" <<'PY'
 import json,sys
 data=json.loads(open(sys.argv[1],encoding='utf-8').read())
 print(";".join(data.get("changed_paths",[])))
@@ -247,15 +201,8 @@ fi
 # 2) If mutation has no changed_paths, try branch diff vs baseline SHA
 if [ -z "$CHANGED" ] && [ -d "$WORKSPACE/.git" ] && command -v git >/dev/null 2>&1; then
   _B_SHA=""
-  if command -v python3 >/dev/null 2>&1; then
-    _B_SHA="$(python3 - "$BASELINE" <<'PY'
-import json,sys
-try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("git",{}).get("head",""))
-except: print("")
-PY
-)"
-  elif command -v python >/dev/null 2>&1; then
-    _B_SHA="$(python - "$BASELINE" <<'PY'
+  if run_python -c "import sys" >/dev/null 2>&1; then
+    _B_SHA="$(run_python - "$BASELINE" <<'PY'
 import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("git",{}).get("head",""))
 except: print("")
@@ -263,15 +210,8 @@ PY
 )"
   fi
   _B_NAME=""
-  if [ -f "$MUTATION" ] && command -v python3 >/dev/null 2>&1; then
-    _B_NAME="$(python3 - "$MUTATION" <<'PY'
-import json,sys
-try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("branch_name",""))
-except: print("")
-PY
-)"
-  elif [ -f "$MUTATION" ] && command -v python >/dev/null 2>&1; then
-    _B_NAME="$(python - "$MUTATION" <<'PY'
+  if [ -f "$MUTATION" ] && run_python -c "import sys" >/dev/null 2>&1; then
+    _B_NAME="$(run_python - "$MUTATION" <<'PY'
 import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("branch_name",""))
 except: print("")
@@ -312,15 +252,9 @@ if [ -n "$CHANGED" ]; then
     MATCHED=0
     for pat in $(printf "%s" "$MUTABLE_LIST" | tr ';' ' '); do
       [ -n "$pat" ] || continue
-      # use python fnmatch when available for glob patterns
-      if command -v python3 >/dev/null 2>&1; then
-        _m="$(python3 - "$cp" "$pat" <<'PY'
-import fnmatch,sys
-print("1" if fnmatch.fnmatch(sys.argv[1], sys.argv[2]) or sys.argv[1]==sys.argv[2] else "0")
-PY
-)"
-      elif command -v python >/dev/null 2>&1; then
-        _m="$(python - "$cp" "$pat" <<'PY'
+      # use python fnmatch when available for glob patterns (uv-first)
+      if run_python -c "import fnmatch" >/dev/null 2>&1; then
+        _m="$(run_python - "$cp" "$pat" <<'PY'
 import fnmatch,sys
 print("1" if fnmatch.fnmatch(sys.argv[1], sys.argv[2]) or sys.argv[1]==sys.argv[2] else "0")
 PY
@@ -351,34 +285,8 @@ if [ "$BASELINE_OK" -ne 1 ]; then
   GATE="fail"
   if [ -f "$MUTATION" ]; then
     # Preserve existing mutation.json intact; only ensure gate reflects failure via patch without touching identities
-    if command -v python3 >/dev/null 2>&1; then
-      python3 - "$MUTATION" "$GATE" "$BASELINE" <<'PY'
-import json, sys
-from pathlib import Path
-mutation_path, gate, baseline_path = sys.argv[1:4]
-try:
-  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
-except Exception:
-  existing={}
-existing["integrity_gate"]=gate
-existing["integrity_passed"]=False
-existing["mutable_gate_passed"]=False
-existing["baseline_path"]=baseline_path
-if "run_id" not in existing or existing.get("run_id") is None:
-  try:
-    existing["run_id"]=Path(mutation_path).parent.name
-  except Exception:
-    pass
-import tempfile, os
-Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
-fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
-os.close(fd)
-tmp=Path(tmp_path)
-tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
-tmp.replace(mutation_path)
-PY
-    elif command -v python >/dev/null 2>&1; then
-      python - "$MUTATION" "$GATE" "$BASELINE" <<'PY'
+    if run_python -c "import sys" >/dev/null 2>&1; then
+      run_python - "$MUTATION" "$GATE" "$BASELINE" <<'PY'
 import json, sys
 from pathlib import Path
 mutation_path, gate, baseline_path = sys.argv[1:4]
@@ -409,21 +317,8 @@ PY
   else
     # No existing mutation: create minimal evidence with derived run_id and baseline path, no null identities
     _derived_run="$(basename "$TRACE_DIR")"
-    if command -v python3 >/dev/null 2>&1; then
-      python3 - "$MUTATION" "$GATE" "$BASELINE" "$_derived_run" <<'PY'
-import json, sys, tempfile, os
-from pathlib import Path
-mutation_path, gate, baseline_path, derived_run = sys.argv[1:5]
-existing={"run_id": derived_run, "baseline_path": baseline_path, "integrity_gate": gate, "integrity_passed": False, "mutable_gate_passed": False, "changed_paths": []}
-Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
-fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
-os.close(fd)
-tmp=Path(tmp_path)
-tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
-tmp.replace(mutation_path)
-PY
-    elif command -v python >/dev/null 2>&1; then
-      python - "$MUTATION" "$GATE" "$BASELINE" "$_derived_run" <<'PY'
+    if run_python -c "import sys" >/dev/null 2>&1; then
+      run_python - "$MUTATION" "$GATE" "$BASELINE" "$_derived_run" <<'PY'
 import json, sys, tempfile, os
 from pathlib import Path
 mutation_path, gate, baseline_path, derived_run = sys.argv[1:5]
@@ -446,44 +341,9 @@ PY
   exit 2
 fi
 
-# Write mutation.json — merge with existing if present, else create
-if command -v python3 >/dev/null 2>&1; then
-  python3 - "$BASELINE" "$MUTATION" "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" "$CHANGED" <<'PY'
-import json, sys, tempfile, os
-from pathlib import Path
-baseline_path, mutation_path, gate, ip, mp, changed = sys.argv[1:7]
-try:
-  baseline=json.loads(Path(baseline_path).read_text(encoding='utf-8'))
-except Exception as e:
-  print(f"pre-run: malformed baseline.json during mutation write: {e}", file=sys.stderr)
-  baseline={}
-existing={}
-try:
-  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
-except Exception as e:
-  if Path(mutation_path).exists():
-    print(f"pre-run: malformed mutation.json during merge: {e}", file=sys.stderr)
-  existing={}
-changed_list=[c for c in changed.split(';') if c] if changed else []
-existing.update({
-    "run_id": baseline.get("run_id"),
-    "idea_id": baseline.get("idea_id"),
-    "baseline_sha": baseline.get("git",{}).get("head"),
-    "integrity_gate": gate,
-    "integrity_passed": ip=="1",
-    "mutable_gate_passed": mp=="1",
-    "changed_paths": changed_list,
-})
-Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
-fd, tmp_path = tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
-os.close(fd)
-tmp=Path(tmp_path)
-tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
-tmp.replace(mutation_path)
-print(json.dumps({"mutation": str(mutation_path), "gate": gate}))
-PY
-elif command -v python >/dev/null 2>&1; then
-  python - "$BASELINE" "$MUTATION" "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" "$CHANGED" <<'PY'
+# Write mutation.json — merge with existing if present, else create (uv-first)
+if run_python -c "import sys" >/dev/null 2>&1; then
+  run_python - "$BASELINE" "$MUTATION" "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" "$CHANGED" <<'PY'
 import json, sys, tempfile, os
 from pathlib import Path
 baseline_path, mutation_path, gate, ip, mp, changed = sys.argv[1:7]

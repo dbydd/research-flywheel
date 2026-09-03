@@ -927,13 +927,15 @@ def _run_once(run_id: str, run_dir: Path, trace_dir: Path, args, profile: dict,
     write_json(trace_dir / "verification.json", verification)
     write_json(run_dir / "verification.json", verification)
 
-    # metrics.json
+    # metrics.json — uv-first fingerprint uses uv.lock digest when present
+    _lock_path = WORKSPACE / "uv.lock"
+    _lock_hash = f"sha256:{hashlib.sha256(_lock_path.read_bytes()).hexdigest()}" if _lock_path.exists() else "unlocked"
     fingerprint = {
         "device": {"kind": "cpu", "count": 1},
         "environment": {
             "python_version": platform.python_version(),
             "platform": platform.platform(),
-            "package_lock_hash": "no-lock",
+            "package_lock_hash": _lock_hash,
         }
     }
     metrics = {

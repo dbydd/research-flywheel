@@ -1,12 +1,24 @@
 #!/bin/sh
 # post-eval.sh — deterministic keep/discard recording, never deletes unrelated files.
-# Portability (reversible): Python resolution prefers python3 then python (see reproduce.sh header).
-# Revert by replacing PY resolution with a hard-coded python3 assignment if that interpreter is guaranteed.
+# Python via uv-first helper: prefers 'uv run --directory "$WORKSPACE" --frozen python' when uv and uv.lock exist, then python3, then python.
 # Usage: bash orchestration/hooks/post-eval.sh [traces/<run_id>/metrics.json or traces/<run_id>]
 set -eu
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 WORKSPACE="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
+
+# uv-first python helper — prefers uv when lock exists, falls back to python3/python
+run_python() {
+  if [ -f "$WORKSPACE/uv.lock" ] && command -v uv >/dev/null 2>&1; then
+    uv run --directory "$WORKSPACE" --frozen python "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 "$@"
+  elif command -v python >/dev/null 2>&1; then
+    python "$@"
+  else
+    return 127
+  fi
+}
 
 ARG=""
 if [ $# -ge 1 ]; then
@@ -65,14 +77,7 @@ if [ ! -f "$METRICS" ]; then
   exit 1
 fi
 
-# Compute outcome/keep using python stdlib so result matches native evaluator semantics
-if command -v python3 >/dev/null 2>&1; then
-  PY=python3
-elif command -v python >/dev/null 2>&1; then
-  PY=python
-else
-  PY=""
-fi
+# Compute outcome/keep using python stdlib so result matches native evaluator semantics (uv-first)
 
 OUTCOME=""
 KEEP=""
@@ -82,8 +87,8 @@ EVAL_STATE=""
 EXEC_STATE=""
 REPRO_STATE=""
 
-if [ -n "$PY" ]; then
-  PYOUT="$($PY - "$METRICS" "$VERIFICATION" <<'PY'
+if run_python -c "import sys" >/dev/null 2>&1; then
+  PYOUT="$(run_python - "$METRICS" "$VERIFICATION" <<'PY'
 import json, sys
 m=json.loads(open(sys.argv[1],encoding='utf-8').read())
 v={}
@@ -104,9 +109,9 @@ print(json.dumps({
 PY
 )"
   # shell-extract without jq via python
-  OUTCOME="$($PY -c "import json,sys; print(json.loads(open(sys.argv[1]).read())['parsed']['outcome'])" "$PYOUT" 2>/dev/null || $PY -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('outcome','discard'))" "$PYOUT")"
+  OUTCOME="$(run_python -c "import json,sys; print(json.loads(open(sys.argv[1]).read())['parsed']['outcome'])" "$PYOUT" 2>/dev/null || run_python -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('outcome','discard'))" "$PYOUT")"
   # simpler: re-parse using python helper
-  EVAL_OUT="$($PY - "$PYOUT" <<'PY'
+  EVAL_OUT="$(run_python - "$PYOUT" <<'PY'
 import json,sys
 payload=json.loads(open(sys.argv[1],encoding='utf-8').read()) if sys.argv[1].endswith('.json') else json.loads(sys.argv[1])
 # if argv1 was raw json string, parse directly
@@ -120,13 +125,13 @@ print(data.get("reason",""))
 PY
 )"
   # Fallback structured parse: just re-run a tiny extractor
-  OUTCOME="$($PY - "$METRICS" <<'PY'
+  OUTCOME="$(run_python - "$METRICS" <<'PY'
 import json,sys
 m=json.loads(open(sys.argv[1],encoding='utf-8').read())
 print(m.get("outcome","discard"))
 PY
 )"
-  KEEP="$($PY - "$METRICS" <<'PY'
+  KEEP="$(run_python - "$METRICS" <<'PY'
 import json,sys
 m=json.loads(open(sys.argv[1],encoding='utf-8').read())
 print("true" if m.get("keep") else "false")
@@ -148,8 +153,8 @@ else
 fi
 
 # Re-derive outcome robustly via python single call
-if [ -n "$PY" ]; then
-  RESULT_JSON="$($PY - "$TRACE_DIR" <<'PY'
+if run_python -c "import sys" >/dev/null 2>&1; then
+  RESULT_JSON="$(run_python - "$TRACE_DIR" <<'PY'
 import json, pathlib, sys
 td=pathlib.Path(sys.argv[1])
 m=json.loads((td/"metrics.json").read_text(encoding='utf-8'))
@@ -170,9 +175,9 @@ if (td/"error.json").exists() and outcome!="keep":
 print(json.dumps({"outcome":outcome,"keep":bool(m.get("keep")), "reason": m.get("reason",""), "metric_main": m.get("metric_main"), "baseline": v.get("baseline_metric"), "idea_id": m.get("idea_id") or v.get("idea_id"), "eval_state": eval_state, "exec_state": exec_state, "repro_state": repro_state}))
 PY
 )"
-  OUTCOME="$(printf "%s" "$RESULT_JSON" | $PY -c "import json,sys; print(json.loads(sys.argv[1]).get('outcome','discard'))" "$RESULT_JSON")"
-  KEEP_STR="$(printf "%s" "$RESULT_JSON" | $PY -c "import json,sys; print('true' if json.loads(sys.argv[1]).get('keep') else 'false')" "$RESULT_JSON")"
-  REASON="$(printf "%s" "$RESULT_JSON" | $PY -c "import json,sys; print(json.loads(sys.argv[1]).get('reason',''))" "$RESULT_JSON")"
+  OUTCOME="$(printf "%s" "$RESULT_JSON" | run_python -c "import json,sys; print(json.loads(sys.argv[1]).get('outcome','discard'))" "$RESULT_JSON")"
+  KEEP_STR="$(printf "%s" "$RESULT_JSON" | run_python -c "import json,sys; print('true' if json.loads(sys.argv[1]).get('keep') else 'false')" "$RESULT_JSON")"
+  REASON="$(printf "%s" "$RESULT_JSON" | run_python -c "import json,sys; print(json.loads(sys.argv[1]).get('reason',''))" "$RESULT_JSON")"
 else
   REASON=""
 fi
@@ -181,8 +186,8 @@ fi
 TRACES_JSONL="$WORKSPACE/traces.jsonl"
 mkdir -p "$(dirname "$TRACES_JSONL")"
 touch "$TRACES_JSONL"
-if [ -n "$PY" ]; then
-  $PY - "$TRACES_JSONL" "$RESULT_JSON" "$RUN_ID" <<'PY'
+if run_python -c "import sys" >/dev/null 2>&1; then
+  run_python - "$TRACES_JSONL" "$RESULT_JSON" "$RUN_ID" <<'PY'
 import json, pathlib, sys
 jl_path=pathlib.Path(sys.argv[1])
 payload=json.loads(sys.argv[2])
@@ -225,8 +230,8 @@ if [ "$OUTCOME" = "keep" ]; then
     cp "$METRICS" "$PAPER_DIR/metrics.json" 2>/dev/null || true
   fi
   # keep trace record
-  if [ -n "$PY" ]; then
-    $PY - "$TRACE_DIR" "$PAPER_DIR" <<'PY'
+  if run_python -c "import sys" >/dev/null 2>&1; then
+    run_python - "$TRACE_DIR" "$PAPER_DIR" <<'PY'
 import json, pathlib, sys, datetime
 td=pathlib.Path(sys.argv[1])
 pd=pathlib.Path(sys.argv[2])
@@ -236,8 +241,8 @@ PY
   echo "post-eval: archived keep $RUN_ID -> archive/papers/$RUN_ID (preserving all other archives)" >&2
 else
   # discard/inconclusive/execution_error -> failed.jsonl
-  if [ -n "$PY" ]; then
-    $PY - "$ARCHIVE_FAILED" "$RESULT_JSON" "$RUN_ID" <<'PY'
+  if run_python -c "import sys" >/dev/null 2>&1; then
+    run_python - "$ARCHIVE_FAILED" "$RESULT_JSON" "$RUN_ID" <<'PY'
 import json, pathlib, sys, datetime
 fp=pathlib.Path(sys.argv[1])
 payload=json.loads(sys.argv[2])
@@ -270,8 +275,8 @@ fi
 # Optional: remove ephemeral git candidate branch for non-keep only when explicitly allowed
 if [ "$OUTCOME" != "keep" ] && [ -n "${POST_EVAL_DELETE_BRANCH:-}" ] && [ -d "$WORKSPACE/.git" ] && command -v git >/dev/null 2>&1; then
   BRANCH=""
-  if [ -f "$MUTATION" ] && [ -n "$PY" ]; then
-    BRANCH="$($PY - "$MUTATION" <<'PY'
+  if [ -f "$MUTATION" ] && run_python -c "import sys" >/dev/null 2>&1; then
+    BRANCH="$(run_python - "$MUTATION" <<'PY'
 import json
 print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("branch_name",""))
 PY

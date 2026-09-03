@@ -3,8 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# uv-managed environment; uv.lock remains committed for reproducibility.
+.venv/
+
 # Locks and process files
 *.lock
+!uv.lock
 
 # Environment and OS files
 .DS_Store

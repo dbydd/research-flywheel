@@ -1,33 +1,31 @@
 #!/bin/sh
 # reproduce.sh — locate latest keep archive/run and execute its reference reproduction.
-# POSIX shell; Python stdlib only.
-# Portability note (reversible): interpreter resolution prefers python3 then python
-# so the script works on macOS (python3), Debian/Ubuntu minimal images (python),
-# and containers with either binary. Revert by replacing $PY with literal python3
-# if a fixed interpreter is desired. All reproduction uses $PY.
+# POSIX shell; Python via uv-first helper (uv run --directory "$WORKSPACE" --frozen python when uv and uv.lock exist, then python3, then python).
 set -eu
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 WORKSPACE="$SCRIPT_DIR"
 
-# Portability: resolve one Python interpreter for this script. Platforms differ
-# (macOS ships python3, some Linux distros ship only python); prefer python3,
-# fall back to python, and reuse the resolved value everywhere below.
-# Reversible: remove this block and replace $PY with python3 to restore pinned behaviour.
-PY=""
-if command -v python3 >/dev/null 2>&1; then
-  PY=python3
-elif command -v python >/dev/null 2>&1; then
-  PY=python
-fi
+# uv-first python helper — prefers uv when lock exists, falls back to python3/python
+run_python() {
+  if [ -f "$WORKSPACE/uv.lock" ] && command -v uv >/dev/null 2>&1; then
+    uv run --directory "$WORKSPACE" --frozen python "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 "$@"
+  elif command -v python >/dev/null 2>&1; then
+    python "$@"
+  else
+    return 127
+  fi
+}
 
 # SAFE_RUN_ID pattern mirrored from orchestration/flywheel.py
 # Used for path-traversal protection; validated in helper and in shell.
 find_latest_keep() {
-  if [ -z "$PY" ]; then
+  if ! run_python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
     return 0
   fi
-  "$PY" - "$WORKSPACE" <<'PY'
+  run_python - "$WORKSPACE" <<'PY'
 import json
 import math
 import os
@@ -375,8 +373,8 @@ if [ -L "$LATEST" ]; then
   exit 2
 fi
 # Resolve and ensure inside workspace
-if [ -n "$PY" ]; then
-  if ! "$PY" - "$LATEST" "$WORKSPACE" <<'PY' 2>/dev/null
+if run_python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+  if ! run_python - "$LATEST" "$WORKSPACE" <<'PY' 2>/dev/null
 import sys
 from pathlib import Path
 p = Path(sys.argv[1]).resolve()
@@ -402,8 +400,8 @@ case "$RUN_ID" in
     ;;
 esac
 # Also validate against SAFE pattern via Python if available
-if [ -n "$PY" ]; then
-  if ! "$PY" - "$RUN_ID" <<'PY' 2>/dev/null
+if run_python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+  if ! run_python - "$RUN_ID" <<'PY' 2>/dev/null
 import re, sys
 SAFE=re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 if not SAFE.fullmatch(sys.argv[1]):
@@ -415,8 +413,8 @@ PY
   fi
 fi
 
-if [ -z "$PY" ]; then
-  echo "reproduce.sh: no python interpreter found (python3 or python required)" >&2
+if ! run_python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+  echo "reproduce.sh: no python interpreter found (uv, python3 or python required)" >&2
   exit 2
 fi
 
@@ -425,7 +423,7 @@ echo "reproduce.sh: latest keep is $RUN_ID ($LATEST)" >&2
 # Execute fixed workspace-local reproduction entrypoint with argv separation.
 # No shell interpretation of archive-controlled strings; no sh -c.
 cd "$WORKSPACE"
-if "$PY" - "$RUN_ID" "$WORKSPACE" <<'PY'
+if run_python - "$RUN_ID" "$WORKSPACE" <<'PY'
 import sys
 from pathlib import Path
 import os
