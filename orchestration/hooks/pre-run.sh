@@ -72,9 +72,10 @@ sha256_of_file() {
 INTEGRITY_LIST=""
 BASELINE_HASHES_JSON=""
 MUTABLE_LIST=""
+BASELINE_OK=1
 
 if command -v python3 >/dev/null 2>&1; then
-  PY_JSON="$(python3 - "$BASELINE" <<'PY'
+  if PY_JSON="$(python3 - "$BASELINE" <<'PY'
 import json,sys
 p=sys.argv[1]
 data=json.loads(open(p,encoding='utf-8').read())
@@ -87,12 +88,19 @@ print(";".join(integrity_paths))
 print(json.dumps(integrity_hashes))
 print(";".join(mutable_paths))
 PY
-)"
-  INTEGRITY_LIST="$(printf "%s" "$PY_JSON" | sed -n '1p')"
-  BASELINE_HASHES_JSON="$(printf "%s" "$PY_JSON" | sed -n '2p')"
-  MUTABLE_LIST="$(printf "%s" "$PY_JSON" | sed -n '3p')"
+)"; then
+    INTEGRITY_LIST="$(printf "%s" "$PY_JSON" | sed -n '1p')"
+    BASELINE_HASHES_JSON="$(printf "%s" "$PY_JSON" | sed -n '2p')"
+    MUTABLE_LIST="$(printf "%s" "$PY_JSON" | sed -n '3p')"
+  else
+    echo "pre-run: malformed baseline.json — cannot parse baseline manifest (failing closed)" >&2
+    BASELINE_OK=0
+    INTEGRITY_LIST=""
+    MUTABLE_LIST=""
+    BASELINE_HASHES_JSON="{}"
+  fi
 elif command -v python >/dev/null 2>&1; then
-  PY_JSON="$(python - "$BASELINE" <<'PY'
+  if PY_JSON="$(python - "$BASELINE" <<'PY'
 import json,sys
 p=sys.argv[1]
 data=json.loads(open(p,encoding='utf-8').read())
@@ -104,19 +112,31 @@ print(";".join(integrity_paths))
 print(json.dumps(integrity_hashes))
 print(";".join(mutable_paths))
 PY
-)"
-  INTEGRITY_LIST="$(printf "%s" "$PY_JSON" | sed -n '1p')"
-  BASELINE_HASHES_JSON="$(printf "%s" "$PY_JSON" | sed -n '2p')"
-  MUTABLE_LIST="$(printf "%s" "$PY_JSON" | sed -n '3p')"
+)"; then
+    INTEGRITY_LIST="$(printf "%s" "$PY_JSON" | sed -n '1p')"
+    BASELINE_HASHES_JSON="$(printf "%s" "$PY_JSON" | sed -n '2p')"
+    MUTABLE_LIST="$(printf "%s" "$PY_JSON" | sed -n '3p')"
+  else
+    echo "pre-run: malformed baseline.json — cannot parse baseline manifest (failing closed)" >&2
+    BASELINE_OK=0
+    INTEGRITY_LIST=""
+    MUTABLE_LIST=""
+    BASELINE_HASHES_JSON="{}"
+  fi
 else
-  # fallback: hardcode reference profile values
-  INTEGRITY_LIST="program.md;evaluation/prepare.py;capabilities/registry.json"
-  MUTABLE_LIST="experiment/run.py"
+  echo "pre-run: baseline parsing requires python3 or python for trustworthy verification — failing closed" >&2
+  BASELINE_OK=0
+  INTEGRITY_LIST=""
+  MUTABLE_LIST=""
   BASELINE_HASHES_JSON="{}"
 fi
 
 # Integrity check
 INTEGRITY_PASSED=1
+if [ "$BASELINE_OK" -ne 1 ]; then
+  echo "pre-run: baseline manifest parsing failed — integrity gate failing closed" >&2
+  INTEGRITY_PASSED=0
+fi
 for rel in $(printf "%s" "$INTEGRITY_LIST" | tr ';' ' '); do
   [ -n "$rel" ] || continue
   FULL="$WORKSPACE/$rel"
@@ -128,24 +148,68 @@ for rel in $(printf "%s" "$INTEGRITY_LIST" | tr ';' ' '); do
   CURRENT="$(sha256_of_file "$FULL" 2>/dev/null || echo "sha256:missing")"
   # extract expected hash from baseline JSON via python if possible
   EXPECTED=""
+  _EXPECTED_OK=0
   if command -v python3 >/dev/null 2>&1; then
-    EXPECTED="$(python3 - "$BASELINE" "$rel" <<'PY'
+    if EXPECTED="$(python3 - "$BASELINE" "$rel" <<'PY'
 import json,sys
-baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
-hashes=baseline.get('integrity_hashes',{})
-print(hashes.get(sys.argv[2],""))
+try:
+  baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
+  hashes=baseline.get('integrity_hashes',{})
+  print(hashes.get(sys.argv[2],""))
+except Exception as e:
+  print(f"pre-run: malformed baseline.json — cannot extract integrity hash for {sys.argv[2]}: {e}", file=sys.stderr)
+  sys.exit(1)
 PY
-)"
+)"; then
+      _EXPECTED_OK=1
+    else
+      echo "pre-run: malformed baseline.json — cannot verify integrity for $rel (failing closed)" >&2
+      INTEGRITY_PASSED=0
+      continue
+    fi
   elif command -v python >/dev/null 2>&1; then
-    EXPECTED="$(python - "$BASELINE" "$rel" <<'PY'
+    if EXPECTED="$(python - "$BASELINE" "$rel" <<'PY'
 import json,sys
-baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
-hashes=baseline.get('integrity_hashes',{})
-print(hashes.get(sys.argv[2],""))
+try:
+  baseline=json.loads(open(sys.argv[1],encoding='utf-8').read())
+  hashes=baseline.get('integrity_hashes',{})
+  print(hashes.get(sys.argv[2],""))
+except Exception as e:
+  print(f"pre-run: malformed baseline.json — cannot extract integrity hash for {sys.argv[2]}: {e}", file=sys.stderr)
+  sys.exit(1)
 PY
-)"
+)"; then
+      _EXPECTED_OK=1
+    else
+      echo "pre-run: malformed baseline.json — cannot verify integrity for $rel (failing closed)" >&2
+      INTEGRITY_PASSED=0
+      continue
+    fi
+  else
+    echo "pre-run: missing python interpreter — cannot verify baseline hash for $rel (failing closed)" >&2
+    INTEGRITY_PASSED=0
+    continue
   fi
-  if [ -n "$EXPECTED" ] && [ "$CURRENT" != "$EXPECTED" ]; then
+  # validate canonical sha256:<64 lowercase hex>
+  _hex="${EXPECTED#sha256:}"
+  _valid=0
+  case "$EXPECTED" in
+    sha256:*)
+      if [ "${#_hex}" -eq 64 ]; then
+        case "$_hex" in
+          *[!0-9a-f]*) _valid=0 ;;
+          *) _valid=1 ;;
+        esac
+      fi
+      ;;
+    *) _valid=0 ;;
+  esac
+  if [ "$_valid" -ne 1 ]; then
+    echo "pre-run: missing or malformed integrity hash for $rel (expected sha256:<64 lowercase hex>) got: ${EXPECTED:-<empty>}" >&2
+    INTEGRITY_PASSED=0
+    continue
+  fi
+  if [ "$CURRENT" != "$EXPECTED" ]; then
     echo "pre-run: integrity mismatch: $rel expected $EXPECTED got $CURRENT" >&2
     INTEGRITY_PASSED=0
   fi
@@ -153,28 +217,31 @@ done
 
 # Changed paths: prefer recorded mutation/candidate-branch, not whole workspace diff
 CHANGED=""
+MUTATION_PARSE_FAILED=0
 # 1) Prefer existing mutation.json changed_paths (flywheel writes this before pre-run)
 if [ -f "$MUTATION" ]; then
   if command -v python3 >/dev/null 2>&1; then
-    CHANGED="$(python3 - "$MUTATION" <<'PY'
-import json
-try:
-    data=json.loads(open(sys.argv[1],encoding='utf-8').read())
-    print(";".join(data.get("changed_paths",[])))
-except:
-    print("")
+    if ! CHANGED="$(python3 - "$MUTATION" <<'PY'
+import json,sys
+data=json.loads(open(sys.argv[1],encoding='utf-8').read())
+print(";".join(data.get("changed_paths",[])))
 PY
-)"
+)"; then
+      echo "pre-run: malformed mutation.json — failing gate" >&2
+      MUTATION_PARSE_FAILED=1
+      CHANGED=""
+    fi
   elif command -v python >/dev/null 2>&1; then
-    CHANGED="$(python - "$MUTATION" <<'PY'
-import json
-try:
-    data=json.loads(open(sys.argv[1],encoding='utf-8').read())
-    print(";".join(data.get("changed_paths",[])))
-except:
-    print("")
+    if ! CHANGED="$(python - "$MUTATION" <<'PY'
+import json,sys
+data=json.loads(open(sys.argv[1],encoding='utf-8').read())
+print(";".join(data.get("changed_paths",[])))
 PY
-)"
+)"; then
+      echo "pre-run: malformed mutation.json — failing gate" >&2
+      MUTATION_PARSE_FAILED=1
+      CHANGED=""
+    fi
   fi
 fi
 # 2) If mutation has no changed_paths, try branch diff vs baseline SHA
@@ -182,14 +249,14 @@ if [ -z "$CHANGED" ] && [ -d "$WORKSPACE/.git" ] && command -v git >/dev/null 2>
   _B_SHA=""
   if command -v python3 >/dev/null 2>&1; then
     _B_SHA="$(python3 - "$BASELINE" <<'PY'
-import json
+import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("git",{}).get("head",""))
 except: print("")
 PY
 )"
   elif command -v python >/dev/null 2>&1; then
     _B_SHA="$(python - "$BASELINE" <<'PY'
-import json
+import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("git",{}).get("head",""))
 except: print("")
 PY
@@ -198,14 +265,14 @@ PY
   _B_NAME=""
   if [ -f "$MUTATION" ] && command -v python3 >/dev/null 2>&1; then
     _B_NAME="$(python3 - "$MUTATION" <<'PY'
-import json
+import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("branch_name",""))
 except: print("")
 PY
 )"
   elif [ -f "$MUTATION" ] && command -v python >/dev/null 2>&1; then
     _B_NAME="$(python - "$MUTATION" <<'PY'
-import json
+import json,sys
 try: print(json.loads(open(sys.argv[1],encoding='utf-8').read()).get("branch_name",""))
 except: print("")
 PY
@@ -236,6 +303,9 @@ fi
 
 # Mutable gate: every changed path must match a mutable pattern (fnmatch support)
 MUTABLE_PASSED=1
+if [ "$MUTATION_PARSE_FAILED" -eq 1 ]; then
+  MUTABLE_PASSED=0
+fi
 if [ -n "$CHANGED" ]; then
   for cp in $(printf "%s" "$CHANGED" | tr ';' ' '); do
     [ -n "$cp" ] || continue
@@ -276,17 +346,124 @@ if [ "$INTEGRITY_PASSED" -ne 1 ] || [ "$MUTABLE_PASSED" -ne 1 ]; then
   GATE="fail"
 fi
 
+# Fail closed on malformed baseline: preserve existing mutation evidence and avoid null run_id/idea_id/baseline_sha
+if [ "$BASELINE_OK" -ne 1 ]; then
+  GATE="fail"
+  if [ -f "$MUTATION" ]; then
+    # Preserve existing mutation.json intact; only ensure gate reflects failure via patch without touching identities
+    if command -v python3 >/dev/null 2>&1; then
+      python3 - "$MUTATION" "$GATE" "$BASELINE" <<'PY'
+import json, sys
+from pathlib import Path
+mutation_path, gate, baseline_path = sys.argv[1:4]
+try:
+  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
+except Exception:
+  existing={}
+existing["integrity_gate"]=gate
+existing["integrity_passed"]=False
+existing["mutable_gate_passed"]=False
+existing["baseline_path"]=baseline_path
+if "run_id" not in existing or existing.get("run_id") is None:
+  try:
+    existing["run_id"]=Path(mutation_path).parent.name
+  except Exception:
+    pass
+import tempfile, os
+Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
+tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
+tmp.replace(mutation_path)
+PY
+    elif command -v python >/dev/null 2>&1; then
+      python - "$MUTATION" "$GATE" "$BASELINE" <<'PY'
+import json, sys
+from pathlib import Path
+mutation_path, gate, baseline_path = sys.argv[1:4]
+try:
+  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
+except Exception:
+  existing={}
+existing["integrity_gate"]=gate
+existing["integrity_passed"]=False
+existing["mutable_gate_passed"]=False
+existing["baseline_path"]=baseline_path
+if "run_id" not in existing or existing.get("run_id") is None:
+  try:
+    existing["run_id"]=Path(mutation_path).parent.name
+  except Exception:
+    pass
+import tempfile, os
+Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
+tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
+tmp.replace(mutation_path)
+PY
+    else
+      : # no python: leave existing mutation.json untouched to preserve evidence
+    fi
+  else
+    # No existing mutation: create minimal evidence with derived run_id and baseline path, no null identities
+    _derived_run="$(basename "$TRACE_DIR")"
+    if command -v python3 >/dev/null 2>&1; then
+      python3 - "$MUTATION" "$GATE" "$BASELINE" "$_derived_run" <<'PY'
+import json, sys, tempfile, os
+from pathlib import Path
+mutation_path, gate, baseline_path, derived_run = sys.argv[1:5]
+existing={"run_id": derived_run, "baseline_path": baseline_path, "integrity_gate": gate, "integrity_passed": False, "mutable_gate_passed": False, "changed_paths": []}
+Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
+tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
+tmp.replace(mutation_path)
+PY
+    elif command -v python >/dev/null 2>&1; then
+      python - "$MUTATION" "$GATE" "$BASELINE" "$_derived_run" <<'PY'
+import json, sys, tempfile, os
+from pathlib import Path
+mutation_path, gate, baseline_path, derived_run = sys.argv[1:5]
+existing={"run_id": derived_run, "baseline_path": baseline_path, "integrity_gate": gate, "integrity_passed": False, "mutable_gate_passed": False, "changed_paths": []}
+Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_path=tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
+tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
+tmp.replace(mutation_path)
+PY
+    else
+      _tmp="$(mktemp "${MUTATION}.tmp.XXXXXX" 2>/dev/null || mktemp -t "$(basename "$MUTATION").tmp.XXXXXX" 2>/dev/null || printf "%s.tmp.%s" "$MUTATION" "$$")"
+      printf '{\n  "run_id": "%s",\n  "baseline_path": "%s",\n  "integrity_gate": "%s",\n  "integrity_passed": false,\n  "mutable_gate_passed": false\n}\n' "$_derived_run" "$BASELINE" "$GATE" > "$_tmp"
+      mv "$_tmp" "$MUTATION"
+    fi
+  fi
+  echo "pre-run: gate=$GATE trace=$TRACE_DIR" >&2
+  echo "pre-run: gate failed — see $MUTATION (malformed baseline)" >&2
+  exit 2
+fi
+
 # Write mutation.json — merge with existing if present, else create
 if command -v python3 >/dev/null 2>&1; then
   python3 - "$BASELINE" "$MUTATION" "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" "$CHANGED" <<'PY'
-import json, sys
+import json, sys, tempfile, os
 from pathlib import Path
 baseline_path, mutation_path, gate, ip, mp, changed = sys.argv[1:7]
-baseline=json.loads(Path(baseline_path).read_text(encoding='utf-8'))
+try:
+  baseline=json.loads(Path(baseline_path).read_text(encoding='utf-8'))
+except Exception as e:
+  print(f"pre-run: malformed baseline.json during mutation write: {e}", file=sys.stderr)
+  baseline={}
 existing={}
 try:
-    existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
-except: pass
+  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
+except Exception as e:
+  if Path(mutation_path).exists():
+    print(f"pre-run: malformed mutation.json during merge: {e}", file=sys.stderr)
+  existing={}
 changed_list=[c for c in changed.split(';') if c] if changed else []
 existing.update({
     "run_id": baseline.get("run_id"),
@@ -298,22 +475,30 @@ existing.update({
     "changed_paths": changed_list,
 })
 Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
-import tempfile, os
-tmp=Path(str(mutation_path)+".tmp")
+fd, tmp_path = tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
 tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
 tmp.replace(mutation_path)
 print(json.dumps({"mutation": str(mutation_path), "gate": gate}))
 PY
 elif command -v python >/dev/null 2>&1; then
   python - "$BASELINE" "$MUTATION" "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" "$CHANGED" <<'PY'
-import json, sys
+import json, sys, tempfile, os
 from pathlib import Path
 baseline_path, mutation_path, gate, ip, mp, changed = sys.argv[1:7]
-baseline=json.loads(Path(baseline_path).read_text(encoding='utf-8'))
+try:
+  baseline=json.loads(Path(baseline_path).read_text(encoding='utf-8'))
+except Exception as e:
+  print(f"pre-run: malformed baseline.json during mutation write: {e}", file=sys.stderr)
+  baseline={}
 existing={}
 try:
-    existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
-except: pass
+  existing=json.loads(Path(mutation_path).read_text(encoding='utf-8'))
+except Exception as e:
+  if Path(mutation_path).exists():
+    print(f"pre-run: malformed mutation.json during merge: {e}", file=sys.stderr)
+  existing={}
 changed_list=[c for c in changed.split(';') if c] if changed else []
 existing.update({
     "run_id": baseline.get("run_id"),
@@ -325,16 +510,18 @@ existing.update({
     "changed_paths": changed_list,
 })
 Path(mutation_path).parent.mkdir(parents=True, exist_ok=True)
-import tempfile, os
-tmp=Path(str(mutation_path)+".tmp")
+fd, tmp_path = tempfile.mkstemp(dir=str(Path(mutation_path).parent), prefix=Path(mutation_path).name+".tmp.")
+os.close(fd)
+tmp=Path(tmp_path)
 tmp.write_text(json.dumps(existing, indent=2)+"\n", encoding='utf-8')
 tmp.replace(mutation_path)
 print(json.dumps({"mutation": str(mutation_path), "gate": gate}))
 PY
 else
-  # fallback shell write
-  printf '{\n  "integrity_gate": "%s",\n  "integrity_passed": %s,\n  "mutable_gate_passed": %s\n}\n' "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" > "$MUTATION.tmp"
-  mv "$MUTATION.tmp" "$MUTATION"
+  # fallback shell write with unique sibling temp file
+  _tmp="$(mktemp "${MUTATION}.tmp.XXXXXX" 2>/dev/null || mktemp -t "$(basename "$MUTATION").tmp.XXXXXX" 2>/dev/null || printf "%s.tmp.%s" "$MUTATION" "$$")"
+  printf '{\n  "integrity_gate": "%s",\n  "integrity_passed": %s,\n  "mutable_gate_passed": %s\n}\n' "$GATE" "$INTEGRITY_PASSED" "$MUTABLE_PASSED" > "$_tmp"
+  mv "$_tmp" "$MUTATION"
 fi
 
 echo "pre-run: gate=$GATE trace=$TRACE_DIR" >&2
