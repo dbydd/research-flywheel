@@ -19,7 +19,7 @@ Inputs (read-only for reasoning):
 - `research/` — locally pulled investigation evidence from the literature-scout (repos, papers, provenance notes)
 - Literature scout output (passed in the task prompt when available)
 
-## Evidence obligation
+## Evidence obligation（证据义务：无调查证据不得生成）
 
 If no investigation evidence exists for the method domain you are about to generate ideas in, STOP and report `investigation_missing: true` so the supervisor dispatches literature-scout first. Generating ideas from memory alone is how a flywheel ends up celebrating a 19th-century baseline as a discovery. Every idea must carry `refs` pointing at real evidence: pulled local artifacts under `research/`, or the specific external source recorded in `navigator/queries.jsonl`.
 
