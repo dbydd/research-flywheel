@@ -1618,10 +1618,17 @@ def resolve_review(run_id: str) -> int:
         print(f"flywheel: resolve-review: run {run_id} keep stands (audit={audit_verdict or 'missing'}, review={meta_verdict or 'missing'})")
         return 0
     ts = now_iso()
+    # Dedupe key: the corrective record must COEXIST with the original run's
+    # ledger entry (append-only corrective discipline), and re-running resolve
+    # must not double-append. locked_jsonl_append dedupes silently on its key,
+    # so we key on a deterministic correction_id instead of run_id — otherwise
+    # the original keep entry (same run_id) would silently swallow this record.
+    correction_id = f"{run_id}:review_overturn"
     corrective = {
         "ts": ts,
         "run_id": run_id,
         "idea_id": idea_id,
+        "correction_id": correction_id,
         "event": "review_overturn",
         "from": "keep",
         "to": "discard",
@@ -1629,16 +1636,17 @@ def resolve_review(run_id: str) -> int:
         "review_verdict": meta_verdict,
         "reason": downgrade_reason,
     }
-    locked_jsonl_append(WORKSPACE / "traces.jsonl", {**corrective, "outcome": "discard", "keep": False})
+    locked_jsonl_append(WORKSPACE / "traces.jsonl", {**corrective, "outcome": "discard", "keep": False}, key="correction_id")
     locked_jsonl_append(WORKSPACE / "research-ledger.jsonl", {
         "ts": ts,
         "run_id": run_id,
         "idea_id": idea_id,
+        "correction_id": correction_id,
         "outcome": "discard",
         "overturned_from": "keep",
         "reason": downgrade_reason,
         "evidence_refs": [f"traces/{run_id}/analyst-audit.json", f"traces/{run_id}/review-votes.jsonl"],
-    })
+    }, key="correction_id")
     for base in (run_dir, trace_dir):
         m = read_json_object(base / "metrics.json")
         if m:
