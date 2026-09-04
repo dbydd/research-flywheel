@@ -13,7 +13,7 @@
   "defaultThinkingLevel": "max",
   "retry": {
     "enabled": true,
-    "maxRetries": 16,
+    "maxRetries": 4,
     "baseDelayMs": 2000
   },
   "subagents": {
