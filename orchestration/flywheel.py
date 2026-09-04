@@ -1612,6 +1612,12 @@ def resolve_review(run_id: str) -> int:
     downgrade_reason = None
     if audit_verdict == "audit_fail":
         downgrade_reason = f"analyst audit_fail: {json.dumps(audit.get('findings') or audit.get('reason') or '', ensure_ascii=False)[:300]}"
+    elif audit_verdict != "audit_pass":
+        # RULES.md clause 1: keep REQUIRES analyst audit_pass. A missing or
+        # unreadable audit at resolve time is a gate violation — fail closed
+        # (found by the qwen instance fix-design review: the None case used to
+        # silently pass).
+        downgrade_reason = f"analyst audit missing or unreadable at resolve time (got {audit_verdict!r}); keep cannot stand"
     elif meta_verdict == "reject":
         downgrade_reason = "review panel FINAL REJECT (meta verdict reject)"
     if downgrade_reason is None:
