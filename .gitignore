@@ -20,3 +20,6 @@ __pycache__/
 # not tracked in git (provenance + hashes documented in research/*/README.md).
 research/**/pi-mono/
 research/**/*.html
+
+# pi runtime state (jobs registry is per-workspace runtime, not template content)
+.pi/schedule-prompts.json
