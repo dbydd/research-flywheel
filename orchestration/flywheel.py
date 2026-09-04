@@ -3,7 +3,7 @@
 # Linux images. Shebang keeps `python3` for direct execution; callers should resolve
 # interpreter as `PY=$(command -v python3 || command -v python)` and run `$PY flywheel.py`.
 # Revert this comment without code change; behavior unchanged if caller pins python3.
-"""Reference research-flywheel runner — dependency-free, OMP-contract compliant."""
+"""Reference research-flywheel runner — dependency-free, pi-contract compliant."""
 from __future__ import annotations
 
 import argparse

@@ -1,5 +1,0 @@
-task:
-  isolation:
-    mode: auto
-    apply: false
-    merge: branch

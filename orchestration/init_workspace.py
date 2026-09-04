@@ -1,6 +1,6 @@
 """Initialize the repository baseline and first run evidence for the reference profile.
 
-This script does not pretend to be an OMP tool. It is the human/scaffold step that:
+This script is the human/scaffold step that:
 
 1. Initializes a Git repository when missing.
 2. Records the integrity-path hashes that the contract requires.
@@ -30,7 +30,7 @@ INTEGRITY_PATHS = [
     "capabilities/registry.json",
 ]
 ARTIFACT_PATHS = [
-    ".omp/config.yml",
+    ".pi/settings.json",
     "AGENTS.md",
     "QUEST.md",
     "evaluation/prepare.py",
@@ -124,7 +124,7 @@ def write_status(run_id: str, baseline: dict) -> None:
 3. Read the active run journal under `runs/<run_id>/journal/`.
 4. Read the run evidence under `traces/<run_id>/`.
 5. Use the research ledger `research/ledger.jsonl` for cross-run facts.
-6. Apply P10 four-layer recovery if OMP session continuity exists.
+6. Apply P10 four-layer recovery if session continuity exists.
 """
     )
 

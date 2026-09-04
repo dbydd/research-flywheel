@@ -1,18 +1,18 @@
-# OMP/PI 全自动科研飞轮工作区规格 v1.0
+# Pi 全自动科研飞轮工作区规格 v1.0
 
-> 适用对象：Oh My Pi（OMP）与 PI coding harness 上的 agent 工作区。本规格定义一个可无人值守自转的科研闭环：人类提一句灵感或系统自动提灵感，agent 自动完成建模、实验、评估、写作、审稿、归档，产出论文草稿或结构化失败结论。
+> 适用对象：Pi coding harness 上的 agent 工作区。本规格定义一个可无人值守自转的科研闭环：人类提一句灵感或系统自动提灵感，agent 自动完成建模、实验、评估、写作、审稿、归档，产出论文草稿或结构化失败结论。
 
 ## 1. 设计目标
 
 ### 1.1 一句话目标
-在 OMP/PI 中打开工作区，输入一句灵感或保持空输入，agent 按当前 experiment profile 全自动跑完建模到归档，runtime 管理执行生命周期，夜间持续自转，次日人类通过看板复盘。默认在普通 shell 中即可跑通（`uv` + `uv.lock`），无需配置 OMP 持久内核。
+在 Pi 中打开工作区，输入一句灵感或保持空输入，agent 按当前 experiment profile 全自动跑完建模到归档，runtime 管理执行生命周期，夜间持续自转，次日人类通过看板复盘。默认在普通 shell 中即可跑通（`uv` + `uv.lock`）。
 
 ### 1.2 可度量目标
 - 零启动成本：`uv sync --frozen` 后 `bash orchestration/scaffold.sh --idea "xxx"` 或空参可在 5 分钟内产生首个可执行实验，`traces/<ts>/metrics.json` 落盘。所有 Python 调用均为 `uv run --frozen python ...`（`uv`/`uv.lock` 缺失时 bootstrap 回退到 `python3`/`python`）。
 - 度量驱动决策：每轮实验产出 `metrics.json`、`lifecycle.jsonl` 与 `traces.jsonl`，evaluation 完成且主度量提升超过 epsilon 才 keep，复刻 Karpathy autoresearch 的 modify-train-evaluate-keep 语义。
 - 双终态归档：成功路径产出 `reports/report.md` 与 `archive/papers/` 的可复现快照；失败路径产出 `reports/failure.md` 与 `archive/failed.jsonl` 的否定性结论。
 - 全链路可审计：不可变 baseline、隔离后端、候选分支、trace、requested/actual cost 与 hub 消息均可回放。
-- 并行探索：单机通过 `task` 在独立 merged view 中并发多分支探索，通过 `hub` 协调分数与 keep 广播，默认以 `uv run --frozen python` fresh 子进程执行，OMP `eval` 仅作可选探索加速。
+- 并行探索：单机通过 subagent `task` 在独立 worktree 中并发多分支探索，由 supervisor 编排分数与 keep 广播，默认以 `uv run --frozen python` fresh 子进程执行。
 
 ### 1.3 非目标
 不做通用 AutoML 平台，不直接对接物理仪器（SDL 形态保留扩展点），不追求单次产出顶会论文，追求可复现、可比较、可累积的飞轮。
@@ -41,7 +41,7 @@ inspiration → modeling → experiment → evaluation → writing → review �
 |------|------|------|----------------|
 | inspiration | 人提 `inspiration.md` 或自动生成 ideas 池 | `archive/ideas.jsonl` 新增条目，含假设、预期提升、风险 | 阈值过滤后入队，无灵感时自动触发 |
 | modeling | idea + 文献证据 + baseline + experiment profile | 隔离候选分支与 `traces/<ts>/mutation.json` | 变更路径属于 `mutable_paths` 且完整性校验通过才进入 experiment |
-| experiment | 候选 merged view + stage resource request | `metrics.json`, `lifecycle.jsonl`, `cost.json`, `run.log`，失败时附 `error.json` | runtime 记录生命周期；completed 进入评估，paused 保留 checkpoint，failed/cancelled 进入归因；默认以 fresh `uv run --frozen python` 执行 |
+| experiment | 候选 worktree + stage resource request | `metrics.json`, `lifecycle.jsonl`, `cost.json`, `run.log`，失败时附 `error.json` | runtime 记录生命周期；completed 进入评估，paused 保留 checkpoint，failed/cancelled 进入归因；默认以 fresh `uv run --frozen python` 执行 |
 | evaluation | completed metrics + baseline evaluator | `metrics.json` 的 keep/discard 判定 | evaluation completed、指纹完整（含 `package_lock_hash`）且主度量 delta 超 epsilon才参与 keep |
 | writing | keep 的 run 与证据 | `reports/report.md` 与图表 | 模板校验通过，引用来自 `navigator/evidence/` |
 | review | draft + checklist | `reports/review.md` 与分数，Elo 排序 | 分数阈值以下回退到 modeling |
@@ -127,8 +127,8 @@ research-flywheel/
     schedule.json         # schedule_prompt 配置
     hooks/pre-run.sh      # baseline hash 与 mutable_paths 校验
     hooks/post-eval.sh    # keep/discard 与归档
-  .omp/
-    config.yml            # task isolation 与 OMP 项目配置
+  .pi/
+    agents/            # pi 项目 agent 模板（模型/审计/评审角色）
   traces.jsonl            # 全局追加追踪（可选聚合）
   status.md               # 人类看板
   reproduce.sh            # 一键复现最新 keep（优先 uv，缺失回退 python3/python）
@@ -144,7 +144,7 @@ research-flywheel/
 | `program.md` | 任务定义，含度量、experiment profile、baseline | 人类 / scaffold | 所有 agent | 每个 run 冻结；profile 声明 `mutable_paths`、stage resource request 与可选 deadline |
 | `inspiration.md` | 单句人类灵感入口 | 人类 | orchestration | 为空时触发自动灵感 |
 | `evaluation/prepare.py` | baseline 数据与评估器 | 人类 | evaluation | 候选运行保持 hash 不变，签名 `load_data()`, `evaluate(pred,target)->metrics` 固定 |
-| `experiment/run.py` | 默认实验入口 | modeling agent (`task` + `agent: "modeler"`, `isolated: true`) | experiment | 在隔离 merged view 中编辑；profile 可把模型、配置等路径加入 `mutable_paths` |
+| `experiment/run.py` | 默认实验入口 | modeling agent (`task` + `agent: "modeler"`, `isolation: "worktree"`) | experiment | 在隔离 merged view 中编辑；profile 可把模型、配置等路径加入 `mutable_paths` |
 | `capabilities/registry.json` | 工具注册表 | 人类 | 所有 agent | baseline 完整性路径，治理流程批准后形成新 baseline |
 | `traces/<ts>/metrics.json` | 标准度量 | experiment | evaluation | 记录 completed evaluation、主辅度量、requested/actual cost 与指纹（含 `package_lock_hash`） |
 | `traces/<ts>/lifecycle.jsonl` | runtime 生命周期 | orchestration/runtime | evaluation | 追加 `started|heartbeat|checkpoint|paused|completed|failed|cancelled` |
@@ -159,7 +159,7 @@ research-flywheel/
 隔离执行要求工作区已有 Git baseline。项目配置采用：
 
 ```yaml
-# .omp/config.yml
+# .pi/agents/modeler.md（frontmatter）
 task:
   isolation:
     mode: auto
@@ -167,7 +167,7 @@ task:
     merge: branch
 ```
 
-`task` 以 `isolated: true` 启动候选。`runIsolatedSubprocess` 捕获 baseline，经 `isoResolve` 与 `isoStart` 生成 disposable merged view，成功候选保留为 `omp/task/<id>` 分支。`auto` 在 APFS 可用时使用 clonefile CoW，并按候选列表降级到其他后端；`rcopy` 提供最终复制路径。orchestration 对 changed paths、`mutable_paths` 与完整性 hash 做归并前门控。`isoDiff` 或 patch capture 提供可选审计产物。OMP approval mode 管理工具调用的 `read|write|exec` 审批和策略信号；文件级完整性由 isolation、baseline manifest 与归并门控执行。
+`task` 以 `isolation: "worktree"` 启动候选。隔离层捕获 baseline 并为子 agent 生成 disposable worktree，成功候选保留为候选分支。orchestration 对 changed paths、`mutable_paths` 与完整性 hash 做归并前门控；diff 提供可选审计产物。工具面由 agent 模板的 `tools`/`acceptanceRole`/`completionGuard` 声明约束；文件级完整性由 worktree isolation、baseline manifest 与归并门控执行。
 
 主度量契约示例 `traces/<ts>/metrics.json`：
 
@@ -205,10 +205,10 @@ task:
 
 ### 4.1 组件映射
 
-| 需求 | OMP/PI 能力 | 用法 |
+| 需求 | Pi 能力 | 用法 |
 |------|-------------|------|
 | 并行隔离探索 | `task` | 每个 idea 以 `isolated: true` 进入独立 merged view，parent checkout 保持 baseline |
-| 正式执行与复现 | `uv run --frozen python` fresh 子进程 | compile/smoke、exploratory full run 与 keeper clean reproduction 均在 fresh 进程执行；`eval` 仅作可选探索加速 |
+| 正式执行与复现 | `uv run --frozen python` fresh 子进程 | compile/smoke、exploratory full run 与 keeper clean reproduction 均在 fresh 进程执行 |
 | 协调与选举 | `hub` | 多 task 间共享 idea 池锁、lifecycle 摘要、keep 决策广播、review 投票 |
 | 定时唤醒 | `schedule_prompt` | 夜间轮询 queued/paused 状态，空队列时触发 auto-inspiration |
 | 候选归并 | task isolation branch + git | orchestration 验证 candidate branch，keep 后归并，其他终态保留 trace 后删除候选 |
@@ -274,7 +274,7 @@ def run_once(idea, profile):
 
 ```mermaid
 flowchart LR
-    subgraph Harness [OMP/PI Harness]
+    subgraph Harness [Pi Harness]
         Sched[schedule_prompt]
         Hub[hub 协调]
         UV[uv run --frozen python<br/>fresh 进程（默认）]
@@ -326,4 +326,4 @@ flowchart LR
 
 ---
 
-> 验证标准：`uv sync --frozen` 后执行 `bash orchestration/scaffold.sh --idea "test"`，在当前 experiment profile 的首轮执行窗口内，`traces/` 出现 completed metrics 或结构化未完成终态（含 `package_lock_hash` 指纹），`archive/` 出现 keep、discard、inconclusive 或 execution_error 归档，且 `traces.jsonl` 可回放全链路。全程无需配置 OMP 持久内核。
+> 验证标准：`uv sync --frozen` 后执行 `bash orchestration/scaffold.sh --idea "test"`，在当前 experiment profile 的首轮执行窗口内，`traces/` 出现 completed metrics 或结构化未完成终态（含 `package_lock_hash` 指纹），`archive/` 出现 keep、discard、inconclusive 或 execution_error 归档，且 `traces.jsonl` 可回放全链路。

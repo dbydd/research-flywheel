@@ -69,7 +69,7 @@ for d in \
   research \
   runs \
   traces \
-  .omp
+  .pi
 do
   mkdir -p "$WORKSPACE/$d"
 done
@@ -276,15 +276,16 @@ if [ ! -f "$WORKSPACE/capabilities/registry.json" ]; then
 REG_EOF
 fi
 
-if [ ! -f "$WORKSPACE/.omp/config.yml" ]; then
-  mkdir -p "$WORKSPACE/.omp"
-  cat > "$WORKSPACE/.omp/config.yml" <<'CFG_EOF'
-task:
-  isolation:
-    mode: auto
-    apply: false
-    merge: branch
-CFG_EOF
+if [ ! -d "$WORKSPACE/.pi/agents" ]; then
+  mkdir -p "$WORKSPACE/.pi/agents" "$WORKSPACE/.pi/rules" "$WORKSPACE/.pi/workflows" "$WORKSPACE/.pi/prompts"
+  # pi project agents/rules/workflows are scaffolded from this template repository's .pi/ tree.
+  TEMPLATE_PI="$(cd "$(dirname "$0")/.." && pwd)/.pi"
+  if [ -d "$TEMPLATE_PI/agents" ]; then
+    cp -R "$TEMPLATE_PI/agents/." "$WORKSPACE/.pi/agents/"
+    cp -R "$TEMPLATE_PI/rules/." "$WORKSPACE/.pi/rules/"
+    cp -R "$TEMPLATE_PI/workflows/." "$WORKSPACE/.pi/workflows/"
+    cp -R "$TEMPLATE_PI/prompts/." "$WORKSPACE/.pi/prompts/"
+  fi
 fi
 
 if [ ! -f "$WORKSPACE/pyproject.toml" ]; then

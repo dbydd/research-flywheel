@@ -1,6 +1,6 @@
 # 灵感自动产生引擎 03-inspiration-engine
 
-> 本文档定义无人类输入时如何自动产生下一个可执行假设。对比 Sakana AI Scientist 的 idea generation、Google Co-Scientist 的 debate、Stanford Virtual Lab 的 PI/critic 机制，萃取可直接落到 OMP/PI 的实现。默认 Python 调用均为 `uv run --frozen python ...`（`uv sync --frozen` 一次），无需持久内核。
+> 本文档定义无人类输入时如何自动产生下一个可执行假设。对比 Sakana AI Scientist 的 idea generation、Google Co-Scientist 的 debate、Stanford Virtual Lab 的 PI/critic 机制，萃取可直接落到 Pi 的实现。默认 Python 调用均为 `uv run --frozen python ...`（`uv sync --frozen` 一次），无需持久内核。
 
 ## 1. 目标与约束
 
@@ -18,7 +18,7 @@
 - **适用**：ML 领域，idea 与代码变更强绑定。
 - **可借鉴**：广度优先脑暴与评分机制，与后续 tree search 天然衔接。
 - **潜在坑**：idea 质量方差大，低分 idea 浪费预算；评分依赖单模型自评，易高估新颖性。
-- **OMP 落地**：`navigator/queries.jsonl` 记录检索，`archive/failed.jsonl` 去重，`capabilities/registry.json` 中注册检索工具。
+- **pi 落地**：`navigator/queries.jsonl` 记录检索，`archive/failed.jsonl` 去重，`capabilities/registry.json` 中注册检索工具。
 
 ### 2.2 Google Co-Scientist — 辩论 + Elo 锦标赛
 
@@ -26,7 +26,7 @@
 - **适用**：需高质量假设的生物医学等高 stakes 领域。
 - **可借鉴**：多轮批判与锦标赛排序提升假设质量。
 - **潜在坑**：实现重，需要多角色编排与大量 test-time 计算，不适合单机夜间轻量场景。
-- **OMP 落地**：`hub` 上的轻量 debate 会议，reviewer 产 Elo，排序后取 top-k 进入实验，每轮限制 1-2 轮辩论防止发散。
+- **pi 落地**：supervisor 编排的轻量 debate 会议，reviewer 产 Elo，排序后取 top-k 进入实验，每轮限制 1-2 轮辩论防止发散。
 
 ### 2.3 Stanford Virtual Lab — PI 分配 + Critic 检验
 
@@ -34,7 +34,7 @@
 - **适用**：跨学科、需协作的复杂目标。
 - **可借鉴**：PI 的全局视角与 critic 的风险意识互补，职责分离清晰。
 - **潜在坑**：角色定义较重，轻量飞轮中引入全套实验室模拟会增加复杂度。
-- **OMP 落地**：Supervisor `task` 扮演 PI（显式 `agent: "idea-generator"` / `agent: "literature-scout"`），`task` 并行模拟 lab meeting，critic 仅做门禁校验。
+- **pi 落地**：Supervisor `task` 扮演 PI（显式 `agent: "idea-generator"` / `agent: "literature-scout"`），`task` 并行模拟 lab meeting，critic 仅做门禁校验。
 
 ### 2.4 本引擎的取舍
 

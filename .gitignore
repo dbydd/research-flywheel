@@ -15,3 +15,8 @@ __pycache__/
 *.tmp
 *.swp
 *~
+
+# Heavy locally-pulled investigation evidence: kept on disk as research proof,
+# not tracked in git (provenance + hashes documented in research/*/README.md).
+research/**/pi-mono/
+research/**/*.html

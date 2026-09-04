@@ -1,6 +1,6 @@
 # Research Flywheel — 全自动科研飞轮工作区模版
 
-> 一句话：`omp` / `pi` 打开工作区，输入一句灵感或空输入，agent 全自动完成建模 → 实验 → 评估 → 写作 → 审稿 → 归档，产出论文草稿或结构化失败结论；灵感亦可在一轮轮 autoresearch 中自动产生，夜间无人值守自转。
+> 一句话：`pi` 打开工作区，输入一句灵感或空输入，agent 全自动完成建模 → 实验 → 评估 → 写作 → 审稿 → 归档，产出论文草稿或结构化失败结论；灵感亦可在一轮轮 autoresearch 中自动产生，夜间无人值守自转。
 
 ## 目录
 
@@ -17,7 +17,7 @@ research-flywheel/
   template/               # 工作区规格（可直接 scaffold）
     00-spec.md            # 七阶段状态机、度量契约、失败路径、harness 接线
     01-workspace-layout.md# 目录树、文件契约、读写边界、git keep/discard
-    02-harness-wiring.md  # OMP/PI 接线：task / uv fresh process / hub / schedule_prompt / trace
+    02-harness-wiring.md  # pi 接线：subagent task / uv fresh process / schedule_prompt / trace
     03-inspiration-engine.md # 自动灵感：Sakana / Co-Scientist / Virtual Lab 三式对比
 ```
 
@@ -31,7 +31,7 @@ research-flywheel/
 
 ## 快速开始（uv 默认，零持久内核）
 
-> 默认路径在普通 shell 中即可跑通，无需配置任何 OMP 持久内核。`uv` + `uv.lock` 存在时用 uv，缺失时 shell 入口回退到 `python3`/`python` 以便 bootstrap。
+> 默认路径在普通 shell 中即可跑通。`uv` + `uv.lock` 存在时用 uv，缺失时 shell 入口回退到 `python3`/`python` 以便 bootstrap。
 
 ```bash
 # 1) 一次性同步（冻结锁文件）
@@ -56,15 +56,6 @@ uv run --frozen python orchestration/inspiration.py --once
 
 详见 `template/00-spec.md` 验证标准：`uv sync --frozen` 后 30 分钟内在 `traces/` 看到 metrics，在 `archive/` 看到 keep 或 failure 归档，`traces.jsonl` 可回放。
 
-## 可选加速：OMP `eval` 持久内核
-
-`eval` 仍可作为**可选的探索加速**（retained runtime 复用已加载数据/权重以省去重复初始化），但**不是默认或必选**：
-
-- 正式门控（compile / smoke / keeper clean reproduction / `reproduce.sh`）一律走 **fresh uv 子进程**（`uv run --frozen python ...`），从不在污染的 cell 中取数。
-- 来自污染 `eval` cell 的度量视为无效证据，keeper 前必须用 fresh uv 进程重跑。
-- 未配置 `eval` 的机器按上节 uv 路径即可完成全部正式流程；夜间与本地复现不要求持久内核在线。
-
-Harness 接线详见 `template/02-harness-wiring.md` §3.2（`uv fresh process (default) + eval (optional)`）。
 
 ## 渠道概览（46 系统）
 
@@ -84,7 +75,7 @@ Harness 接线详见 `template/02-harness-wiring.md` §3.2（`uv fresh process (
 - **三文件基座**（Karpathy）：`prepare.py` 固定评估，`run.py` 唯一可变，`program.md` 冻结目标
 - **三阶段**（Agent Lab）：`navigator/` 文献、`traces/` 实验、`reports/` 写作
 - **四层**（Bohrium）：Data / Model / Execution / Orchestration 映射到 `prepare.py+bench/` / `run.py` / `traces/` / `orchestration/`
-- **Harness**：`task` 并行探索、`uv run --frozen python` fresh 进程为默认执行、`hub` 协调选举、`schedule_prompt` 定时、`git` keep/discard、`traces.jsonl` 追踪；`eval` 仅作可选探索加速
+- **Harness**：subagent `task` 并行探索（worktree 隔离）、`uv run --frozen python` fresh 进程为默认且唯一正式执行路径、`schedule_prompt` 定时、`git` keep/discard、`traces.jsonl` 追踪
 - **灵感引擎**：Sakana 头脑风暴+查新 / Co-Scientist 辩论+Elo / Virtual Lab PI分配，三式统一为 候选→去重→辩论→Elo→入队
 - **可移植 Python**：`pyproject.toml`（`>=3.11`，`package=false`）、`uv.lock`（`sha256` 指纹）、`.python-version`（`3.11`）随模版分发；`uv sync --frozen` 一次，之后均用 `uv run --frozen python ...`
 

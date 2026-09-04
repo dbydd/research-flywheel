@@ -55,8 +55,8 @@ research-flywheel/
     schedule.json         # schedule_prompt 配置
     hooks/pre-run.sh      # baseline hash 与 mutable_paths 校验（优先 uv，回退 python3/python）
     hooks/post-eval.sh    # keep/discard 与归档
-  .omp/
-    config.yml           # task isolation 与 OMP 项目配置
+  .pi/
+    agents/           # pi 项目 agent 模板
   traces.jsonl            # 全局追加追踪（可选聚合）
   status.md               # 人类看板
   reproduce.sh            # 一键复现最新 keep（优先 uv run --frozen，回退 python3/python）
@@ -89,7 +89,7 @@ flowchart TD
 | `program.md` | 任务、度量、experiment profile、baseline | 人类/scaffold | 人类 | 全部 | 每个 run 冻结；frontmatter 声明 `mutable_paths`、`integrity_paths` 与 stage resources |
 | `inspiration.md` | 单句人类灵感入口 | 人类 | 人类 | orchestration | 为空时触发自动灵感 |
 | `evaluation/prepare.py` | baseline 数据与评估器 | 人类 | 人类 | evaluation | 候选运行保持 hash 不变，签名 `load_data()`, `evaluate(pred,target)->metrics` 固定 |
-| `experiment/run.py` | 默认实验入口 | scaffold | modeling agent (`task` + `agent: "modeler"`, `isolated: true`) | experiment | 在隔离 merged view 中编辑，需导出 profile 指定入口 |
+| `experiment/run.py` | 默认实验入口 | scaffold | modeling agent (`task` + `agent: "modeler"`, `isolation: "worktree"`) | experiment | 在隔离 merged view 中编辑，需导出 profile 指定入口 |
 | `capabilities/registry.json` | 工具注册表 | 人类 | 人类 | 所有 agent | baseline 完整性路径；治理批准后形成新 baseline |
 | `navigator/evidence/*.json` | 带溯源证据 | navigator agent (`task` + `agent: "literature-scout"`) | navigator agent | modeling/writing | 追加，含引用与可信度 |
 | `traces/<ts>/` | 单轮证据包 | orchestration | experiment/runtime/orchestration | 全部 | parent checkout 外部收集，候选归并决策前持续可见 |
@@ -183,7 +183,7 @@ Shell 入口在 `uv` 与 `uv.lock` 存在时优先 uv，缺失时回退到 `pyth
 
 ## 4. Agent 可编辑边界
 
-- **modeling agent**（`task` + `agent: "modeler"`, `isolated: true`）：在 merged view 中直接编辑 `experiment_profile.mutable_paths`。候选可包含 `experiment/run.py`、模型模块与实验配置等跨文件变更。compile/smoke 门控以 fresh `uv run --frozen python` 子进程执行（bash），不依赖 `eval`。
+- **modeling agent**（`task` + `agent: "modeler"`, `isolation: "worktree"`）：在隔离 worktree 中直接编辑 `experiment_profile.mutable_paths`。候选可包含 `experiment/run.py`、模型模块与实验配置等跨文件变更。compile/smoke 门控以 fresh `uv run --frozen python` 子进程执行（bash）。
 - **experiment agent**：执行已通过完整性门控的 candidate branch，写入 `traces/<ts>/` 证据包和 checkpoint（默认 `uv run --frozen python`）。
 - **navigator agent**（`task` + `agent: "literature-scout"`）：写入 `navigator/`，读取 `archive/ideas.jsonl` 与冻结 `program.md`。
 - **writing/review agent**（`task` + `agent: "paper-writer"` / `reviewer-*`, reviewers 并行一批）：写入 `reports/`，读取 completed metrics、clean reproduction 与 `navigator/`。
@@ -197,13 +197,13 @@ Shell 入口在 `uv` 与 `uv.lock` 存在时优先 uv，缺失时回退到 `pyth
 4. 重算 `program.md`、`evaluation/prepare.py`、`capabilities/registry.json` 的 hash 并与 manifest 对照。
 5. 将 gate 结果写入 `mutation.json`；通过后进入 compile/smoke（`uv run --frozen python` fresh 进程）。
 
-OMP approval mode 处理工具调用的 tier、用户策略与安全 prompt。headless subagent 的普通 tier 审批由 parent `task` 授权；显式 per-tool `deny` 保持生效。文件级边界由 isolation、manifest 与归并门控执行。`eval` 仅作可选的探索加速，不替代 fresh 进程门控。
+工具调用边界由 agent 模板声明（`tools` 白名单、`acceptanceRole`、`completionGuard`）与 parent 派遣参数共同执行。文件级边界由 worktree isolation、manifest 与归并门控执行。
 
 ## 5. 候选分支与 keep/discard
 
 - `main` 保存可复现的最新 keep baseline。
-- `.omp/config.yml` 设置 `task.isolation.mode: auto`、`task.isolation.apply: false`、`task.isolation.merge: branch`。
-- 每轮 task 从 baseline 生成 disposable merged view；成功任务把候选提交到 `omp/task/<id>`，parent checkout 保持原 baseline。
+- `.pi/config.yml` 设置 `task.isolation.mode: auto`、`task.isolation.apply: false`、`task.isolation.merge: branch`。
+- 每轮 task 从 baseline 生成 disposable worktree；成功任务把候选提交到隔离层生成的候选分支，parent checkout 保持原 baseline。
 - `keep`：clean reproduction（fresh `uv run --frozen python`）与 evaluation 均 completed、指纹含有效 `package_lock_hash`、actual cost 完整后，由 orchestration 将候选分支归并到 main，打 tag `keep-<id>`，固化证据包。
 - `discard|inconclusive|execution_error`：先固化 `traces/<id>/`，再删除候选分支；parent checkout 无需 reset。
 - `git.patch` 来自 `isoDiff` 或 patch capture，承担可选审计与恢复职责。
@@ -216,4 +216,4 @@ uv sync --frozen
 bash orchestration/scaffold.sh --idea "gated attention with learned temperature"
 ```
 
-`scaffold.sh` 行为：创建目录树、写入 `pyproject.toml` / `uv.lock` / `.python-version`（若不存在则 `uv sync --frozen` 生成）、写入含 experiment profile 的 `program.md`、初始化 `evaluation/prepare.py` 与 `experiment/run.py` 最小可跑版本、注册 `capabilities/registry.json`、创建 `navigator/` 与 `bench/` 骨架、写入 `.omp/config.yml` 的 task isolation 配置、初始化 Git 仓库并提交 baseline。后续所有 Python 调用均为 `uv run --frozen python ...`（缺失 uv 时 bootstrap 回退到 `python3`/`python`）。
+`scaffold.sh` 行为：创建目录树、写入 `pyproject.toml` / `uv.lock` / `.python-version`（若不存在则 `uv sync --frozen` 生成）、写入含 experiment profile 的 `program.md`、初始化 `evaluation/prepare.py` 与 `experiment/run.py` 最小可跑版本、注册 `capabilities/registry.json`、创建 `navigator/` 与 `bench/` 骨架、写入 `.pi/` 的 agents/rules/workflows/prompts 配置、初始化 Git 仓库并提交 baseline。后续所有 Python 调用均为 `uv run --frozen python ...`（缺失 uv 时 bootstrap 回退到 `python3`/`python`）。

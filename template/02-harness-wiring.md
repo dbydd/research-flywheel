@@ -1,16 +1,16 @@
 # Harness 接线图与运行时 02-harness-wiring
 
-> 本文档把 00-spec 的 harness 抽象落到 OMP/PI 可执行的命令、代码与调度配置。目标是把无人值守的 modify-evaluate-keep 循环用 OMP 原生能力拼出来，不引入外部编排系统。**默认在普通 shell 中以 `uv` fresh 进程跑通**（`uv sync --frozen` + `uv run --frozen python ...`），OMP `eval` 仅作可选探索加速。
+> 本文档把 00-spec 的 harness 抽象落到 Pi 可执行的命令、代码与调度配置。目标是把无人值守的 modify-evaluate-keep 循环用 Pi 原生能力拼出来，不引入外部编排系统。**默认在普通 shell 中以 `uv` fresh 进程跑通**（`uv sync --frozen` + `uv run --frozen python ...`）。
 
 ## 1. 接线总览
 
-| 飞轮需求 | OMP/PI 能力 | 接线方式 | 备注 |
+| 飞轮需求 | Pi 能力 | 接线方式 | 备注 |
 |----------|-----------------|----------|------|
 | 并行探索多假设 | `task` isolation (`agent: "<name>"`, `isolated: true`) | 每个 idea 以 `isolated: true` 进入独立 merged view | parent checkout 保持 baseline；reviewers 以一个 `tasks[]` 批次并行 |
-| 正式执行与复现 | `uv run --frozen python` fresh 子进程（默认） | compile/smoke 与 keeper clean reproduction 均以 fresh uv 进程执行 | 不要求持久内核；`eval` 仅作可选探索加速 |
+| 正式执行与复现 | `uv run --frozen python` fresh 子进程（默认） | compile/smoke 与 keeper clean reproduction 均以 fresh uv 进程执行 | fresh 进程是唯一正式路径 |
 | 多 task 协调 | `hub` | 队列锁、lifecycle 摘要、keep 广播、review 投票 | 轻量消息，大产物写 trace |
 | 定时无人值守 | `schedule_prompt` | 定时检查 queued/paused run 与 checkpoint | runtime 管理实验生命周期；执行侧走 uv fresh 进程 |
-| 候选分歧管理 | isolation branch + git | `omp/task/<id>` 候选经门控后归并或归档 | patch 为可选审计产物 |
+| 候选分歧管理 | isolation branch + git | worktree 候选分支经门控后归并或归档 | patch 为可选审计产物 |
 | 全链路审计 | `traces/` + `traces.jsonl` | baseline、mutation、lifecycle、cost、fingerprint（含 `package_lock_hash = sha256:<uv.lock digest>`）结构化追加 | 可回放可复盘 |
 
 ```mermaid
@@ -50,7 +50,7 @@ flowchart TB
 
 ## 2. 角色映射（论文工厂分工）
 
-角色以项目级 agent 定义 `.omp/agents/*.md` 承载（OMP 原生发现，`task` 的 `agent` 参数直接引用）。按现代论文工厂分工，keeper gate 保持 runtime 确定性裁决，review 面板只可否决、不可放行未过门控的候选。所有 phase 的 `task` 调度均显式传入 `agent: "<project-agent-name>"`，subagents 起始空白、仅凭 prompt 中的 run_id/idea/trace 路径工作。
+角色以项目级 agent 定义 `.pi/agents/*.md` 承载（pi 项目级自动发现，`task` 的 `agent` 参数直接引用）。按现代论文工厂分工，keeper gate 保持 runtime 确定性裁决，review 面板只可否决、不可放行未过门控的候选。所有 phase 的 `task` 调度均显式传入 `agent: "<project-agent-name>"`，subagents 起始空白、仅凭 prompt 中的 run_id/idea/trace 路径工作。
 
 | 论文工厂角色 | agent 名 | 阶段 | 权限要点 |
 |--------------|----------|------|----------|
@@ -100,7 +100,7 @@ flowchart TD
 隔离执行以 Git baseline 为前提。scaffold 先初始化仓库并提交 baseline，再写入项目配置：
 
 ```yaml
-# .omp/config.yml
+# .pi/agents/modeler.md（frontmatter）
 task:
   isolation:
     mode: auto
@@ -124,15 +124,15 @@ task:
 }
 ```
 
-`runIsolatedSubprocess` 在顶层调用开始时捕获 baseline，经 `isoResolve` 选择后端并由 `isoStart` 物化 merged view。macOS 的 APFS 后端使用 `clonefile` CoW；后端不可用时 resolver 按候选顺序降级，`rcopy` 提供最终路径。成功候选在 branch mode 提交到 `omp/task/<id>`。`apply: false` 将归并决定留给 orchestration。`isoDiff` 与 patch capture 可生成审计或恢复产物，候选主路径保持 branch/commit。
+subagent 隔离（`isolation: "worktree"`）在顶层调用开始时捕获 baseline 并为子 agent 生成 disposable worktree；父检出不持有子 agent 的可变权威，子 agent 返回 diff。成功候选保留为候选分支，归并决定留给 orchestration。diff 可作为审计或恢复产物，候选主路径保持 branch/commit。
 
 experiment profile 的 `mutable_paths` 决定可接受的 changed paths。`program.md`、`evaluation/prepare.py`、`capabilities/registry.json` 的 hash 来自 `baseline.json`。orchestration 在 full run 前校验路径集合与完整性 hash，并将 resolved backend、fallback reason、branch name 和 gate 结果写入 `mutation.json`。
 
-OMP approval mode 管理工具调用 tier 和 per-tool 策略。headless subagent 由 parent `task` 提供调用授权，显式 `deny` 策略保持有效。文件级完整性由 isolation、baseline manifest 与归并门控执行。task 之间通过 `hub` 传递 idea_id、score、lifecycle state 与 keeper 决策；大产物写入 `traces/<id>/`。
+工具调用边界由 agent 模板声明（`tools` 白名单、`acceptanceRole`、`completionGuard`）与 parent 派遣参数共同执行。文件级完整性由 worktree isolation、baseline manifest 与归并门控执行。task 之间由 supervisor 传递 idea_id、score、lifecycle state 与 keeper 决策；大产物写入 `traces/<id>/`。
 
 ### 3.2 uv fresh 进程（默认）与 eval 可选加速
 
-**可移植默认**：`uv sync --frozen` 一次，后续所有 Python 均以 fresh 子进程 `uv run --frozen python ...` 执行（`uv`/`uv.lock` 缺失时 shell 入口回退到 `python3`/`python` 以便 bootstrap）。正式门控永不要求 OMP 持久内核。
+**可移植默认**：`uv sync --frozen` 一次，后续所有 Python 均以 fresh 子进程 `uv run --frozen python ...` 执行（`uv`/`uv.lock` 缺失时 shell 入口回退到 `python3`/`python` 以便 bootstrap）。
 
 三类运行的默认形态（均为 fresh uv 子进程）：
 
@@ -140,7 +140,7 @@ OMP approval mode 管理工具调用 tier 和 per-tool 策略。headless subagen
 2. **exploratory full run**：fresh `uv run --frozen python` 子进程执行 `experiment/run.py`（或 profile 指定入口）。同轮内如需多步迭代，可在同一 uv 调用内顺序执行或拆为多次 fresh 调用；`cost.json` 记录 `exploration_state_manifest`。
 3. **keeper clean reproduction**：全新 fresh `uv run --frozen python` 子进程 cold-start 重跑候选分支、数据和依赖，结果独立记录为 `clean_reproduction_passed`。
 
-**可选加速**：OMP `eval`（persistent kernel）在同一 isolated task 内可作为 retained runtime 复用已加载数据/权重以省去重复初始化，仅用于探索加速。首格以 `reset: true` 初始化，后续格以 `reset: false` 复用。启用时 `cost.json` 额外记录 `exploration_state_manifest` 与 `eval_cache`。污染的 `eval` cell 产生的度量视为无效证据，keeper 前必须以 `uv run --frozen python` fresh 进程重跑。
+
 
 默认（uv fresh 进程）的 compile gate：
 
@@ -218,13 +218,13 @@ def claim_idea(pool_path="archive/ideas.jsonl"):
 
 ### 3.4 候选分支 keep/discard
 
-task isolation 的 branch mode 产出 `omp/task/<id>`。orchestration 将候选元数据写入 `traces/<run_id>/mutation.json`：
+worktree isolation 产出候选分支。orchestration 将候选元数据写入 `traces/<run_id>/mutation.json`：
 
 ```json
 {
   "run_id": "20260902-031502-a3f9",
   "baseline_sha": "a1c5f7258fd7a6ab2dfb25c2a2d7f6af6f5d4b1e",
-  "branch_name": "omp/task/modeling-idea-007",
+  "branch_name": "worktree/modeling-idea-007",
   "resolved_backend": "apfs",
   "fallback_reason": null,
   "changed_paths": ["experiment/run.py", "models/attention.py"],
@@ -245,7 +245,7 @@ task isolation 的 branch mode 产出 `omp/task/<id>`。orchestration 将候选�
 
 ### 3.5 schedule_prompt 夜间循环
 
-`orchestration/schedule.json` 保存以下两份 `schedule_prompt` 请求。agent 通过 `write` 向 `xd://schedule_prompt` 写入单份 JSON 内容完成注册。
+`orchestration/schedule.json` 保存以下两份 `schedule_prompt` 请求。agent 通过 `schedule_prompt` 工具/action（`action: add`，需同时提供 `schedule` 与 `prompt`）完成注册。
 
 夜间轮询：
 

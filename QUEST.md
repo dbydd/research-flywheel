@@ -1,7 +1,7 @@
 # Research Flywheel Quest
 
 ## Goal
-Run a zero-dependency reference research experiment through the OMP workspace and leave a reproducible paper draft or a structured failure conclusion.
+Run a zero-dependency reference research experiment through the pi workspace (investigation-first: frontier evidence pulled to research/ before any method work) and leave a reproducible paper draft or a structured failure conclusion.
 
 ## Complete chain
 

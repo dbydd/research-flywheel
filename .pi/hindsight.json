@@ -1,0 +1,29 @@
+{
+  "setupComplete": true,
+  "scope": {
+    "mode": "isolated-bank"
+  },
+  "hindsight": {
+    "apiKey": {
+      "source": "env",
+      "name": "HINDSIGHT_API_TOKEN"
+    }
+  },
+  "banks": {
+    "project": {
+      "enabled": true
+    },
+    "user": {
+      "enabled": false
+    }
+  },
+  "userRetain": {
+    "mode": "explicit-only"
+  },
+  "recall": {
+    "enabled": true
+  },
+  "retain": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "packages": [
+    "npm:pi-schedule-prompt",
+    "npm:@luxusai/pi-hindsight",
+    "npm:@narumitw/pi-lsp",
+    {
+      "source": "npm:not-enough-retry",
+      "extensions": []
+    }
+  ],
+  "defaultProvider": "axonhub",
+  "defaultModel": "generic-researcher-powerful",
+  "defaultThinkingLevel": "max",
+  "retry": {
+    "enabled": true,
+    "maxRetries": 16,
+    "baseDelayMs": 2000
+  },
+  "subagents": {
+    "defaultModel": "axonhub/generic-researcher-powerful",
+    "agentOverrides": {
+      "literature-scout": {
+        "model": "axonhub/supercheap"
+      }
+    }
+  }
+}
