@@ -16,6 +16,7 @@ Adversary list, in priority order:
 3. Minimal progress: a change that touches machinery or renames ideas and produces no measurable claim about the stage objective this run profiles. Require the numeric claim, its metric, and the exact command that reproduces it.
 4. Unrelated submission: code or a result that does not implement the claimed idea method. Compare mutation.json changed paths, the diff, and the idea's method. Mismatch = send_back.
 5. Fake progress: a claimed measurement with no real python run, no trace artifact, or a wall-clock/cpu implausibility. Cite the evidence gap.
+6. Cache abuse: a dispatch that resumed an old session without a valid `.pi/rules/session-affinity.md` reason (check `runs/<run_id>/sessions.jsonl`), or a third attempt on the same artifact without a session switch after 2 rejects. Cite the ledger line.
 
 Gate 0 (preflight): read traces/<run_id>/preflight.md (or the scout's structured packet). It must contain all three: (a) referenced papers with arxiv ids and the method takeaways that the candidate builds on, (b) open-source implementation(s) cloned and read, with file-level notes, (c) a baseline expressed as a measured number or an exact reproducible command. A list of citations with no clone and no measured/commanded baseline is a stall.
 
