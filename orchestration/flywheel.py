@@ -863,11 +863,21 @@ def _run_once(run_id: str, run_dir: Path, trace_dir: Path, args, profile: dict,
         evaluation_state = "completed"
         if direction == "lower":
             delta = baseline_val - candidate_val
-            keep = delta > epsilon
         else:
             delta = candidate_val - baseline_val
-            keep = delta > epsilon
-        reason = f"{'keep' if keep else 'discard'}: {profile.get('evaluation',{}).get('metric')} baseline {baseline_val} -> candidate {candidate_val} delta {delta} epsilon {epsilon}"
+        # Keeper gate clause: analyst audit_pass (RULES.md 1). If the audit file
+        # already exists (re-invocation after a resolved audit), a fail blocks keep.
+        audit_verdict = None
+        _audit_path = trace_dir / "analyst-audit.json"
+        if _audit_path.exists():
+            _audit = read_json_object(_audit_path)
+            audit_verdict = _audit.get("verdict") if _audit else "unreadable"
+        keep = delta > epsilon and integrity_passed and audit_verdict != "audit_fail"
+        reason = (
+            f"{'keep' if keep else 'discard'}: {profile.get('evaluation',{}).get('metric')} "
+            f"baseline {baseline_val} -> candidate {candidate_val} delta {delta} epsilon {epsilon}; "
+            f"integrity {integrity_passed}; audit {audit_verdict or 'pending'}"
+        )
     elif execution_state == "failed":
         evaluation_state = "failed"
         reason = f"execution_error: {error_obj.get('message','')[:200]}"
@@ -1569,12 +1579,114 @@ def _replay_cached(run_id: str, run_dir: Path, trace_dir: Path, args, direction:
     return 0
 
 
+def resolve_review(run_id: str) -> int:
+    """Close the review gap (RULES.md clause 1): a keeper must survive the analyst
+    audit and the review panel. audit_fail or panel reject downgrades keep ->
+    discard via runtime-owned state corrections + append-only corrective records.
+    A panel revise annotates keep-with-caveats; accept confirms the keep."""
+    run_dir = WORKSPACE / "runs" / run_id
+    trace_dir = WORKSPACE / "traces" / run_id
+    if not run_dir.exists() or not trace_dir.exists():
+        print(f"flywheel: resolve-review: unknown run {run_id}", file=sys.stderr)
+        return 2
+    metrics = read_json_object(run_dir / "metrics.json")
+    if not metrics or metrics.get("outcome") != "keep":
+        print(f"flywheel: resolve-review: run {run_id} is not a keeper; nothing to resolve")
+        return 0
+    idea_id = metrics.get("idea_id")
+    audit = read_json_object(trace_dir / "analyst-audit.json")
+    audit_verdict = audit.get("verdict") if audit else None
+    meta_verdict = None
+    votes_path = trace_dir / "review-votes.jsonl"
+    if votes_path.exists():
+        votes = read_jsonl_array(votes_path, quarantine_tail=False)
+        meta = [v for v in votes if v.get("perspective") == "meta"]
+        if meta:
+            meta_verdict = meta[-1].get("verdict")
+    if meta_verdict is None:
+        review_path = WORKSPACE / "reports" / "review.md"
+        if review_path.exists():
+            _m = re.search(r"review_vote:\s*(accept|revise|reject)", review_path.read_text(encoding="utf-8"))
+            if _m:
+                meta_verdict = _m.group(1)
+    downgrade_reason = None
+    if audit_verdict == "audit_fail":
+        downgrade_reason = f"analyst audit_fail: {json.dumps(audit.get('findings') or audit.get('reason') or '', ensure_ascii=False)[:300]}"
+    elif meta_verdict == "reject":
+        downgrade_reason = "review panel FINAL REJECT (meta verdict reject)"
+    if downgrade_reason is None:
+        print(f"flywheel: resolve-review: run {run_id} keep stands (audit={audit_verdict or 'missing'}, review={meta_verdict or 'missing'})")
+        return 0
+    ts = now_iso()
+    corrective = {
+        "ts": ts,
+        "run_id": run_id,
+        "idea_id": idea_id,
+        "event": "review_overturn",
+        "from": "keep",
+        "to": "discard",
+        "audit_verdict": audit_verdict,
+        "review_verdict": meta_verdict,
+        "reason": downgrade_reason,
+    }
+    locked_jsonl_append(WORKSPACE / "traces.jsonl", {**corrective, "outcome": "discard", "keep": False})
+    locked_jsonl_append(WORKSPACE / "research-ledger.jsonl", {
+        "ts": ts,
+        "run_id": run_id,
+        "idea_id": idea_id,
+        "outcome": "discard",
+        "overturned_from": "keep",
+        "reason": downgrade_reason,
+        "evidence_refs": [f"traces/{run_id}/analyst-audit.json", f"traces/{run_id}/review-votes.jsonl"],
+    })
+    for base in (run_dir, trace_dir):
+        m = read_json_object(base / "metrics.json")
+        if m:
+            m["keep"] = False
+            m["outcome"] = "discard"
+            m["overturned"] = {"ts": ts, "audit_verdict": audit_verdict, "review_verdict": meta_verdict, "reason": downgrade_reason}
+            m["reason"] = f"review overturn: {downgrade_reason}"
+            write_json(base / "metrics.json", m)
+        v = read_json_object(base / "verification.json")
+        if v:
+            v["keep"] = False
+            v["overturned"] = {"ts": ts, "audit_verdict": audit_verdict, "review_verdict": meta_verdict, "reason": downgrade_reason}
+            write_json(base / "verification.json", v)
+    write_terminal_marker(run_id, idea_id or "unknown", "discard", trace_dir, run_dir)
+    if idea_id:
+        update_idea_terminal(idea_id, run_id, "discard")
+        failed_path = WORKSPACE / "archive" / "failed.jsonl"
+        failed_path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_append(failed_path, json.dumps({"ts": ts, "run_id": run_id, "idea_id": idea_id, "reason": downgrade_reason, "origin": "review_overturn"}, ensure_ascii=False) + "\n")
+    reports_dir = WORKSPACE / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    failure_text = (
+        f"# Failure Report: {idea_id} (review overturn)\n"
+        f"- run_id: {run_id}\n- original outcome: keep\n- final outcome: discard\n"
+        f"- audit: {audit_verdict}\n- review: {meta_verdict}\n- reason: {downgrade_reason}\n"
+        f"- evidence: traces/{run_id}/analyst-audit.json, traces/{run_id}/review-votes.jsonl, traces/{run_id}/review.md\n"
+    )
+    (reports_dir / "failure.md").write_text(failure_text, encoding="utf-8")
+    (trace_dir / "failure.md").write_text(failure_text, encoding="utf-8")
+    (run_dir / "failure.md").write_text(failure_text, encoding="utf-8")
+    print(f"flywheel: resolve-review: run {run_id} downgraded keep -> discard ({downgrade_reason})")
+    return 0
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Research flywheel run_once")
     parser.add_argument("--idea", type=str, default=None, help="Idea text to seed if queue empty")
     parser.add_argument("--failure-mode", type=str, default=None, help="Deterministic execution_error mode: import|runtime|syntax")
     parser.add_argument("--run-id", type=str, default=None, help="Reuse/force run id")
+    parser.add_argument("--resolve-review", type=str, default=None, metavar="RUN_ID", help="Re-evaluate an archived keep against analyst-audit.json and the review panel verdict; downgrade to discard on audit_fail or reject")
     args = parser.parse_args()
+
+    if args.resolve_review is not None:
+        try:
+            rid = validate_run_id(args.resolve_review)
+        except ValueError as exc:
+            parser.error(str(exc))
+        with locked((WORKSPACE / "runs").parent / f"{rid}.resolve.lock"):
+            return resolve_review(rid)
 
     profile = parse_program()
     integrity_paths: list[str] = profile.get("integrity_paths", INTEGRITY_DEFAULT)
