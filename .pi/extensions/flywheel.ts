@@ -279,6 +279,16 @@ function dispatchStation(cwd: string, station: string, opts: { idea?: string; pr
   return { station, role, idea: ideaId, ...rest };
 }
 
+function repoIdOf(cwd: string): string | null {
+  try {
+    const current = resultOf(orca(cwd, ["worktree", "current"]));
+    const id = current?.worktree?.repoId;
+    return typeof id === "string" ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 function dispatchRoleAgent(cwd: string, role: string, task: string, requestedName?: string, surface?: string, setup?: (worktreePath: string) => void): object {
   const trimmed = task.trim();
   if (!trimmed) throw new Error("task is empty");
@@ -293,8 +303,12 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   // materializing the checkout plus a fallback shell terminal, so the JSON call
   // returns ok:false (runtime_unavailable) while the worktree does land. Tolerate
   // that, then adopt the created worktree by path suffix.
+  const repoId = repoIdOf(cwd);
+  const createArgs = repoId
+    ? ["worktree", "create", "--repo", `id:${repoId}`, "--name", name, "--setup", "skip"]
+    : ["worktree", "create", "--name", name, "--setup", "skip"];
   try {
-    orca(cwd, ["worktree", "create", "--name", name, "--parent-worktree", "active", "--setup", "skip"]);
+    orca(cwd, createArgs);
   } catch {
     /* runtime drop is expected; adopt below */
   }
