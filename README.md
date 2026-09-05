@@ -33,7 +33,7 @@ scout → modeling → experiment → evaluation → writing → review → arch
 
 ## 命令
 
-- `/bootstrap [方向]`：交互式派发 scout；带参则直接派发
+- `/bootstrap [方向]`：交互式派发 scout；带参则直接派发。派发后自动移除 README.md（用户向说明），工作区进入纯 agent 运行态
 - `/flywheel <idea-id>`：报告 idea 的下一站和前置产物
 
 ## 目录

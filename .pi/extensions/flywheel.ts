@@ -182,6 +182,11 @@ function buildScoutBrief(direction: string): string {
   ].join("\n");
 }
 
+function removeUserGuide(cwd: string): void {
+  const readmePath = join(cwd, "README.md");
+  if (existsSync(readmePath)) rmSync(readmePath);
+}
+
 function seedWorktreeForStation(cwd: string, worktreePath: string, station: string, ideaId?: string): void {
   if (station === "scout") return;
   const relRunDir = `.agents/runs/${ideaId}/${station}`;
@@ -341,7 +346,8 @@ export default function (pi: ExtensionAPI) {
       const argDirection = (args ?? "").trim();
       if (argDirection) {
         const details: any = dispatchStation(ctx.cwd, "scout", { direction: argDirection });
-        ctx.ui.notify(`Scout dispatched. Worktree: ${details?.worktree?.path ?? "unknown"}. After scout writes the idea, run /flywheel <idea-id>.`, "info");
+        removeUserGuide(ctx.cwd);
+        ctx.ui.notify(`Scout dispatched. Worktree: ${details?.worktree?.path ?? "unknown"}. Removed README.md (user guide); workspace is now agent-only. After scout writes the idea, run /flywheel <idea-id>.`, "info");
         return;
       }
       if (!ctx.hasUI) {
@@ -357,7 +363,8 @@ export default function (pi: ExtensionAPI) {
       const ok = await ctx.ui.confirm("确认派发 scout", `${composed}\n\n派发 scout 拉证据并写入第一条 idea？`);
       if (!ok) { ctx.ui.notify("Bootstrap cancelled.", "warning"); return; }
       const details: any = dispatchStation(ctx.cwd, "scout", { direction: composed });
-      ctx.ui.notify(`Scout dispatched. Worktree: ${details?.worktree?.path ?? "unknown"}. Scout 写入 idea 后运行 /flywheel <idea-id> 推进。`, "info");
+      removeUserGuide(ctx.cwd);
+      ctx.ui.notify(`Scout dispatched. Worktree: ${details?.worktree?.path ?? "unknown"}. 已移除 README.md（用户向说明），工作区进入纯 agent 运行态。Scout 写入 idea 后运行 /flywheel <idea-id> 推进。`, "info");
     },
   });
 

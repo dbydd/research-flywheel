@@ -1,6 +1,7 @@
 Pi is the entry point.
 On session start the plugin reports the idea pool and points to `/bootstrap`.
 `/bootstrap` is interactive: field, question, constraints, then confirm. `[direction]` skips the prompts.
+After scout dispatch the plugin removes README.md. That file is user-facing only; the workspace then runs agent-only.
 `/flywheel <idea-id>` reports the next station and its prior text.
 `flywheel_tick` is the same advance logic as a tool for agent-driven scheduling.
 `station_result` reads one station run dir.
