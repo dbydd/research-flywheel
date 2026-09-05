@@ -13,6 +13,20 @@
       "lastStatus": "success",
       "lastRun": "2026-09-05T08:50:00.005Z",
       "nextRun": "2026-09-05T09:00:00.000Z"
+    },
+    {
+      "id": "XhY8DI_DZm",
+      "name": "flywheel-qwen-watchdog-v2",
+      "schedule": "0 */10 * * * *",
+      "prompt": "你是Muse Spark，research-flywheel模板的调度器（当前cwd应为 /Users/dbydd/vibe-agent-working-dir/research-flywheel）。你的目的是维护全自动科研飞轮论文工厂：scout→modeling→experiment→evaluation→writing→review→archive，靠Orca worktree隔离+Pi worker+goal/todo推进，不靠原生subagent。\n\nqwen工作区（/Users/dbydd/vibe-agent-working-dir/qwen38-27b-sft-workspace）的研究目的是：在Apple Silicon本机用MLX工具链研究可迁移SFT方法，先在小模型（Qwen3.5-4B-MLX-8bit）比较数据配方/LoRA目标模块/学习率/上下文与终止设计，再跨尺度验证，最后门控研究Qwen3.8-27B orchestrator LoRA适配，产出可复现结构化调度证据。当前idea示例：dispatch-recipe-audit-001（orchestrator_contract、check_dispatch、dispatch_sft_example三方一致性审计）。\n\n每次唤醒时做qwen工作区全量检查（只读优先，不擅自写调度层）：\n1. ideas池：cat .agents/ideas.jsonl（条数、status、id），ledger：cat .agents/ledger.jsonl尾部5行\n2. runs：ls -R .agents/runs/*/station-result.txt + stalled.txt，有DONE/FAILED/STALLED即报\n3. Orca：orca worktree list --json看scout/modeling/experiment/evaluation/writing/review/archive各站worktree是否存在；orca terminal list看worker终端是否存活\n4. git：git -C qwen工作区 status --short + log --oneline -3\n5. intercom：检查是否有01a07003等qwen侧session的pending消息需中转\n6. 若发现stalled.txt超阈值或station-result FAILED，汇总成需人工决策事项并@用户；健康推进则一句话总结不打扰。若两边session长时间无活动，发送一次心跳总结防止睡眠丢失上下文。",
+      "enabled": true,
+      "type": "cron",
+      "createdAt": "2026-09-05T11:52:29.859Z",
+      "runCount": 4,
+      "session": "01a06bf4-c09a-7ce1-a0d3-652f5dee0ccd",
+      "lastStatus": "success",
+      "lastRun": "2026-09-05T12:30:00.007Z",
+      "nextRun": "2026-09-05T12:40:00.000Z"
     }
   ],
   "version": 1

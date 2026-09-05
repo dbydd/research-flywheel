@@ -413,7 +413,7 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, station: str
   const kickoff = kickoffMessage(station, ideaId, runDir, objective, todos);
   writeFileSync(
     join(worktree.path, ".agents", "worker-context.json"),
-    JSON.stringify({ role, station, idea: ideaId, runDir, objective, todos }, null, 2),
+    JSON.stringify({ role, station, idea: ideaId, runDir, objective, todos, supervisorRoot: cwd }, null, 2),
   );
   const terminal = terminalOf(orca(cwd, ["terminal", "create", "--worktree", `id:${worktree.id}`, "--command", "pi --approve"]));
   orca(cwd, ["terminal", "wait", "--terminal", terminal, "--for", "tui-idle", "--timeout-ms", "60000"]);
@@ -429,7 +429,7 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, station: str
 }
 
 export default function (pi: ExtensionAPI) {
-  type WorkerCtx = { role: string; station: string; idea: string; runDir: string; objective: string; todos: Array<{ content: string; status: string; activeForm: string }> };
+  type WorkerCtx = { role: string; station: string; idea: string; runDir: string; objective: string; todos: Array<{ content: string; status: string; activeForm: string }>; supervisorRoot?: string };
 
   let worker: WorkerCtx | null = null;
   let stallCount = 0;
@@ -505,9 +505,27 @@ export default function (pi: ExtensionAPI) {
   }
 
   function writeStallMarker(cwd: string): void {
+    const body = `stalled x${stallCount} at ${new Date().toISOString()}\nrole=${worker?.role} station=${worker?.station} idea=${worker?.idea}\n`;
     try {
-      const marker = join(cwd, worker?.runDir ?? "", "stalled.txt");
-      writeFileSync(marker, `stalled x${stallCount} at ${new Date().toISOString()}\nrole=${worker?.role} station=${worker?.station} idea=${worker?.idea}\n`);
+      writeFileSync(join(cwd, worker?.runDir ?? "", "stalled.txt"), body);
+    } catch { /* best effort */ }
+    try {
+      const root = worker?.supervisorRoot;
+      if (root && root !== cwd) writeFileSync(join(root, worker?.runDir ?? "", "stalled.txt"), body);
+    } catch { /* best effort */ }
+  }
+
+  function syncStationResult(cwd: string): void {
+    // Worker writes station-result.txt locally; the scheduler reads the
+    // supervisor copy. Mirror both directions so either side sees DONE.
+    try {
+      const root = worker?.supervisorRoot;
+      if (!root || root === cwd) return;
+      const local = join(cwd, worker?.runDir ?? "", "station-result.txt");
+      const remote = join(root, worker?.runDir ?? "", "station-result.txt");
+      if (!existsSync(local)) return;
+      mkdirSync(join(root, worker?.runDir ?? ""), { recursive: true });
+      cpSync(local, remote);
     } catch { /* best effort */ }
   }
 
@@ -549,6 +567,7 @@ export default function (pi: ExtensionAPI) {
     if (!worker) return;
     if (stationFinished(ctx.cwd)) {
       workerDone = true;
+      syncStationResult(ctx.cwd);
       renderWorkerWidget(ctx);
       return;
     }
