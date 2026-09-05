@@ -1,27 +1,13 @@
 {
   "packages": [
-    "npm:pi-schedule-prompt",
-    "npm:@luxusai/pi-hindsight",
-    "npm:@narumitw/pi-lsp",
     {
-      "source": "npm:not-enough-retry",
-      "extensions": []
+      "source": "npm:pi-subagents",
+      "autoload": false,
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
     }
   ],
-  "defaultProvider": "axonhub",
-  "defaultModel": "generic-researcher-powerful",
-  "defaultThinkingLevel": "max",
-  "retry": {
-    "enabled": true,
-    "maxRetries": 4,
-    "baseDelayMs": 2000
-  },
-  "subagents": {
-    "defaultModel": "axonhub/generic-researcher-powerful",
-    "agentOverrides": {
-      "literature-scout": {
-        "model": "axonhub/supercheap"
-      }
-    }
-  }
+  "extensions": ["./extensions/flywheel.ts"]
 }

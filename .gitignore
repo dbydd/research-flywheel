@@ -1,25 +1,6 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# uv-managed environment; uv.lock remains committed for reproducibility.
-.venv/
-
-# Locks and process files
-*.lock
-!uv.lock
-
-# Environment and OS files
 .DS_Store
-*.tmp
-*.swp
-*~
-
-# Heavy locally-pulled investigation evidence: kept on disk as research proof,
-# not tracked in git (provenance + hashes documented in research/*/README.md).
-research/**/pi-mono/
-research/**/*.html
-
-# pi runtime state (jobs registry is per-workspace runtime, not template content)
-.pi/schedule-prompts.json
+*.lock
+.pi/sessions/
+.pi/hindsight/
+.agents/runs/
+.agents/archive/
