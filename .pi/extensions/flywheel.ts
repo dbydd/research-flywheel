@@ -61,7 +61,43 @@ function terminalOf(response: any): string {
   return handle;
 }
 
-function injectContext(source: string, target: string, profile: string): void {
+function listWorktrees(cwd: string): any[] {
+  try {
+    const result = resultOf(orca(cwd, ["worktree", "list"]));
+    const worktrees = result?.worktrees ?? result;
+    return Array.isArray(worktrees) ? worktrees : [];
+  } catch {
+    return [];
+  }
+}
+
+function adoptWorktreeByName(cwd: string, name: string): { id: string; path: string } | null {
+  const suffix = `/qwen38-27b-sft-workspace/${name}`;
+  for (const candidate of listWorktrees(cwd)) {
+    const path = candidate?.path;
+    if (typeof path !== "string" || !path.endsWith(suffix)) continue;
+    const id = candidate?.id;
+    if (typeof id !== "string") continue;
+    return { id, path };
+  }
+  return null;
+}
+
+function listTerminals(cwd: string, worktreeId: string): any[] {
+  try {
+    const result = resultOf(orca(cwd, ["terminal", "list", "--worktree", `id:${worktreeId}`]));
+    const terminals = result?.terminals ?? result;
+    return Array.isArray(terminals) ? terminals : [];
+  } catch {
+    return [];
+  }
+}
+
+function closeTerminal(cwd: string, handle: string): void {
+  orca(cwd, ["terminal", "close", "--terminal", handle]);
+}
+
+
   rmSync(join(target, ".pi"), { recursive: true, force: true });
   rmSync(join(target, ".agents"), { recursive: true, force: true });
   mkdirSync(join(target, ".pi", "extensions"), { recursive: true });
@@ -255,29 +291,35 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   }
   const effectiveSurface = surface === "list" || surface === "loop" ? surface : "goal";
   const profile = roleProfile(cwd, role);
-  const createArgs = [
-    "worktree", "create", "--name", workerName(role, requestedName),
-    "--setup", "skip",
-  ];
-  let worktreeResponse: any;
+  const name = workerName(role, requestedName);
+
+  // Stage 1: create the worktree. Orca's runtime drops the response right after
+  // materializing the checkout plus a fallback shell terminal, so the JSON call
+  // returns ok:false (runtime_unavailable) while the worktree does land. Tolerate
+  // that, then adopt the created worktree by path suffix.
   try {
-    worktreeResponse = orca(cwd, [...createArgs, "--parent-worktree", "active"]);
+    orca(cwd, ["worktree", "create", "--name", name, "--parent-worktree", "active", "--setup", "skip"]);
   } catch {
-    worktreeResponse = orca(cwd, createArgs);
+    /* runtime drop is expected; adopt below */
   }
-  const worktree = worktreeOf(worktreeResponse);
+  const adopted = adoptWorktreeByName(cwd, name);
+  if (!adopted) throw new Error(`worktree ${name} did not materialize`);
+  const worktree = { id: adopted.id, path: adopted.path };
+
+  // Stage 2: inject context before any agent starts.
   injectContext(cwd, worktree.path, profile);
   if (setup) setup(worktree.path);
 
-  let terminal: string;
-  try {
-    terminal = terminalOf(worktreeResponse);
-  } catch {
-    terminal = terminalOf(orca(cwd, ["terminal", "list", "--worktree", `id:${worktree.id}`]));
-  }
-  orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", "pi --approve", "--enter"]);
+  // Stage 3: start pi in a dedicated terminal, not the fallback shell.
+  const terminal = terminalOf(orca(cwd, ["terminal", "create", "--worktree", `id:${worktree.id}`, "--command", "pi --approve"]));
   orca(cwd, ["terminal", "wait", "--terminal", terminal, "--for", "tui-idle", "--timeout-ms", "60000"]);
   orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", launchCommand(effectiveSurface, trimmed), "--enter"]);
+
+  // Stage 4: close the fallback shell created by worktree create.
+  for (const item of listTerminals(cwd, worktree.id)) {
+    const handle = typeof item?.handle === "string" ? item.handle : "";
+    if (handle && handle !== terminal) closeTerminal(cwd, handle);
+  }
 
   return { role, surface: effectiveSurface, task: trimmed, worktree, terminal };
 }
