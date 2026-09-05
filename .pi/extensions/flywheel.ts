@@ -255,10 +255,16 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   }
   const effectiveSurface = surface === "list" || surface === "loop" ? surface : "goal";
   const profile = roleProfile(cwd, role);
-  const worktreeResponse = orca(cwd, [
+  const createArgs = [
     "worktree", "create", "--name", workerName(role, requestedName),
-    "--parent-worktree", "active", "--setup", "skip",
-  ]);
+    "--setup", "skip",
+  ];
+  let worktreeResponse: any;
+  try {
+    worktreeResponse = orca(cwd, [...createArgs, "--parent-worktree", "active"]);
+  } catch {
+    worktreeResponse = orca(cwd, createArgs);
+  }
   const worktree = worktreeOf(worktreeResponse);
   injectContext(cwd, worktree.path, profile);
   if (setup) setup(worktree.path);
