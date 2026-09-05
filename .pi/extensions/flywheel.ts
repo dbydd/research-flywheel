@@ -97,7 +97,7 @@ function closeTerminal(cwd: string, handle: string): void {
   orca(cwd, ["terminal", "close", "--terminal", handle]);
 }
 
-
+function injectContext(source: string, target: string, profile: string): void {
   rmSync(join(target, ".pi"), { recursive: true, force: true });
   rmSync(join(target, ".agents"), { recursive: true, force: true });
   mkdirSync(join(target, ".pi", "extensions"), { recursive: true });
