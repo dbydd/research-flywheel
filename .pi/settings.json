@@ -1,1 +1,17 @@
-{"extensions": ["./extensions/flywheel.ts"]}
+{
+  "extensions": [
+    "./extensions/flywheel.ts"
+  ],
+  "packages": [
+    "npm:pi-codex-goal",
+    "npm:@juicesharp/rpiv-todo",
+    {
+      "source": "npm:pi-goal-list-loop-audit",
+      "autoload": false,
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    }
+  ]
+}

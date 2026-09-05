@@ -11,6 +11,8 @@ The Pi tool `dispatch_role_agent` creates a worktree through Orca.
 It injects the role preset as that worktree root `AGENTS.md`.
 It starts Pi there.
 Worker spawn uses `dispatch_role_agent`.
+Worker goal tracking uses pi-codex-goal (`create_goal`, `get_goal`, `update_goal`) plus the rpiv-todo `todo` tool.
+Station completion is the `station-result.txt` DONE line.
 
 Brief parts order:
 - Why: this station exists for this reason
@@ -21,16 +23,11 @@ Brief parts order:
 - Done when: checkable outputs
 - Failure Done: attempted, observed, cause, next
 
-Short two-or-three sentence commands produce degenerate loops.
 Write the full brief before calling `dispatch_role_agent`.
 
-GLLA binds per worktree through Pi package merge.
-The template project keeps `pi-goal-list-loop-audit` enabled here.
-Each worker receives project `.pi-glla/settings.json` with `autoAcceptDrafts`.
-Draft Confirm stays off inside dispatched worktrees.
-The agent still writes objective plus verification contract through the propose path.
-`dispatch_role_agent` launches `/goal start`, `/list start`, or `/loop start` with the full brief.
-That launch sets the worker goal/list/loop and keeps worker context fixed.
+Worker bootstrapping: the scheduler sends a bootstrap message after Pi reaches idle.
+The worker calls `create_goal` with the station brief as objective, tracks steps with `todo`, writes `station-result.txt`, then calls `update_goal` status complete.
+The scheduler reads `station-result.txt` only.
 
 Persistent scheduler state lives in `.agents/`.
 The scheduler reads `.agents/ideas.jsonl` and `.agents/ledger.jsonl`.

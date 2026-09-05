@@ -8,4 +8,4 @@ Write the idea into `.agents/ideas.jsonl` following `.agents/idea-schema.md`. Fi
 
 Return the idea id, question, hypothesis, method, evidence paths, evaluation contract, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not edit the scheduler. Do not create a worker through a shell command.
+If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Do not edit the scheduler. Do not create a worker through a shell command.

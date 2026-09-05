@@ -115,19 +115,20 @@ function injectContext(source: string, target: string, profile: string): void {
   rmSync(join(target, ".agents"), { recursive: true, force: true });
   mkdirSync(join(target, ".pi", "extensions"), { recursive: true });
   cpSync(join(source, ".pi", "settings.json"), join(target, ".pi", "settings.json"));
+  const npmSource = join(source, ".pi", "npm");
+  if (existsSync(npmSource)) cpSync(npmSource, join(target, ".pi", "npm"), { recursive: true });
   cpSync(join(source, ".pi", "extensions"), join(target, ".pi", "extensions"), { recursive: true });
   cpSync(join(source, ".agents", "roles"), join(target, ".agents", "roles"), { recursive: true });
-  mkdirSync(join(target, ".pi-glla"), { recursive: true });
-  const gllaSettings = join(source, ".pi-glla", "settings.json");
-  if (existsSync(gllaSettings)) cpSync(gllaSettings, join(target, ".pi-glla", "settings.json"));
   writeFileSync(join(target, "AGENTS.md"), profile.endsWith("\n") ? profile : `${profile}\n`);
 }
 
-function launchCommand(surface: string, task: string): string {
+// Worker goal: pi-codex-goal tools. The worker session calls create_goal
+// with the station brief as objective, tracks station steps with the todo
+// tool, and calls update_goal status complete after station-result.txt.
+// station-result.txt DONE is the completion signal the scheduler reads.
+function goalObjective(station: string, task: string): string {
   const text = task.replace(/"/g, "'");
-  if (surface === "list") return `/list start "${text}"`;
-  if (surface === "loop") return `/loop start "${text}" measure=none max=0`;
-  return `/goal start "${text}"`;
+  return `[${station}] ${text}`;
 }
 
 // Production chain: idea id in, full station brief out.
@@ -270,16 +271,15 @@ function readStationResult(cwd: string, ideaId: string, station: string): { stat
   return { status: "unknown", detail: `${runDir} exists but carries no verdict` };
 }
 
-function dispatchStation(cwd: string, station: string, opts: { idea?: string; prior?: string; direction?: string; extra?: string; name?: string; surface?: string }): object {
+function dispatchStation(cwd: string, station: string, opts: { idea?: string; prior?: string; direction?: string; extra?: string; name?: string }): object {
   if (!STATION_ROLE[station]) throw new Error(`unknown station: ${station}`);
   const role = STATION_ROLE[station];
-  const surface = opts.surface;
   const name = opts.name;
   if (station === "scout") {
     const direction = (opts.direction ?? "").trim();
     if (!direction) throw new Error("scout station needs direction");
     const brief = buildScoutBrief(direction.replace(/"/g, "'"));
-    const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `scout-${Date.now()}`, surface);
+    const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `scout-${Date.now()}`);
     const { role: _role, ...rest } = dispatched;
     return { station, role, direction, ...rest };
   }
@@ -289,7 +289,7 @@ function dispatchStation(cwd: string, station: string, opts: { idea?: string; pr
   if (!prior) throw new Error(`${station} station needs prior`);
   const idea = findIdea(cwd, ideaId);
   const { brief } = buildStationBrief(cwd, station, idea, prior.replace(/"/g, "'"), (opts.extra ?? "").replace(/"/g, "'"));
-  const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `${station}-${ideaId}`, surface, (worktreePath) =>
+  const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `${station}-${ideaId}`, (worktreePath) =>
     seedWorktreeForStation(cwd, worktreePath, station, ideaId),
   );
   const { role: _role, ...rest } = dispatched;
@@ -306,13 +306,12 @@ function repoIdOf(cwd: string): string | null {
   }
 }
 
-function dispatchRoleAgent(cwd: string, role: string, task: string, requestedName?: string, surface?: string, setup?: (worktreePath: string) => void): object {
+function dispatchRoleAgent(cwd: string, role: string, task: string, requestedName?: string, setup?: (worktreePath: string) => void): object {
   const trimmed = task.trim();
   if (!trimmed) throw new Error("task is empty");
   for (const section of ["Why:", "Background:", "Prior:", "How:", "Evidence:", "Done when:", "Failure Done:"]) {
     if (!trimmed.includes(section)) throw new Error(`Task brief misses ${section}`);
   }
-  const effectiveSurface = surface === "list" || surface === "loop" ? surface : "goal";
   const profile = roleProfile(cwd, role);
   const name = workerName(role, requestedName);
 
@@ -338,9 +337,17 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   if (setup) setup(worktree.path);
 
   // Stage 3: start pi in a dedicated terminal, not the fallback shell.
+  // The worker bootstraps itself: create_goal with the station brief as
+  // objective, todo for station steps, update_goal complete after the
+  // station-result.txt DONE line is written.
+  const bootstrap = [
+    `Call create_goal with objective ${JSON.stringify(goalObjective(requestedName ?? role, trimmed))}.`,
+    `Track station steps with the todo tool.`,
+    `Finish by writing station-result.txt, then call update_goal with status complete.`,
+  ].join(" ");
   const terminal = terminalOf(orca(cwd, ["terminal", "create", "--worktree", `id:${worktree.id}`, "--command", "pi --approve"]));
   orca(cwd, ["terminal", "wait", "--terminal", terminal, "--for", "tui-idle", "--timeout-ms", "60000"]);
-  orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", launchCommand(effectiveSurface, trimmed), "--enter"]);
+  orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", bootstrap.replace(/"/g, "'"), "--enter"]);
 
   // Stage 4: close the fallback shell created by worktree create.
   for (const item of listTerminals(cwd, worktree.id)) {
@@ -348,7 +355,7 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
     if (handle && handle !== terminal) closeTerminal(cwd, handle);
   }
 
-  return { role, surface: effectiveSurface, task: trimmed, worktree, terminal };
+  return { role, task: trimmed, worktree, terminal };
 }
 
 export default function (pi: ExtensionAPI) {
@@ -444,7 +451,6 @@ export default function (pi: ExtensionAPI) {
         direction: { type: "string", description: "User research direction, required for scout." },
         prior: { type: "string", description: "Prior station output: cause, artifact paths, numbers. Required for every station except scout." },
         extra: { type: "string", description: "Optional extra instructions appended to How." },
-        surface: { type: "string", enum: ["goal", "list", "loop"], description: "GLLA surface. Default goal." },
         name: { type: "string", description: "Optional Orca worktree name." },
       },
       required: ["station"],
@@ -533,20 +539,19 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "dispatch_role_agent",
     label: "Dispatch role agent",
-    description: "Create an Orca worktree, inject .agents/roles/<role>.md as AGENTS.md, and start Pi there with a GLLA goal/list/loop already set. The task brief carries Why, Background, Prior, How, Evidence, Done when, Failure Done. Short commands are rejected.",
+    description: "Create an Orca worktree, inject .agents/roles/<role>.md as AGENTS.md, and start Pi there. The worker bootstraps itself with create_goal plus the todo tool and closes with update_goal complete. The task brief carries Why, Background, Prior, How, Evidence, Done when, Failure Done. Short commands are rejected.",
     parameters: {
       type: "object",
       properties: {
         role: { type: "string", description: "Role profile name under .agents/roles" },
         task: { type: "string", description: "Full worker brief: Why, Background, Prior with cause and artifact paths, How, Evidence paths, Done when, Failure Done. Section headers are required." },
-        surface: { type: "string", enum: ["goal", "list", "loop"], description: "GLLA surface the worker starts on. goal runs /goal start, list runs /list start, loop runs /loop start metricless unbounded. Default goal." },
         name: { type: "string", description: "Optional Orca worktree name" },
       },
       required: ["role", "task"],
       additionalProperties: false,
     },
     async execute(_toolCallId, input: any, _signal, _onUpdate, ctx) {
-      const details = dispatchRoleAgent(ctx.cwd, input.role, input.task, input.name, input.surface);
+      const details = dispatchRoleAgent(ctx.cwd, input.role, input.task, input.name);
       return { content: [{ type: "text", text: JSON.stringify(details, null, 2) }], details };
     },
   });

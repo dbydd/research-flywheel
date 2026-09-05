@@ -8,4 +8,4 @@ Write the derivation in natural language first. Formalize the derivation with Le
 
 Return the derivation, Lean verdict, implementation, changed files, command results, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not edit the scheduler. Do not create a worker through a shell command.
+If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Do not edit the scheduler. Do not create a worker through a shell command.
