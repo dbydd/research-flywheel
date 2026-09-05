@@ -411,6 +411,10 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, station: str
   const objective = goalObjective(station, trimmed);
   const todos = todoSeed(station, ideaId, runDir);
   const kickoff = kickoffMessage(station, ideaId, runDir, objective, todos);
+  writeFileSync(
+    join(worktree.path, ".agents", "worker-context.json"),
+    JSON.stringify({ role, station, idea: ideaId, runDir, objective, todos }, null, 2),
+  );
   const terminal = terminalOf(orca(cwd, ["terminal", "create", "--worktree", `id:${worktree.id}`, "--command", "pi --approve"]));
   orca(cwd, ["terminal", "wait", "--terminal", terminal, "--for", "tui-idle", "--timeout-ms", "60000"]);
   orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", kickoff, "--enter"]);
@@ -421,11 +425,102 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, station: str
     if (handle && handle !== terminal) closeTerminal(cwd, handle);
   }
 
-  return { role, task: trimmed, worktree, terminal };
+  return { role, task: trimmed, worktree, terminal, station, idea: ideaId, runDir, objective, todos };
 }
 
 export default function (pi: ExtensionAPI) {
+  type WorkerCtx = { role: string; station: string; idea: string; runDir: string; objective: string; todos: Array<{ content: string; status: string; activeForm: string }> };
+
+  let worker: WorkerCtx | null = null;
+  let stallCount = 0;
+  let currentStep = "";
+  let workerDone = false;
+  const STALL_NUDGE_MAX = 3;
+
+  function workerContextFile(cwd: string): string {
+    return join(cwd, ".agents", "worker-context.json");
+  }
+
+  function readWorkerContext(cwd: string): WorkerCtx | null {
+    try {
+      const p = workerContextFile(cwd);
+      if (!existsSync(p)) return null;
+      const data = JSON.parse(readFileSync(p, "utf8"));
+      if (typeof data?.role !== "string" || typeof data?.station !== "string" || typeof data?.runDir !== "string") return null;
+      return data as WorkerCtx;
+    } catch {
+      return null;
+    }
+  }
+
+  function stationResultPath(cwd: string): string {
+    return join(cwd, worker?.runDir ?? "", "station-result.txt");
+  }
+
+  function stationFinished(cwd: string): boolean {
+    try {
+      const p = stationResultPath(cwd);
+      if (!existsSync(p)) return false;
+      const first = readFileSync(p, "utf8").split("\n").find(Boolean) ?? "";
+      return first.trim().toUpperCase().startsWith("DONE");
+    } catch {
+      return false;
+    }
+  }
+
+  function stationCheckpoints(station: string): string[] {
+    switch (station) {
+      case "scout": return ["frontier-notes.md", "station-result.txt"];
+      case "modeling": return ["derivation.md", "proof.lean", "station-result.txt"];
+      case "experiment": return ["baseline_report.json", "candidate_report.json", "station-result.txt"];
+      case "evaluation": return ["verdict.md", "station-result.txt"];
+      case "writing": return ["station-result.txt"];
+      case "review": return ["station-result.txt"];
+      case "archive": return ["station-result.txt"];
+      default: return ["station-result.txt"];
+    }
+  }
+
+  function progressOf(cwd: string): { done: number; total: number } {
+    const cps = stationCheckpoints(worker?.station ?? "");
+    const total = cps.length;
+    const done = cps.filter((p) => existsSync(join(cwd, worker?.runDir ?? "", p))).length;
+    return { done, total };
+  }
+
+  function renderWorkerWidget(ctx: any): void {
+    if (!worker || !ctx.hasUI) return;
+    const { done, total } = progressOf(ctx.cwd);
+    const status = workerDone
+      ? "DONE"
+      : stallCount > STALL_NUDGE_MAX
+        ? `STALLED x${stallCount} - notify superior`
+        : stallCount > 0
+          ? `stalled x${stallCount}`
+          : "running";
+    ctx.ui.setWidget("flywheel-worker", [
+      `${worker.role} | ${worker.station} | ${worker.idea}`,
+      `${status} | ${done}/${total} artifacts${currentStep ? " | " + currentStep : ""}`,
+    ]);
+  }
+
+  function writeStallMarker(cwd: string): void {
+    try {
+      const marker = join(cwd, worker?.runDir ?? "", "stalled.txt");
+      writeFileSync(marker, `stalled x${stallCount} at ${new Date().toISOString()}\nrole=${worker?.role} station=${worker?.station} idea=${worker?.idea}\n`);
+    } catch { /* best effort */ }
+  }
+
   pi.on("session_start", async (_event, ctx) => {
+    const wc = readWorkerContext(ctx.cwd);
+    if (wc) {
+      worker = wc;
+      stallCount = 0;
+      workerDone = stationFinished(ctx.cwd);
+      currentStep = wc.todos?.find((t) => t.status === "in_progress")?.content ?? wc.todos?.[0]?.content ?? "";
+      renderWorkerWidget(ctx);
+      return;
+    }
     if (!ctx.hasUI) return;
     const ideasPath = join(ctx.cwd, ".agents", "ideas.jsonl");
     let ideaCount = 0;
@@ -442,6 +537,29 @@ export default function (pi: ExtensionAPI) {
       ].join("\n"),
       "info",
     );
+  });
+
+  pi.on("tool_result", async (_event, ctx) => {
+    if (!worker || !ctx.hasUI) return;
+    workerDone = stationFinished(ctx.cwd);
+    renderWorkerWidget(ctx);
+  });
+
+  pi.on("agent_settled", async (_event, ctx) => {
+    if (!worker) return;
+    if (stationFinished(ctx.cwd)) {
+      workerDone = true;
+      renderWorkerWidget(ctx);
+      return;
+    }
+    stallCount += 1;
+    renderWorkerWidget(ctx);
+    if (stallCount <= STALL_NUDGE_MAX) {
+      const step = currentStep || worker.todos?.[0]?.content || "do the station work";
+      pi.sendUserMessage(`You have not written station-result.txt yet. Continue: ${step}. Write ${worker.runDir}/station-result.txt with first line DONE or FAILED, then call update_goal status complete.`);
+    } else {
+      writeStallMarker(ctx.cwd);
+    }
   });
 
   pi.registerCommand("bootstrap", {

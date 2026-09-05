@@ -29,6 +29,9 @@ Worker bootstrapping: after Pi reaches idle the scheduler sends one kickoff mess
 The worker executes those tool calls first, then does the station work, writes `station-result.txt`, then calls `update_goal` status complete.
 The scheduler reads `station-result.txt` only.
 
+Worker supervision: each worker shows a widget with role, station, idea, artifact progress, and stall count.
+On `agent_settled` with no `station-result.txt`, the worker nudges itself to continue; after the stall threshold it writes `stalled.txt` in its run dir for the scheduler to reclaim.
+
 Persistent scheduler state lives in `.agents/`.
 The scheduler reads `.agents/ideas.jsonl` and `.agents/ledger.jsonl`.
 Workers do not read `.agents/` directly; they read paths named in their brief.
