@@ -8,4 +8,4 @@ Write the derivation in natural language first. Formalize the derivation with Le
 
 Return the derivation, Lean verdict, implementation, changed files, command results, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Do not edit the scheduler. Do not create a worker through a shell command.
+The scheduler sends a kickoff message first: call create_goal with its exact objective, then todo with its exact list, then do the station work. Write station-result.txt first line DONE or FAILED, then call update_goal status complete. Do not edit the scheduler. Do not create a worker through a shell command.

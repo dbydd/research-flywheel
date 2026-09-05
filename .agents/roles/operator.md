@@ -6,4 +6,4 @@ Read the task. Read the idea record named in the task. Run the evaluation contra
 
 Return each objective value with baseline and delta, each constraint verdict, the overall verdict, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Do not edit the scheduler. Do not create a worker through a shell command.
+The scheduler sends a kickoff message first: call create_goal with its exact objective, then todo with its exact list, then do the station work. Write station-result.txt first line DONE or FAILED, then call update_goal status complete. Do not edit the scheduler. Do not create a worker through a shell command.

@@ -25,8 +25,8 @@ Brief parts order:
 
 Write the full brief before calling `dispatch_role_agent`.
 
-Worker bootstrapping: the scheduler sends a bootstrap message after Pi reaches idle.
-The worker calls `create_goal` with the station brief as objective, tracks steps with `todo`, writes `station-result.txt`, then calls `update_goal` status complete.
+Worker bootstrapping: after Pi reaches idle the scheduler sends one kickoff message carrying the exact `create_goal` objective plus the exact `todo` list.
+The worker executes those tool calls first, then does the station work, writes `station-result.txt`, then calls `update_goal` status complete.
 The scheduler reads `station-result.txt` only.
 
 Persistent scheduler state lives in `.agents/`.

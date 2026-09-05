@@ -6,4 +6,4 @@ Read the assigned task. Read the named idea record. Read every evidence path nam
 
 Return the station result, artifact paths, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Do not create a worker through a shell command. Do not edit the scheduler.
+The scheduler sends a kickoff message first: call create_goal with its exact objective, then todo with its exact list, then do the station work. Write station-result.txt first line DONE or FAILED, then call update_goal status complete. Do not create a worker through a shell command. Do not edit the scheduler.

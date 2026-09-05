@@ -122,13 +122,82 @@ function injectContext(source: string, target: string, profile: string): void {
   writeFileSync(join(target, "AGENTS.md"), profile.endsWith("\n") ? profile : `${profile}\n`);
 }
 
-// Worker goal: pi-codex-goal tools. The worker session calls create_goal
-// with the station brief as objective, tracks station steps with the todo
-// tool, and calls update_goal status complete after station-result.txt.
-// station-result.txt DONE is the completion signal the scheduler reads.
+// Worker goal and todos are created by the scheduler process, not by the
+// worker model. After the worker Pi reaches idle, dispatch sends one
+// follow-up user message that instructs the model to call create_goal with
+// the exact objective below, then the exact todo list, then do the station
+// work. The model fills in evidence and results; it never invents the goal
+// or the step list.
 function goalObjective(station: string, task: string): string {
   const text = task.replace(/"/g, "'");
   return `[${station}] ${text}`;
+}
+
+function todoSeed(station: string, ideaId: string, runDir: string): Array<{ content: string; status: string; activeForm: string }> {
+  const steps: Array<[string, string]> = (() => {
+    switch (station) {
+      case "scout":
+        return [
+          ["Survey literature and record frontier-notes.md", "Surveying literature"],
+          ["Pull local evidence into research/", "Pulling local evidence"],
+          ["Design evaluation contract", "Designing evaluation contract"],
+          ["Append idea line and write station-result.txt DONE", "Writing idea line"],
+        ];
+      case "modeling":
+        return [
+          ["Write natural-language derivation", "Writing derivation"],
+          ["Formalize Lean proof and run lean", "Formalizing Lean proof"],
+          ["Implement method in experiment/", "Implementing method"],
+          ["Write evaluator in evaluation/ and station-result.txt DONE", "Writing evaluator"],
+        ];
+      case "experiment":
+        return [
+          ["Run baseline through evaluator", "Running baseline"],
+          ["Run candidate through evaluator", "Running candidate"],
+          ["Record traces and write station-result.txt DONE", "Recording traces"],
+        ];
+      case "evaluation":
+        return [
+          ["Measure every objective and constraint", "Measuring objectives"],
+          ["Apply pass rule and write verdict.md plus station-result.txt DONE", "Writing verdict"],
+        ];
+      case "writing":
+        return [
+          ["Draft report with traced numbers", "Drafting report"],
+          ["Preserve open questions and write station-result.txt DONE", "Preserving open questions"],
+        ];
+      case "review":
+        return [
+          ["Check number traceability and verdict match", "Checking traceability"],
+          ["Return verdict line plus findings and station-result.txt DONE", "Returning verdict"],
+        ];
+      case "archive":
+        return [
+          ["Place paper or archive failure", "Placing paper"],
+          ["Append ledger line and write station-result.txt DONE", "Appending ledger"],
+        ];
+      default:
+        return [[`Complete ${station} station`, `Completing ${station}`]];
+    }
+  })();
+  return steps.map(([content, activeForm], index) => ({
+    content: `[${ideaId}/${station}] ${content} (${runDir})`,
+    status: index === 0 ? "in_progress" : "pending",
+    activeForm,
+  }));
+}
+
+function kickoffMessage(station: string, ideaId: string, runDir: string, objective: string, todos: Array<{ content: string; status: string; activeForm: string }>): string {
+  const lines = [
+    `Station ${station} for idea ${ideaId}. Run these tool calls first, in order, before any other work.`,
+    `1. Call create_goal with objective exactly: ${objective}`,
+    `2. Call todo with exactly this JSON array: ${JSON.stringify(todos)}`,
+    `3. Do the station work in ${runDir}.`,
+    `4. Write station-result.txt with first line DONE or FAILED.`,
+    `5. Call update_goal with status complete.`,
+    `Do not invent a different goal or step list.`,
+  ];
+  return lines.join("\n").replace(/"/g, "'");
 }
 
 // Production chain: idea id in, full station brief out.
@@ -279,7 +348,7 @@ function dispatchStation(cwd: string, station: string, opts: { idea?: string; pr
     const direction = (opts.direction ?? "").trim();
     if (!direction) throw new Error("scout station needs direction");
     const brief = buildScoutBrief(direction.replace(/"/g, "'"));
-    const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `scout-${Date.now()}`);
+    const dispatched: any = dispatchRoleAgent(cwd, role, brief, station, "seed", ".agents/runs/scout", name ?? `scout-${Date.now()}`);
     const { role: _role, ...rest } = dispatched;
     return { station, role, direction, ...rest };
   }
@@ -289,7 +358,7 @@ function dispatchStation(cwd: string, station: string, opts: { idea?: string; pr
   if (!prior) throw new Error(`${station} station needs prior`);
   const idea = findIdea(cwd, ideaId);
   const { brief } = buildStationBrief(cwd, station, idea, prior.replace(/"/g, "'"), (opts.extra ?? "").replace(/"/g, "'"));
-  const dispatched: any = dispatchRoleAgent(cwd, role, brief, name ?? `${station}-${ideaId}`, (worktreePath) =>
+  const dispatched: any = dispatchRoleAgent(cwd, role, brief, station, ideaId, `.agents/runs/${ideaId}/${station}`, name ?? `${station}-${ideaId}`, (worktreePath) =>
     seedWorktreeForStation(cwd, worktreePath, station, ideaId),
   );
   const { role: _role, ...rest } = dispatched;
@@ -306,7 +375,7 @@ function repoIdOf(cwd: string): string | null {
   }
 }
 
-function dispatchRoleAgent(cwd: string, role: string, task: string, requestedName?: string, setup?: (worktreePath: string) => void): object {
+function dispatchRoleAgent(cwd: string, role: string, task: string, station: string, ideaId: string, runDir: string, requestedName?: string, setup?: (worktreePath: string) => void): object {
   const trimmed = task.trim();
   if (!trimmed) throw new Error("task is empty");
   for (const section of ["Why:", "Background:", "Prior:", "How:", "Evidence:", "Done when:", "Failure Done:"]) {
@@ -337,17 +406,14 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   if (setup) setup(worktree.path);
 
   // Stage 3: start pi in a dedicated terminal, not the fallback shell.
-  // The worker bootstraps itself: create_goal with the station brief as
-  // objective, todo for station steps, update_goal complete after the
-  // station-result.txt DONE line is written.
-  const bootstrap = [
-    `Call create_goal with objective ${JSON.stringify(goalObjective(requestedName ?? role, trimmed))}.`,
-    `Track station steps with the todo tool.`,
-    `Finish by writing station-result.txt, then call update_goal with status complete.`,
-  ].join(" ");
+  // The kickoff message carries the exact create_goal objective plus the
+  // exact todo list. The worker model executes those tool calls first.
+  const objective = goalObjective(station, trimmed);
+  const todos = todoSeed(station, ideaId, runDir);
+  const kickoff = kickoffMessage(station, ideaId, runDir, objective, todos);
   const terminal = terminalOf(orca(cwd, ["terminal", "create", "--worktree", `id:${worktree.id}`, "--command", "pi --approve"]));
   orca(cwd, ["terminal", "wait", "--terminal", terminal, "--for", "tui-idle", "--timeout-ms", "60000"]);
-  orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", bootstrap.replace(/"/g, "'"), "--enter"]);
+  orca(cwd, ["terminal", "send", "--terminal", terminal, "--text", kickoff, "--enter"]);
 
   // Stage 4: close the fallback shell created by worktree create.
   for (const item of listTerminals(cwd, worktree.id)) {
@@ -539,19 +605,22 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "dispatch_role_agent",
     label: "Dispatch role agent",
-    description: "Create an Orca worktree, inject .agents/roles/<role>.md as AGENTS.md, and start Pi there. The worker bootstraps itself with create_goal plus the todo tool and closes with update_goal complete. The task brief carries Why, Background, Prior, How, Evidence, Done when, Failure Done. Short commands are rejected.",
+    description: "Create an Orca worktree, inject .agents/roles/<role>.md as AGENTS.md, and start Pi there with a fixed station goal plus todo list. The task brief carries Why, Background, Prior, How, Evidence, Done when, Failure Done. Section headers are required.",
     parameters: {
       type: "object",
       properties: {
         role: { type: "string", description: "Role profile name under .agents/roles" },
         task: { type: "string", description: "Full worker brief: Why, Background, Prior with cause and artifact paths, How, Evidence paths, Done when, Failure Done. Section headers are required." },
+        station: { type: "string", description: "Station name used for the fixed goal objective and todo list." },
+        idea: { type: "string", description: "Idea id used for the fixed goal objective and todo list." },
+        runDir: { type: "string", description: "Station run dir used for the fixed todo list." },
         name: { type: "string", description: "Optional Orca worktree name" },
       },
-      required: ["role", "task"],
+      required: ["role", "task", "station", "idea", "runDir"],
       additionalProperties: false,
     },
     async execute(_toolCallId, input: any, _signal, _onUpdate, ctx) {
-      const details = dispatchRoleAgent(ctx.cwd, input.role, input.task, input.name);
+      const details = dispatchRoleAgent(ctx.cwd, input.role, input.task, input.station, input.idea, input.runDir, input.name);
       return { content: [{ type: "text", text: JSON.stringify(details, null, 2) }], details };
     },
   });
