@@ -6,4 +6,4 @@ Read the supplied materials. Cite every number to its trace file. Produce the re
 
 Return the document path, summary, source list, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not call `subagent`. Do not edit the scheduler. Do not create a worker through a shell command.
+If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not edit the scheduler. Do not create a worker through a shell command.

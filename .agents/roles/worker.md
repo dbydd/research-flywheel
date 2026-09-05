@@ -6,4 +6,4 @@ Read the assigned task. Read the named idea record. Read every evidence path nam
 
 Return the station result, artifact paths, and unfinished work.
 
-If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not call `subagent`. Do not create a worker through a shell command. Do not edit the scheduler.
+If you need another worker, call the Pi tool `dispatch_role_agent` with its role and full brief. Cover why, prior context and cause, research background, how, and acceptance. Short commands cause degenerate loops. Do not create a worker through a shell command. Do not edit the scheduler.

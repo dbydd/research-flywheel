@@ -1,13 +1,1 @@
-{
-  "packages": [
-    {
-      "source": "npm:pi-subagents",
-      "autoload": false,
-      "extensions": [],
-      "skills": [],
-      "prompts": [],
-      "themes": []
-    }
-  ],
-  "extensions": ["./extensions/flywheel.ts"]
-}
+{"extensions": ["./extensions/flywheel.ts"]}

@@ -10,7 +10,6 @@ Role presets live in `.agents/roles/<role>.md`.
 The Pi tool `dispatch_role_agent` creates a worktree through Orca.
 It injects the role preset as that worktree root `AGENTS.md`.
 It starts Pi there.
-`subagent` and `subagent_supervisor` are deprecated.
 Worker spawn uses `dispatch_role_agent`.
 
 Brief parts order:

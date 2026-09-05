@@ -5,11 +5,6 @@ import { join } from "node:path";
 
 // Research Flywheel worker entry.
 // dispatch_role_agent is the worker spawn path.
-// subagent and subagent_supervisor stay disabled in this workspace.
-// packages carries only delta filters, never a bare source.
-// A bare object entry does not disable pi-subagents.
-// The project package list merges with global, so the full source string is required here.
-// The tool_call gate plus the deprecated placeholders below keep old calls visible.
 // Operating context lives in .pi/SYSTEM.md.
 // SYSTEM.md loads once as session customPrompt.
 // The template root carries no AGENTS.md.
@@ -342,50 +337,6 @@ export default function (pi: ExtensionAPI) {
       ].join("\n"),
       "info",
     );
-  });
-
-  // Deprecated entry guard.
-  // subagent calls stop here.
-  // subagent_supervisor calls stop here.
-  // dispatch_role_agent carries role, task, worktree, AGENTS.md injection, Pi start.
-  pi.on("tool_call", async (event) => {
-    if (event.toolName === "subagent" || event.toolName === "subagent_supervisor") {
-      return { block: true, reason: "Deprecated. Call dispatch_role_agent. Workers run through Pi and Orca." };
-    }
-  });
-
-  // Deprecated placeholder.
-  // This name shadows any loaded subagent tool.
-  // Execution always fails with routing guidance.
-  pi.registerTool({
-    name: "subagent",
-    label: "Deprecated subagent",
-    description: "Deprecated. Calls fail. Call dispatch_role_agent for worker spawn.",
-    parameters: {
-      type: "object",
-      properties: {},
-      additionalProperties: true,
-    },
-    async execute() {
-      throw new Error("Deprecated. Call dispatch_role_agent with role and task.");
-    },
-  });
-
-  // Deprecated placeholder.
-  // This name shadows any loaded subagent_supervisor tool.
-  // Execution always fails with routing guidance.
-  pi.registerTool({
-    name: "subagent_supervisor",
-    label: "Deprecated subagent supervisor",
-    description: "Deprecated. Calls fail. Call dispatch_role_agent for worker spawn.",
-    parameters: {
-      type: "object",
-      properties: {},
-      additionalProperties: true,
-    },
-    async execute() {
-      throw new Error("Deprecated. Call dispatch_role_agent with role and task.");
-    },
   });
 
   pi.registerCommand("bootstrap", {
