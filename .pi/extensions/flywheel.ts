@@ -67,7 +67,8 @@ function listWorktrees(cwd: string): any[] {
 }
 
 function adoptWorktreeByName(cwd: string, name: string): { id: string; path: string } | null {
-  const suffix = `/qwen38-27b-sft-workspace/${name}`;
+  const base = cwd.split("/").filter(Boolean).pop() ?? "";
+  const suffix = `/${base}/${name}`;
   for (const candidate of listWorktrees(cwd)) {
     const path = candidate?.path;
     if (typeof path !== "string" || !path.endsWith(suffix)) continue;
