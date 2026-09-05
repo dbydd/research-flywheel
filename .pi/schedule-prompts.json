@@ -8,8 +8,11 @@
       "enabled": true,
       "type": "cron",
       "createdAt": "2026-09-05T06:07:50.504Z",
-      "runCount": 0,
-      "session": "01a06bf4-c09a-7ce1-a0d3-652f5dee0ccd"
+      "runCount": 3,
+      "session": "01a06bf4-c09a-7ce1-a0d3-652f5dee0ccd",
+      "lastStatus": "success",
+      "lastRun": "2026-09-05T06:30:00.005Z",
+      "nextRun": "2026-09-05T06:40:00.000Z"
     }
   ],
   "version": 1

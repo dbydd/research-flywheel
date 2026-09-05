@@ -224,10 +224,10 @@ function buildScoutBrief(direction: string): string {
     `Why: Seed the flywheel with the first grounded idea for this direction.`,
     `Background: User direction: ${direction} Frontier constraints unknown until scout pulls evidence.`,
     `Prior: No prior run. This is the seed round.`,
-    `How: 1. Inspect frontier sources for the direction. 2. Pull evidence into research/. 3. Design the evaluation contract with objectives, constraints, and pass rule. 4. Append one idea line to .agents/ideas.jsonl following .agents/idea-schema.md. Write .agents/runs/scout/station-result.txt with first line DONE plus idea id, or FAILED plus cause. Sync-back: copy the idea line and any research/ artifacts to this worktree, or report FAILED when nothing was produced.`,
-    `Evidence: research/ paths created by this station.`,
-    `Done when: One idea line exists in .agents/ideas.jsonl with non-empty evidence, evaluation.objectives, and done_when. station-result.txt first line starts with DONE.`,
-    `Failure Done: State attempted sources, observed gap, cause, and manual flag. No empty idea record.`,
+    `How: 1. Search current literature with web_search: at least 2 queries on the direction, read at least 2 primary sources (papers, docs, or upstream repos), record URLs plus one-line findings each. 2. Inspect local frontier sources for the direction (code, data, evaluator, contract). 3. Pull all evidence into research/: web findings go to research/frontier-notes.md with URLs, local artifacts are copied or referenced by path. 4. Design the evaluation contract with objectives, constraints, and pass rule. 5. Append one idea line to .agents/ideas.jsonl following .agents/idea-schema.md. Write .agents/runs/scout/station-result.txt with first line DONE plus idea id, or FAILED plus cause. The idea evidence array must include research/frontier-notes.md plus local evidence paths. Sync-back: copy the idea line and any research/ artifacts to the scheduler worktree listed in Evidence, or report FAILED when nothing was produced.`,
+    `Evidence: research/ paths created by this station. Scheduler worktree for sync-back is named in the dispatch notice.`,
+    `Done when: One idea line exists in .agents/ideas.jsonl with non-empty evidence including research/frontier-notes.md, evaluation.objectives, and done_when. station-result.txt first line starts with DONE.`,
+    `Failure Done: State attempted sources (web queries plus local paths), observed gap, cause, and manual flag. No empty idea record.`,
   ].join("\n");
 }
 

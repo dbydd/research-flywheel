@@ -10,7 +10,7 @@
 - `question`: 研究问题
 - `hypothesis`: 可证伪假设
 - `method`: 方法草案，落在哪块代码
-- `evidence`: 证据路径数组，必须非空，指向 `research/` 下真实物料
+- `evidence`: 证据路径数组，必须非空，指向 `research/` 下真实物料；必须包含 `research/frontier-notes.md`（scout 的联网文献记录，含 URL 与单行结论）
 - `evaluation`: 评测契约，见下
 - `done_when`: 验收条件，可检查
 - `status`: `queued` | `running` | `keep` | `failed` | `manual`
