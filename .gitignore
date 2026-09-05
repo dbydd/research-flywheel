@@ -4,3 +4,4 @@
 .pi/hindsight/
 .agents/runs/
 .agents/archive/
+!.gitkeep
