@@ -66,9 +66,11 @@ function listWorktrees(cwd: string): any[] {
   }
 }
 
-function adoptWorktreeByName(cwd: string, name: string): { id: string; path: string } | null {
-  const base = cwd.split("/").filter(Boolean).pop() ?? "";
-  const suffix = `/${base}/${name}`;
+function sleepMs(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function findWorktreeBySuffix(cwd: string, suffix: string): { id: string; path: string } | null {
   for (const candidate of listWorktrees(cwd)) {
     const path = candidate?.path;
     if (typeof path !== "string" || !path.endsWith(suffix)) continue;
@@ -77,6 +79,21 @@ function adoptWorktreeByName(cwd: string, name: string): { id: string; path: str
     return { id, path };
   }
   return null;
+}
+
+// Orca materializes the checkout asynchronously: the create call returns
+// (or drops) before `worktree list` shows the new entry. Poll until the
+// suffix appears instead of trusting a single list call.
+function waitForWorktreeByName(cwd: string, name: string, timeoutMs = 30000): { id: string; path: string } | null {
+  const base = cwd.split("/").filter(Boolean).pop() ?? "";
+  const suffix = `/${base}/${name}`;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const found = findWorktreeBySuffix(cwd, suffix);
+    if (found) return found;
+    if (Date.now() >= deadline) return null;
+    sleepMs(1500);
+  }
 }
 
 function listTerminals(cwd: string, worktreeId: string): any[] {
@@ -312,8 +329,8 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
   } catch {
     /* runtime drop is expected; adopt below */
   }
-  const adopted = adoptWorktreeByName(cwd, name);
-  if (!adopted) throw new Error(`worktree ${name} did not materialize`);
+  const adopted = waitForWorktreeByName(cwd, name);
+  if (!adopted) throw new Error(`worktree ${name} did not materialize within 30s`);
   const worktree = { id: adopted.id, path: adopted.path };
 
   // Stage 2: inject context before any agent starts.
