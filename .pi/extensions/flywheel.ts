@@ -84,7 +84,7 @@ function findWorktreeBySuffix(cwd: string, suffix: string): { id: string; path: 
 // Orca materializes the checkout asynchronously: the create call returns
 // (or drops) before `worktree list` shows the new entry. Poll until the
 // suffix appears instead of trusting a single list call.
-function waitForWorktreeByName(cwd: string, name: string, timeoutMs = 30000): { id: string; path: string } | null {
+function waitForWorktreeByName(cwd: string, name: string, timeoutMs = 120000): { id: string; path: string } | null {
   const base = cwd.split("/").filter(Boolean).pop() ?? "";
   const suffix = `/${base}/${name}`;
   const deadline = Date.now() + timeoutMs;
@@ -330,7 +330,7 @@ function dispatchRoleAgent(cwd: string, role: string, task: string, requestedNam
     /* runtime drop is expected; adopt below */
   }
   const adopted = waitForWorktreeByName(cwd, name);
-  if (!adopted) throw new Error(`worktree ${name} did not materialize within 30s`);
+  if (!adopted) throw new Error(`worktree ${name} did not materialize within 120s`);
   const worktree = { id: adopted.id, path: adopted.path };
 
   // Stage 2: inject context before any agent starts.

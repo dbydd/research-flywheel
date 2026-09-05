@@ -1,0 +1,16 @@
+{
+  "jobs": [
+    {
+      "id": "-iVDcl9YgV",
+      "name": "flywheel-e2e-watch",
+      "schedule": "0 */10 * * * *",
+      "prompt": "Background watchdog for the research-flywheel e2e test (qwen38-27b-sft-workspace). Do NOT message the user unless something needs their input. Quietly: (1) check intercom pending/inbox for replies from session 01a07003 and relay only actionable failures; (2) verify scout worktree landed via `orca worktree list --json` (expect a new scout-* besides the removed orphan scout-1788587885896); (3) check `.agents/ideas.jsonl` in qwen38-27b-sft-workspace for the new idea line; (4) if dispatch failed again, capture the exact error text for the next debug round. Summarize findings in one short paragraph per check, no user interruption for healthy progress.",
+      "enabled": true,
+      "type": "cron",
+      "createdAt": "2026-09-05T06:07:50.504Z",
+      "runCount": 0,
+      "session": "01a06bf4-c09a-7ce1-a0d3-652f5dee0ccd"
+    }
+  ],
+  "version": 1
+}
