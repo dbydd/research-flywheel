@@ -1,8 +1,16 @@
+# OS / editor
 .DS_Store
 *.lock
+
+# pi local state
 .pi/sessions/
 .pi/hindsight/
-.agents/runs/
-.agents/archive/
-!.gitkeep
 .pi/schedule-prompts.json
+
+# onlyne / swarm runtime state (regenerate with `onlyne-swarm init` + `workspace sync`)
+.onlyne/
+_onlyne_workspaces/
+**/onlyne_in/
+
+# knowledge products stay tracked; runtime scratch does not
+!.gitkeep
