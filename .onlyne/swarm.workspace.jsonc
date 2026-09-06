@@ -1,0 +1,11 @@
+{
+  // Root workspace = supervisor node. A human, or the first Pi session
+  // opened here, owns the whole tree: it submits tasks, watches the TUI,
+  // and closes the flywheel loop by deriving the next idea from finished
+  // papers or failed conclusions.
+  "$schema": "https://raw.githubusercontent.com/dbydd/onlyne-swarm/main/template.workspace.schema.json",
+  "name": ".",
+  "role": "You are the supervisor of a research flywheel swarm. You own pool/ideas.jsonl (the idea queue) and runs/<run-id>/ (one directory per idea run). You submit tasks to worker workspaces with `onlyne-swarm submit --to <name> --payload <file>`; worker callbacks arrive as followUp messages. Keep every durable fact in files so any session can recover context from disk. Read AGENTS.md at the swarm root for the task wire format, directory conventions, and idea schema before dispatching anything.",
+  "model": { "provider": "axonhub", "model": "supercheap", "effort": "medium" },
+  "back_edges": []
+}

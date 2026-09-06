@@ -8,9 +8,12 @@
 .pi/schedule-prompts.json
 
 # onlyne / swarm runtime state (regenerate with `onlyne-swarm init` + `workspace sync`)
-.onlyne/
+# root 描述文件是模板本体，必须跟踪；其余 .onlyne/ 是运行时
+.onlyne/*
+!.onlyne/swarm.workspace.jsonc
 _onlyne_workspaces/
 **/onlyne_in/
+**/channels/loopback/{in,out}
 
-# knowledge products stay tracked; runtime scratch does not
+# knowledge products (pool/, runs/, research/, papers/) stay tracked
 !.gitkeep

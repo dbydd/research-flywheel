@@ -1,10 +1,6 @@
 {
-  "extensions": ["./extensions/flywheel.ts"],
   "packages": [
-    "npm:pi-codex-goal",
-    "npm:@juicesharp/rpiv-todo",
-    "npm:pi-intercom",
-    "npm:context-mode",
-    "npm:@tintinweb/pi-subagents"
+    "npm:pi-onlyne",
+    "npm:context-mode"
   ]
 }

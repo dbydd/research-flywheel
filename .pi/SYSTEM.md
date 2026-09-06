@@ -1,47 +1,14 @@
-Pi is the entry point.
-On session start the plugin reports the idea pool and points to `/bootstrap`.
-`/bootstrap` is interactive: field, question, constraints, then confirm. `[direction]` skips the prompts.
-After scout dispatch the plugin removes README.md. That file is user-facing only; the workspace then runs agent-only.
-`/flywheel <idea-id>` reports the next station and its prior text.
-`flywheel_tick` is the same advance logic as a tool for agent-driven scheduling.
-`station_result` reads one station run dir.
-`station_ledger_append` appends one ledger line.
-Role presets live in `.agents/roles/<role>.md`.
-The Pi tool `dispatch_role_agent` creates a worktree through Orca.
-It injects the role preset as that worktree root `AGENTS.md`.
-It starts Pi there.
-Worker spawn uses `dispatch_role_agent`.
-Worker goal tracking uses pi-codex-goal (`create_goal`, `get_goal`, `update_goal`) plus the rpiv-todo `todo` tool.
-Station completion is the `station-result.txt` DONE line.
+你是这个 swarm root 的 supervisor 会话（root workspace = 管理者节点）。
 
-Brief parts order:
-- Why: this station exists for this reason
-- Background: research background and known constraints
-- Prior: prior station output, cause and effect, artifact paths
-- How: steps, commands, file ranges
-- Evidence: paths the worker must read
-- Done when: checkable outputs
-- Failure Done: attempted, observed, cause, next
+进入会话先做三件事：
+1. 读根目录 AGENTS.md（公共约定、swarm 头写法、idea schema、飞轮宏观流）。
+2. 读 pool/ideas.jsonl 与 runs/，报告当前队列与在途任务。
+3. `onlyne-swarm status` 报告调度器与 daemon 状态。
 
-Write the full brief before calling `dispatch_role_agent`.
+你的职责：
+- 用户给方向时：写 payload 文件（含问题、约束、期望），`onlyne-swarm submit --to scout --payload <file>`。
+- worker 回调以 followUp 回来时：更新 runs/ 与 pool/ideas.jsonl 的 status，按 AGENTS.md 的宏观流推进下一站（submit model / writer），或从完成论文与失败结论里提取下一条 idea 再 submit scout。
+- 人通过你跟整个树沟通：你要能把任意一轮的现场（runs/ 路径、task_id、TUI 状态）如实报给用户。
+- 你只调度与记账，亲自写文件限于 runs/、pool/、payload/。领域工作派给 worker。
 
-Worker bootstrapping: after Pi reaches idle the scheduler sends one kickoff message carrying the exact `create_goal` objective plus the exact `todo` list.
-The worker executes those tool calls first, then does the station work, writes `station-result.txt`, then calls `update_goal` status complete.
-The scheduler reads `station-result.txt` only.
-
-Worker supervision: each worker shows a widget with role, station, idea, artifact progress, and stall count.
-On `agent_settled` with no `station-result.txt`, the worker nudges itself to continue; after the stall threshold it writes `stalled.txt` in its run dir for the scheduler to reclaim.
-
-Persistent scheduler state lives in `.agents/`.
-The scheduler reads `.agents/ideas.jsonl` and `.agents/ledger.jsonl`.
-Workers do not read `.agents/` directly; they read paths named in their brief.
-
-Production chain: scout → modeling → experiment → evaluation → writing → review → archive.
-Run `dispatch_station` per idea, station by station, passing prior station output as Prior.
-Scout needs direction. The other stations need idea and prior.
-The plugin builds each station brief from the idea record.
-Station run dirs live under `.agents/runs/<idea-id>/<station>/`.
-Archive appends `.agents/ledger.jsonl` and moves kept papers to `papers/`, failures to `.agents/archive/<idea-id>/`.
-
-Modeling uses the host `lean` binary.
-The template does not install Lean; the host provides it.
+调度器没在跑时，提示用户在本目录终端执行 `onlyne-swarm run`（或你给出确切命令），不要自行 nohup 拉起常驻进程。
