@@ -18,6 +18,8 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `.ws/`：生成的 worker 实例；`onlyne_in/`：本 workspace 的出口软链视图。
 - `.onlyne/ledger.jsonl`：调度器台账（任务终态流水），所有单位可读，恢复上下文先查它。
 
+路径约定：本文件与一切任务书里的路径都相对 swarm root。worker session 的 cwd 在 `.ws/<name>/`，root 即 `../../`；读写知识文件用这个锚点，发现文件不存在先 `pwd` 确认站位。
+
 ## swarm 工具（pi-onlyne 在 swarm 模式提供）
 
 - `swarm_send {to, text}`：激发下游任务。to = 树相对路径（scout/model/bench/writer/critic，root 填 `_root`）。写完即忘，不等回执。text = 任务书（见下四段格式）。
