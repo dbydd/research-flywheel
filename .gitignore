@@ -5,3 +5,4 @@
 .agents/runs/
 .agents/archive/
 !.gitkeep
+.pi/schedule-prompts.json
