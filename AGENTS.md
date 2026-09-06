@@ -1,8 +1,13 @@
 # Research Flywheel v3 — swarm 公共约定
 
 本文件位于 swarm root，pi 会沿父目录自动拼进树内每个 session 的上下文。
-workspace = role = 记忆+设定+历史文件；session = 该 role 手头的一件工作。
-一切信息落文件，一切结论可回溯到 runs/ 与 papers/ 的路径。
+workspace = role = 记忆+设定+历史文件；session = 该 role 手头的一件工作，一跳即结。
+一切信息落文件，一切结论可回溯到 runs/、papers/ 与 .onlyne/ledger.jsonl 的路径。
+
+## 工作模型（射后不理）
+
+每个 session 的生命周期：恢复上下文 → 工作 → 激发下游（可选，若干）→ 交活退出。
+session 对下游零等待。下游成果经文件与台账呈现，由接力任务唤醒合适的单位继续。
 
 ## 目录
 
@@ -10,26 +15,27 @@ workspace = role = 记忆+设定+历史文件；session = 该 role 手头的一�
 - `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
 - `research/`：证据。`frontier-notes.md` 是联网检索记录（URL+单行结论，追加式）。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿（`<run-id>.md`）。
-- `_onlyne_workspaces/`：生成的 worker 实例；`onlyne_in/`：本 workspace 的出口软链视图。
+- `.ws/`：生成的 worker 实例；`onlyne_in/`：本 workspace 的出口软链视图。
+- `.onlyne/ledger.jsonl`：调度器台账（任务终态流水），所有单位可读，恢复上下文先查它。
 
-## swarm 任务写法（worker 之间）
+## swarm 工具（pi-onlyne 在 swarm 模式提供）
 
-- 收任务：调度器把带 `---swarm` 头的任务书以 followUp 送进你的 session。
-- 交回：`onlyne_swarm_reply` 写 out（成功信号），或 `onlyne_mark_no_reply` 结束不产出。
-- 发子任务：新 UUID 作 task_id，把下面格式的正文写入 `onlyne_in/<目标>/`：
+- `swarm_send {to, text}`：激发下游任务。to = 树相对路径（scout/model/bench/writer/critic，root 填 `_root`）。写完即忘，不等回执。text = 任务书（见下四段格式）。
+- `swarm_complete {text}`：交活结项，本跳成功信号。text = 结果摘要 + 产物路径清单。
+- `swarm_quit {reason?}`：静默退出，调度器记 failed。任务书前提不成立、无事可做时用。
+- `swarm_status`：只读兜底，查当前 task_id 与已激发列表。
+- 头构造在工具内部完成。手写 `---swarm` 块、直写 FIFO 都是错误做法。
 
-  ```text
-  ---swarm
-  task_id: <uuid4>
-  from: <你的树路径，如 model>
-  reply_to: <你当前任务的 task_id>
-  attempt: 1
-  ---
-  <Markdown 任务书：目标、输入路径、期望产出、done_when>
-  ```
+## 任务书四段（swarm_send 的 text）
 
-- 发一个子任务后你的 `pending_replies` +1；回调以 followUp 回来。回调没收齐就 reply = 提前终止，禁止。
-- 失败也要 reply：正文首段写 `> swarm-failed: <原因>`，随后注明已落盘的现场路径。
+```text
+目标：<一句话，做完算什么>
+输入：<必须读的文件路径，runs/ 与 research/ 为准>
+期望产物：<写到哪里的什么文件，格式要求>
+下一跳建议：<完成后该 swarm_send 谁、干什么；没有就写 无>
+```
+
+输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。
 
 ## idea schema（pool/ideas.jsonl 一行一条 JSON）
 
@@ -37,12 +43,19 @@ workspace = role = 记忆+设定+历史文件；session = 该 role 手头的一�
 
 `evaluation`: `{objectives:[{metric,evaluator,direction,epsilon,baseline}], constraints:[{check,description}], pass_rule:"all"|"any"}`。evidence 为空、objectives 为空、done_when 为空 → 不进池。
 
-## 飞轮宏观流（由 supervisor 闭合环路）
+## 飞轮宏观流（接力闭环）
 
-scout 出 idea → supervisor 入队 → model 推导/形式化/实现（可派 bench）→ bench 回值 → writer 成稿（可派 critic）→ critic verdict → supervisor 归档：keep 留 papers/，failed 记 verdict.md；随后从 open questions 或失败结论提取下一条 idea，再 submit scout。环路在 supervisor 手里，人随时可接管该 session。
+1. supervisor：从 pool 取 queued idea，固化 `runs/<run-id>/idea.json`，`swarm_send model`，status 改 running。
+2. model：推导+Lean+实现后 `swarm_send bench`（评测任务书），随后 `swarm_send writer`（带"等 measured/ 就绪"的提醒）。
+3. bench：跑完落 `runs/<run-id>/measured/`，`swarm_send writer`（续作，指向 summary.md）。
+4. writer：稿件成形后 `swarm_send critic`，随后 `swarm_complete`（批评家意见以接力任务进修订轮）。
+5. critic：verdict + 编号 finding 落 `runs/<run-id>/verdict.md`；revise → `swarm_send writer`；accept/reject → `swarm_send _root`。
+6. supervisor：被唤醒后归档（keep 留 papers/，failed 记 verdict.md），从 open questions 或失败结论提取下一条 idea 入池，推进队列。
+
+环路在 supervisor 手里，人随时可接管该 session。自激发无熔断，终结靠人 `onlyne-swarm cancel <task-id>` 或 TUI。
 
 ## 纪律
 
 - 改 `experiment/`、`evaluation/` 前读 runs/ 里上一轮记录；改动在任务产物里写明。
 - 数值只从 measured/ 引，报告只写跑出来的东西。
-- 名字即路径：worker 名保持 ≤7 字符、树保持一层（socket 路径长度限制）。
+- 失败也交活：跑不动的结论写进 runs/，`swarm_complete` 交失败报告（首段 `> hop-failed: <原因>` + 现场路径），让下游有据可依。

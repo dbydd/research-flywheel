@@ -11,7 +11,7 @@
 # root 描述文件是模板本体，必须跟踪；其余 .onlyne/ 是运行时
 .onlyne/*
 !.onlyne/swarm.workspace.jsonc
-_onlyne_workspaces/
+.ws/
 **/onlyne_in/
 **/channels/loopback/{in,out}
 

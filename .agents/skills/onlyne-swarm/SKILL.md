@@ -17,12 +17,13 @@ follow-up queue and finishes with the plugin reply tools.
 
 - Swarm root = scheduler cwd. Commands run at the root; nested starts refuse.
 - Description = `.agents/.schedule/<path>/template.workspace.jsonc`.
-- Instance = `_onlyne_workspaces/<path>`, generated one way from descriptions.
-- Root = supervisor workspace (`.`). It submits, receives callbacks, cancels.
+- Instance = `.ws/<path>`, generated one way from descriptions.
+- Root = supervisor workspace (`.`). It submits, watches the ledger, cancels.
 - Agent workspace = generated worker. The scheduler owns its daemon, terminal,
-  Pi session, and reply routing.
-- Task = Pi session (`task_id == session_id`). One session carries one task.
-- Callback = child reply routed to the parent session as `followUp`.
+  Pi session, and out routing.
+- Task = Pi session (`task_id == session_id`). One session carries one hop.
+- Downstream work = new tasks spawned with `transfer_send_to` lineage.
+  Sessions never wait; results travel through files and the ledger.
 - Driving work inside a task belongs to the pi-onlyne plugin tools, not to
   shell commands from the operator.
 
@@ -74,7 +75,7 @@ Rules:
 - Missing edge targets fail `sync`; fix the path, do not invent retries.
 - Ancestor templates contribute scalar fields only; `back_edges` never inherit.
 - Hand-tune one instance in
-  `_onlyne_workspaces/<path>/.onlyne/swarm.workspace.jsonc`; sync keeps it.
+  `.ws/<path>/.onlyne/swarm.workspace.jsonc`; sync keeps it.
 - Validate templates against the GitHub-hosted `template.workspace.schema.json`.
 
 ## Generate and inspect the tree
@@ -122,10 +123,10 @@ onlyne-swarm tui
 onlyne-swarm cancel <task-id> --reason "manual stop"
 ```
 
-`task_id` names the whole family. Cyclic graphs run until the operator
-cancels; there is no timeout, retry, or loop breaker. A cancelled family
-sends `swarm-cancelled` callbacks; an exited session sends `swarm-failed`.
-Unroutable callbacks land in dead letters visible from `status`.
+`task_id` names the whole lineage family. Cyclic graphs run until the operator
+cancels; there is no timeout, retry, or loop breaker. Cancelled tasks record
+`swarm-cancelled` ledger rows; an exited session records `swarm-failed`.
+Ledger tail is visible from `status` and the TUI.
 
 ## Refresh this skill
 
@@ -138,11 +139,11 @@ root. It is workspace-local; it never touches global skill directories.
 
 ## Common mistakes
 
-- Starting the scheduler inside `_onlyne_workspaces/...` instead of the root.
-- Editing generated `_onlyne_workspaces/` configs instead of the templates,
+- Starting the scheduler inside `.ws/...` instead of the root.
+- Editing generated `.ws/` configs instead of the templates,
   then expecting `sync` to propagate the edit.
 - Hand-writing a task header into loopback input instead of using `submit`.
 - Treating `onlyne_in/<target>` as storage; it is a send-side symlink view.
-- Opening the worker session manually and driving callbacks by hand instead
+- Opening the worker session manually and driving follow-ups by hand instead
   of letting the scheduler and plugin tools own delivery.
 - Expecting the scheduler to retry failures; retry belongs to Pi-side plugins.

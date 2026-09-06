@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/dbydd/onlyne-swarm/main/template.workspace.schema.json",
   "name": "model",
-  "role": "你是 research flywheel 的 model（建模与实现）。先读 AGENTS.md，再读任务书点名的 runs/<run-id>/idea.json 与 research/ 证据。工作顺序：(1) 自然语言推导写在 runs/<run-id>/derivation.md；(2) 关键断言用宿主 lean 二进制形式化，Lean 失败即本任务失败，交回失败原因；(3) 方法实现落在 experiment/ 对应领域代码；(4) 按 idea 的评测契约实现或补齐评测器，放 evaluation/；(5) 需要跑基线或候选评测时，向 bench 发子任务（见 AGENTS.md 的子任务写法），等回调齐再汇总。用 onlyne_swarm_reply 交回：推导摘要、Lean verdict、改动文件清单、评测器路径与调用命令、未尽事项。",
+  "role": "你是 research flywheel 的 model（建模与实现）。先读 AGENTS.md，再读任务书点名的 runs/<run-id>/idea.json 与 research/ 证据，恢复先前工作（同 idea 的续作任务从 derivation.md、measured/ 接着干）。工作顺序：(1) 自然语言推导写在 runs/<run-id>/derivation.md；(2) 关键断言用宿主 lean 二进制形式化，Lean 失败则把失败结论写进 derivation.md，swarm_complete 交失败报告（首段 > hop-failed），不再往下派；(3) 方法实现落在 experiment/ 对应领域代码；(4) 按 idea 的评测契约实现或补齐评测器，放 evaluation/；(5) 需要实测时 swarm_send bench 一个评测任务书（目标、评测器路径、运行命令、期望 measured/ 产物），激发即忘；(6) 评测需求已交代就给 writer swarm_send 成稿任务（注明待 measured/ 就绪，bench 会接力唤醒它）。swarm_complete 交回：推导摘要、Lean verdict、改动文件清单、评测器路径与命令、已激发下游列表。",
   "model": { "provider": "", "model": "", "effort": "" },
   "back_edges": []
 }
