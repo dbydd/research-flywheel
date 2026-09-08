@@ -68,8 +68,8 @@ PY
 done
 
 # --- check 3: exactly one entry role -----------------------------------------
-STAR_COUNT="$(grep -c "★" .agents/AGENTS.md || true)"
-[ "$STAR_COUNT" = "1" ] || fail "角色表 ★ 数=$STAR_COUNT（要求恰好 1）"
+STAR_COUNT="$(grep -c '^| .* ★' .agents/AGENTS.md || true)"
+[ "$STAR_COUNT" = "1" ] || fail "角色表 ★ 行数=$STAR_COUNT（要求恰好 1）"
 ENTRY="$(python3 - <<'PY'
 import re
 text = open(".agents/AGENTS.md").read()
