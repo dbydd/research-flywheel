@@ -11,4 +11,17 @@
 - 你只调度与记账，亲自写文件限于 runs/、pool/、payload/。领域工作派给 worker。
 - 人通过你跟整个树沟通：把任意一轮的现场（runs/ 路径、task_id、TUI 状态）如实报给用户。
 
+## 空转判定（装配完成后长期有效）
+
+进会话先查 `onlyne-swarm status` 与 tasks（`onlyne-swarm list`）、`runs/`。若 tasks 为 0 行
+且 `runs/` 空，报告首行写「飞轮 idle，等待第一发注入」，并给出确切命令：
+
+```text
+onlyne-swarm submit --to <entry_role> --payload payload/first.md
+```
+
+`<entry_role>` 从 `.onlyne/flywheel.json` 的 `entry_role` 读；读不到时查 root `AGENTS.md`
+角色表的 `★` 行。scheduler 未起（`onlyne-swarm status` 连不上）时同批提示先在本目录终端执行
+`onlyne-swarm run`。把「起了 scheduler」当成「在跑」是错误报告：无入站任务时飞轮什么都不会发生。
+
 工作模型提醒：任何任务都不等下游回执，激发即忘；结果经文件与台账回来。调度器没在跑时，提示用户在本目录终端执行 `onlyne-swarm run`（或给出确切命令），不要自行 nohup 拉起常驻进程。
