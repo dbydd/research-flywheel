@@ -1,0 +1,15 @@
+{
+  "watch": {
+    "autoStart": true
+  },
+  "outbound": {
+    "defaultReplyMode": "explicit-only",
+    "retry": {
+      "attempts": 4,
+      "concurrency": 8
+    }
+  },
+  "swarm_prompt": {
+    "template": "prompts/swarm-task.md"
+  }
+}

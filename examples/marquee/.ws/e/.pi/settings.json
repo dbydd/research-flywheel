@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "npm:pi-onlyne@^0.8.1"
+  ],
+  "defaultTools": [
+    "bash"
+  ]
+}

@@ -40,6 +40,10 @@ onlyne-swarm tui
 
 接力拓扑完整描述在根目录 `AGENTS.md` 的宏观流一节——每个 session 自动继承该文件。调度机制与工具用法见 `.agents/skills/onlyne-swarm/SKILL.md`。
 
+## 协议样例
+
+[`examples/marquee`](examples/marquee/README.md) 是独立的五节点 `a→b→c→d→e→a` 流水灯。它用于验证 session 自回收 ack、裸 relay / scheduler deliver 分层、环状自激与全量重试。它不参与科研 idea 池与论文归档；执行时复制到短路径目录，按样例 README 启动。canonical 副本同时随 `onlyne-swarm/examples/marquee` 发布。
+
 ## 动力源
 
 seed 由人给（方向+问题）。之后每轮收尾，supervisor 从论文 open questions 或失败结论提取下一条 idea 入池。idea 无证据或无评测契约不进池。自激发无熔断，终结靠人：`onlyne-swarm cancel <task-id>`（按 `transfer_send_to` 血缘整族取消）或 TUI `c` 键。
