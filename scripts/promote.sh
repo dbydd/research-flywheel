@@ -266,7 +266,7 @@ python3 - "$THEME" "$ENTRY" "$ROLES_JSON" "$TEMPLATE_COMMIT" "$NOW" <<'PY_FLY'
 import json,sys
 theme, entry, roles, commit, now = sys.argv[1], sys.argv[2], json.loads(sys.argv[3]), sys.argv[4], sys.argv[5]
 json.dump({"stage":"live","theme":theme,"slug":theme,"template_commit":commit,
-           "promoted_at":now,"entry_role":entry,"roles":json.loads(roles)},
+           "promoted_at":now,"entry_role":entry,"roles":roles},
           open(".onlyne/flywheel.json","w"), indent=2, ensure_ascii=False)
 PY_FLY
 if [ "$PAYLOAD_MISSING" = "1" ]; then
