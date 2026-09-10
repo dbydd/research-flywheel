@@ -19,7 +19,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 ## 目录
 
 - `pool/ideas.jsonl`：idea 池（唯一队列，一行一条，见下 schema）。侦察位追加，新轮也由侦察位自取消费；supervisor 不碰队列。
-- `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
+- `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`figs/`（绘图脚本）、`verdict.md`。figure 制作归 writer 兼职，无独立 role。
 - `research/`：证据。`frontier-notes.md` 是联网检索记录（URL+单行结论，追加式）。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿（`<run-id>.md`）。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
