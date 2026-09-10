@@ -59,10 +59,29 @@ flowchart LR
 | 5 | `research/` | 领域锚点文件与 `frontier-notes.md` 表头约定 | scout / model |
 | 6 | `experiment/`、`evaluation/` | 领域代码与评测器骨架 | model / bench |
 | 7 | `papers/`、`runs/` | 空骨架 + `.gitkeep` | writer / critic / supervisor |
-| 8 | `.pi/settings.json` | `npm:pi-onlyne@^0.8.1` 版本下限 | 所有 worker 与 supervisor |
+| 8 | `.pi/settings.json` | `packages` 含 pi-onlyne（发布态 `npm:pi-onlyne@^0.9.1`；开发态换成本地路径，版本下限从包内 `package.json` 核，§3.1） | 所有 worker 与 supervisor |
+| 8b | `.pi/onlyne.json` | 写 `{"watch":{"autoStart":true}}`；缺它 watch 不自启，`swarm_ready` 永不发 | pi-onlyne 扩展 |
+| 8c | `.onlyne/config.toml` | 含 `[swarm] enabled = true`；缺它工具面按非 swarm 装配 | pi-onlyne 扩展 + daemon |
 | 9 | `README.md` | 用户面：这套主题跑什么、怎么起 | 人 |
 
 第 3 项的角色清单是拓扑的唯一事实源。第 1、2 项里出现的角色名都要由装配过程按第 3 项生成。
+
+### 3.1 swarm-ready 三门（root 与每个实例都要过）
+
+一发任务落到 worker 会话，前提是三处配置同时成立：
+
+| 门 | 位置 | 判据 | 缺它的现场 |
+|---|---|---|---|
+| 1 工具面 | `.onlyne/config.toml` | `[swarm] enabled = true` | swarm 工具不注册，会话按普通 onlyne 面装配 |
+| 2 watch 自启 | `.pi/onlyne.json` | `watch.autoStart == true`（默认 false） | watch 不起，`swarm_ready` 永不发，scheduler 收不到 handshake |
+| 3 插件装载 | `.pi/settings.json` | `packages` 含 pi-onlyne | 扩展根本不加载 |
+
+职责划分：实例侧三门由 scheduler `run_sync` 物化与 additive 补齐（R1/R2），`onlyne-swarm status`
+的 `not_swarm_ready` 与 `list_workspaces[].swarm_ready_gaps` 报缺哪门（R3），`submit` 到未就绪
+workspace 直接拒绝。root 侧三门归本装配过程：root 的 `.pi` 由用户维护，scheduler 只报缺、不动手。
+**三门对 root 同样适用**，root 过不了，第一发 `submit` 就停在 root 门前，supervisor 会话也拿不到 swarm 工具。
+开发态把 `packages` 里的 `npm:pi-onlyne@…` 换成本地路径（相对 settings 所在目录解析，实例侧形如
+`../../../../onlyne/harness/pi-onlyne`），这样插件改动免发版即生效。
 
 另一处同类缺口：root `AGENTS.md` 与本文都引用 `payload/`，模板目录里它不存在（`pool/`、`runs/`、
 `research/`、`papers/`、`experiment/`、`evaluation/` 都只带 `.gitkeep`，`payload/` 连目录都没有）。
@@ -75,7 +94,7 @@ flowchart LR
 ```markdown
 | role | 职责 | 上游 | 下游 | entry | model |
 |---|---|---|---|---|---|
-| scout | 前沿检索与 idea 入池 | root | root | ★ | axonhub/supercheap |
+| scout | 前沿检索与 idea 入池 | root | root | ★ | `<你的provider>/<模型>` |
 | model | 推导 + Lean + 实现 | root | bench, writer, root | | … |
 | bench | 跑批与测量 | model | writer, root | | … |
 | writer | 成稿 | model, bench | critic | | … |
@@ -149,11 +168,16 @@ frontmatter `name` + `description` 要能触发（关键词：装配、bootstrap
    `done_when` 非空。允许 0 条种子，此时给 warning。
 7. `payload/` 与 `research/` 就位：`payload/` 存在（缺则脚本建目录 + `.gitkeep` 并列入本次
    commit，§3 记的模板缺口）；`research/` 至少一个非 `.gitkeep` 文件。
-8. `.pi/settings.json` 的 `packages` 含 `npm:pi-onlyne@^0.8.1` 或更高下限。
-9. 二进制齐备：`onlyne-swarm`、`onlyne`、`orca`、`pi`；`onlyne-swarm --version >= 0.5.0`。
+8. swarm-ready 三门在 root 就位：`.onlyne/config.toml` 有 `[swarm] enabled = true`、
+   `.pi/onlyne.json` 有 `watch.autoStart = true`、`.pi/settings.json` 的 `packages` 含 pi-onlyne
+   （npm 下限 `^0.9.1`，或本地路径包、按包内 `package.json` 核同一下限，§3.1）。实例侧交给 `onlyne-swarm status` 的 `not_swarm_ready`
+   交叉核对：非空即失败，输出缺哪门。
+9. 二进制齐备：`onlyne-swarm`、`onlyne`、`orca`、`pi`；`onlyne-swarm --version >= 0.7.0`，
+   `onlyne --version >= 0.6.0`（0.6.0 起 daemon 有忙判定/空闲回收 IPC）。
 
-> CLI 实际子命令集（0.5.0）：`init`、`export-skill`、`run`、`attach`、`submit`、`cancel`、`list`、
-> `status`、`tui`、`shell-completions`、`workspace {create|sync}`。`validate` 与 `doctor` 不存在，
+> CLI 实际子命令集（0.7.0）：`init`、`export-skill`、`run`（`--detach` 后台常驻）、`stop`、
+> `attach`、`submit`、`cancel`（`--force` 强拆顽固任务族）、`repair`、`list`、`status`、`tui`、
+> `shell-completions`、`workspace {create|sync}`。`validate` 与 `doctor` 不存在，
 > 模板校验靠 `workspace sync` 与 IPC `list_workspaces`。
 
 ### 6.4 动作序（全部成功才算落定）
@@ -201,8 +225,8 @@ frontmatter `name` + `description` 要能触发（关键词：装配、bootstrap
   若 `tasks` 为 0 行且 `runs/` 空，报告首行写「飞轮 idle，等待第一发注入」并给出确切命令；
   scheduler 未起时同批提示先 `onlyne-swarm run`；把"起了 scheduler"当成"在跑"归为错误报告。
 
-第一发落地后环才成形：起始 role 产出入池 → `swarm_send _root` 唤醒 supervisor → supervisor 取
-queued 派给下一个 role。后续每轮的推进靠接力任务，启动只需要一发。
+第一发落地后环即成形：起始 role 产出入池并自取 queued 派给下游 → 环在 role 之间自转。后续每轮的推进靠
+接力任务，启动只需要一发；supervisor 不进环，人问起时从 runs/ 与 ledger 汇报现场。
 
 ## 7. 装配阶段（skill 的步骤骨架）
 

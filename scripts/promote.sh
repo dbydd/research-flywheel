@@ -202,17 +202,29 @@ if ! ls research/ 2>/dev/null | grep -vq "^\.gitkeep$"; then
 fi
 
 # --- check 8: pi-onlyne version floor -------------------------------------------
-python3 - .pi/settings.json <<'PY_PKGS' || fail ".pi/settings.json MISSING pi-onlyne floor (reason above)"
-import json,sys
+python3 - .pi/settings.json <<'PY_PKGS' || fail ".pi/settings.json pi-onlyne floor not met (reason above)"
+import json, os, sys
 d = json.load(open(sys.argv[1]))
-pkgs = d.get("packages", [])
-ok = any(
-    p.startswith("npm:pi-onlyne@") and (
-        p.split("@", 2)[-1].lstrip("^~>= ")[:3] >= "0.8"
-    )
-    for p in pkgs
-)
-assert ok, f"packages={pkgs}"
+base = os.path.dirname(os.path.abspath(sys.argv[1]))
+FLOOR = [0, 9, 1]
+def vge(s):
+    try:
+        parts = [int(x) for x in s.split("-")[0].split(".")]
+    except ValueError:
+        return False
+    return (parts + [0, 0])[:3] >= FLOOR
+ok = False
+for p in d.get("packages", []):
+    if p.startswith("npm:pi-onlyne@"):
+        ok = ok or vge(p.split("@", 2)[-1].lstrip("^~>= "))
+    elif "pi-onlyne" in p:
+        pj = os.path.join(p if os.path.isabs(p) else os.path.join(base, p), "package.json")
+        try:
+            meta = json.load(open(pj))
+            ok = ok or (meta.get("name") == "pi-onlyne" and vge(meta.get("version", "0")))
+        except OSError:
+            pass
+assert ok, f"packages={d.get('packages', [])} (want pi-onlyne >= {'.'.join(map(str, FLOOR))}, npm or local path)"
 PY_PKGS
 
 # --- check 9: binaries -----------------------------------------------------------
@@ -220,11 +232,19 @@ for b in onlyne-swarm onlyne orca pi; do
   command -v "$b" >/dev/null || fail "binary MISSING:: $b"
 done
 SWARM_VER="$(onlyne-swarm --version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "$SWARM_VER" <<'PY_VER' || fail "onlyne-swarm --version=$SWARM_VER (want >= 0.5.0)"
+python3 - "$SWARM_VER" <<'PY_VER' || fail "onlyne-swarm --version=$SWARM_VER (want >= 0.7.0)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [0, 5, 0], "version too old"
+assert (parts + [0, 0])[:3] >= [0, 7, 0], "version too old"
 PY_VER
+if command -v onlyne >/dev/null; then
+  ONLYNE_VER="$(onlyne --version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
+  python3 - "$ONLYNE_VER" <<'PY_ONE' || fail "onlyne --version=$ONLYNE_VER (want >= 0.6.0 for busy/idle IPC)"
+import sys
+parts = [int(x) for x in sys.argv[1].split(".")]
+assert (parts + [0, 0])[:3] >= [0, 6, 0], "version too old"
+PY_ONE
+fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
 

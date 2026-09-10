@@ -91,4 +91,5 @@ onlyne-swarm submit --to <entry_role> --payload payload/first.md
 ```
 
 自查：`onlyne-swarm status` 的 tasks 出现 ≥1 行且起始 role 有 session；随后 `runs/` 或
-`research/` 开始有产物。此后 supervisor 靠接力任务推进，人工不再推。
+`research/` 开始有产物。此后环在 role 之间靠接力自转，supervisor 不进环，人工不再推。
+常驻推荐 `onlyne-swarm run --detach`（`onlyne-swarm stop` 收）。
