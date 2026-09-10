@@ -32,6 +32,12 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 路径约定：本文件与一切任务书里的路径都相对 swarm root。worker session 的 cwd 在 `.ws/<name>/`，root 即 `../../`；读写知识文件用这个锚点，发现文件不存在先 `pwd` 确认站位。
 
+发布面/工作面语义：root 产物区（`runs/`、`papers/`、`experiment/`、`evaluation/`）是纯发布面，`.ws/<role>/` 是各 role 的独立工作面。
+
+1. 草稿、中间件、探针、staged 代码先落自己实例的 `work/`（私有，不入 git）；定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
+2. 追加式台账（`pool/ideas.jsonl`、`research/frontier-notes.md`、`run-log.md`、`measured/` 流件）直写 root——功耗切片与接力唤醒要求实时。
+3. peer 实例 `../../<peer>/work/` 可只读翻看（工作区互相可见是本义）；交接与审稿判据仍是任务书与 root 发布物。
+
 <!-- THEME:runs-layout
 装配时替换本注释块，填入本主题对 runs/<run-id>/ 的目录结构与文件命名增补约定。
 默认结构（idea.json/derivation.md/lean/measured/verdict.md）保持不变，主题专属产物列出落点。
