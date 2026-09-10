@@ -19,9 +19,10 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 ## 目录
 
 - `pool/ideas.jsonl`：idea 池（唯一队列，一行一条，见下 schema）。侦察位追加，新轮也由侦察位自取消费；supervisor 不碰队列。
-- `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`figs/`（绘图脚本）、`verdict.md`。figure 制作归 writer 兼职，无独立 role。
+- `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
+- `papers/`：成稿（`<run-id>.md`）与 `figs/<run-id>/`（绘图脚本、成图、mermaid/tikz 源，图随稿件走，critic 追溯锚点单一）。figure 制作归 writer 兼职，无独立画图 role。
 - `research/`：证据。`frontier-notes.md` 是联网检索记录（URL+单行结论，追加式）。
-- `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿（`<run-id>.md`）。
+- `experiment/`：领域代码。`evaluation/`：评测器。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
 - `.ws/`：生成的 worker 实例（含 `.pi/` 快照与 `.onlyne/swarm.workspace.jsonc` overlay）。快照只在实例新建那一刻由 `workspace sync`/`create` 从 root 描述拷出；存量实例 sync 只报 readiness 缺项，不写任何文件。
 - `.onlyne/`：调度器运行态（tasks.json/.bak、ledger.jsonl、sockets、FIFO、detached.lock）。FIFO 读端会阻塞，禁止对本目录做任何递归读取；查状态走 `onlyne-swarm list` / `status` 或 `swarm_status`，读台账只按单文件路径。
