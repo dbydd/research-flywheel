@@ -21,7 +21,7 @@ onlyne-swarm submit --to <entry_role> --payload payload/first.md
 ```
 
 `<entry_role>` 从 `.onlyne/flywheel.json` 的 `entry_role` 读；读不到时查 root `AGENTS.md`
-角色表的 `★` 行。scheduler 未起（`onlyne-swarm status` 连不上）时同批提示先在本目录的 Orca/Herdr 前台 tab 独占跑
+角色表的 `★` 行。scheduler 未起（`onlyne-swarm status` 连不上）时同批提示先在本目录的可见 runtime 前台 tab（`SWARM_RUNTIME=auto` 探测 herdr/zellij/orca）独占跑
 `onlyne-swarm run`（状态可见优先）；无人值守才用 `run --detach`。把「起了 scheduler」当成「在跑」是错误报告：无入站任务时飞轮什么都不会发生。
 pool 有 queued 而 tasks 为 0 时，说明环停在 scout 之前——投一发 `--to scout` 即可续上。
 

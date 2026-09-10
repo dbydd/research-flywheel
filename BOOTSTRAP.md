@@ -172,7 +172,8 @@ frontmatter `name` + `description` 要能触发（关键词：装配、bootstrap
    `.pi/onlyne.json` 有 `watch.autoStart = true`、`.pi/settings.json` 的 `packages` 含 pi-onlyne
    （npm 下限 `^0.9.1`，或本地路径包、按包内 `package.json` 核同一下限，§3.1）。实例侧交给 `onlyne-swarm status` 的 `not_swarm_ready`
    交叉核对：非空即失败，输出缺哪门。
-9. 二进制齐备：`onlyne-swarm`、`onlyne`、`orca`、`pi`；`onlyne-swarm --version >= 0.7.0`，
+9. 二进制齐备：`onlyne-swarm`、`onlyne`、`pi` 三个硬依赖，runtime 三选一（herdr/zellij/orca 任一在即可，
+   `SWARM_RUNTIME=auto` 按此序探测，空值默认 orca）；`onlyne-swarm --version >= 0.7.0`，
    `onlyne --version >= 0.6.0`（0.6.0 起 daemon 有忙判定/空闲回收 IPC）。
 
 > CLI 实际子命令集（0.7.0）：`init`、`export-skill`、`run`（`--detach` 后台常驻）、`stop`、

@@ -141,7 +141,7 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
   C. ping 通 + 无 scheduler + 无活 pi 祖先 + pid 文件无活进程 → 残留：先对其 RPC 发 shutdown，再按精确 PID TERM。
   D. socket 在 + ping 不通 → stale，删 socket。
   E. `scheduler.pid` 进程活而 scheduler 已退 → 孤儿 scheduler，按 scheduler 处理（先停它，daemon 才会失去 respawn 主）。scheduler 从不杀活着的不属于它的 daemon。
-- scheduler 常驻用 Orca/Herdr 可见前台 tab 独占跑 `onlyne-swarm run`（状态可见优先，tab 内 Ctrl-C 停环）；`onlyne-swarm run --detach`＋`stop` 降为无人值守备份方案。杀单个 daemon 会被 respawn，先停 scheduler。
+- scheduler 常驻用可见 runtime 前台 tab 独占跑 `onlyne-swarm run`（runtime 由 `SWARM_RUNTIME` 选定：`auto` 按 herdr→zellij→orca 探测，空=orca 默认；状态可见优先，tab 内 Ctrl-C 停环）；`onlyne-swarm run --detach`＋`stop` 降为无人值守备份方案。杀单个 daemon 会被 respawn，先停 scheduler。
 
 ## 纪律
 

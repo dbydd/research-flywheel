@@ -228,9 +228,12 @@ assert ok, f"packages={d.get('packages', [])} (want pi-onlyne >= {'.'.join(map(s
 PY_PKGS
 
 # --- check 9: binaries -----------------------------------------------------------
-for b in onlyne-swarm onlyne orca pi; do
+for b in onlyne-swarm onlyne pi; do
   command -v "$b" >/dev/null || fail "binary MISSING:: $b"
 done
+if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
+  fail "runtime MISSING:: need one of herdr/zellij/orca (SWARM_RUNTIME=auto probes in that order)"
+fi
 SWARM_VER="$(onlyne-swarm --version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
 python3 - "$SWARM_VER" <<'PY_VER' || fail "onlyne-swarm --version=$SWARM_VER (want >= 0.7.0)"
 import sys
