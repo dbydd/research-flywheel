@@ -32,7 +32,7 @@ flowchart TD
 crates.io 的 `onlyne` 0.5.x 是旧形态占名，npm 的 `pi-onlyne` ≤0.9.1 是旧协议——都不要装。
 
 ```bash
-git clone -b v1.0.0-beta.3 https://github.com/dbydd/onlyne && cd onlyne   # 未打 tag 时用 d0573e3 tip
+git clone -b v1.0.0-beta.4 https://github.com/dbydd/onlyne && cd onlyne   # 2666ede；beta.3 亦兼容（哨兵方案跨版本）
 cargo build --release   # 全新 clone 实测 ~60s
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
 onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protocol_version，fail-fast
@@ -40,7 +40,7 @@ onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protoc
 
 动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制只有 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
 
-版本闸钉 tag `v1.0.0-beta.3`（= 125e351；beta.2/d0f4e60 因 plugins glob 回归作废，禁钉）。v1 见到 legacy `.onlyne/`
+版本闸钉 tag `v1.0.0-beta.4`（= 2666ede；beta.2/d0f4e60 因 glob 回归作废禁钉，beta.3/125e351 兼容哨兵方案）。v1 见到 legacy `.onlyne/`
 （含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入——这是特性：旧树先整目录
 `mv .onlyne .onlyne.v0-archive/`（迁移前用旧 CLI 把在飞任务记 failed 收官、`sqlite3` 导旧 ledger CSV 进 runs/）。
 
@@ -73,7 +73,7 @@ completion 走 origin 自动通道不经 ACL）。promote check 4 机器核这�
 1 THEME 槽清空；2 每 role 模板目录 + settings 三元组非空；3 `★` 恰好一个且是 spec 在册 role；
 4 spec[[client]]==模板目录、_supervisor admin=true、prose 非空、relay 边双向闭合、targets 不含 _supervisor；
 5 角色表与 spec 逐名对齐；6 种子 idea 过 schema 硬门；7 payload/ 与 research/ 有实物；
-8 agent_package 绝对路径存在且 package.json ≥1.0.0；9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 orca→zellij→fake，`ONLYNE_BACKEND` 可钉）。
+8 agent_package 绝对路径存在且 package.json ≥1.0.0；9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 zellij→orca→fake，`ONLYNE_BACKEND` 可钉）。
 
 actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.json`（stage=live、roles、entry_role）→
 退役装配材料（`.agents/AGENTS.md`、`BOOTSTRAP.md`、`.agents/skills/flywheel-setup/`）→ commit。

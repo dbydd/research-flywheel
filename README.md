@@ -4,9 +4,9 @@
 
 ## 前置
 
-- onlyne v1.0.0-beta.3（源码构建：clone -b + `cargo build --release`，五产物进 PATH；无 crates.io/npm 渠道）
+- onlyne v1.0.0-beta.4（源码构建：clone -b + `cargo build --release`，五产物进 PATH；无 crates.io/npm 渠道）
 - `pi`（role 会话由 client 起，插件 `plugins/onlyne-agent-pi` 经 generate vendor 进各 ws，零 npm 依赖）
-- 会话后端二选一在场：`orca` 或 `zellij`（`ONLYNE_BACKEND` 探测序 orca→zellij→fake）
+- 会话后端二选一在场：`orca` 或 `zellij`（`ONLYNE_BACKEND` 探测序 zellij→orca→fake）
 - 已配置的 pi model/provider
 
 ## 起飞
