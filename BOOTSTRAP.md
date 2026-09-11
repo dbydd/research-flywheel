@@ -69,7 +69,7 @@ relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含
 1 THEME 槽清空。2 每 role 模板目录 + settings 三元组非空。3 `★` 恰好一个且是 spec 在册 role。
 4 spec[[client]]==模板目录、_supervisor admin=true、prose 非空、relay 边双向闭合、targets 不含 _supervisor。
 5 角色表与 spec 逐名对齐。6 种子 idea 过 schema 硬门。7 payload/ 与 research/ 有实物。
-8 agent_package 绝对路径存在且 package.json ≥1.0.0。9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 zellij→orca→fake，`ONLYNE_BACKEND` 可钉）。
+8 agent_package 绝对路径存在且 package.json ≥1.0.0。9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 orca→zellij→fake，`ONLYNE_BACKEND` 可钉）。
 
 actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.json`（stage=live、roles、entry_role）→
 退役装配材料（`.agents/AGENTS.md`、`BOOTSTRAP.md`、`.agents/skills/flywheel-setup/`）→ commit。

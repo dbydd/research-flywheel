@@ -10,7 +10,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 - onlyne v1.0.0-beta.4。需要源码构建：clone -b + `cargo build --release`，再把五个产物放进 PATH。crates.io/npm 两个渠道都没有 v1 发布。
 - `pi`。role 会话由 client 启动。插件 `plugins/onlyne-agent-pi` 通过 generate vendor 到各 ws。它零 npm 依赖。
-- 会话后端需要 `orca` 或 `zellij`。`ONLYNE_BACKEND` 的探测序是 zellij→orca→fake。
+- 会话后端需要 `orca` 或 `zellij`。`ONLYNE_BACKEND` 的探测序是 orca→zellij→fake。
 - pi model/provider 已经配好。
 
 ## 起飞

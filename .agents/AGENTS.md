@@ -136,7 +136,7 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
 ## 维护与配置（supervisor 用）
 
 - `spec.toml` 是唯一真相。[[client]] 的 prose/ACL/`max_sessions`/`reuse` 都在 role 条目上配。`[client.timeout]` 有 ready_ms=30000、running_ms=120000、idle_ms=60000。`[client.intent]` 有 attempts=3、backoff_ms=[1000,2000,4000]。改完跑 `onlyne reload --server-root .`，可用 `--dry-run`/`spec-diff` 预览。失败时保留旧 spec，并记 `fault{spec_reload_failed}`。
-- 后端选择：`ONLYNE_BACKEND` env，取值 `auto|zellij|orca|exec|fake`。空值与 `auto` 按能力探测，顺序 zellij→orca→fake。命令行型 role 用 zellij/orca 起 session_command。SWARM_RUNTIME 已退役。
+- 后端选择：`ONLYNE_BACKEND` env，取值 `auto|zellij|orca|exec|fake`。空值与 `auto` 按能力探测，顺序 orca→zellij→fake。命令行型 role 用 zellij/orca 起 session_command。SWARM_RUNTIME 已退役。
 - role 模型/思考档 = `.onlyne/templates/flywheel/<role>/.pi/settings.json` 三元组。生成后 ws 内的 `.pi/**` 归 role 与 supervisor 所有。重 generate 前先看 spec 的模板发现规则（templates/<topo>/<role>/，basename=role 名）。
 - ws 整目录 `mv` 即搬迁，这是设计内能力。client 的全部路径自 `--workspace` 推导，intents/游标随 `.onlyne/` 同行。搬完重启该 client。
 - 故障运维：`onlyne faults --open-only` 看核心检测。`onlyne repair inspect|retry|close|fail|ack` 与 `rebind|adopt` 把任务指回活 pane。`DeliveryState::Exhausted` 是终态，重开要经过这里的显式决定。
