@@ -114,8 +114,10 @@ role 增删以 `.onlyne/spec.toml` 的 [[client]] 为准，本表与 `allowed_ta
 
 ```bash
 onlyne-server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin
-# 回填 spec.toml：cert_pin、agent_package="<onlyne checkout>/plugins/onlyne-agent-pi"；
-# 各 role key 先播合法 32 字节占位（AWAAAAAAAA...AAA=）——全量 parse 下非法 key 连 client init 都跑不动
+# 回填 spec.toml 的 cert_pin；哨兵统一 sed：
+#   ABS="<onlyne checkout>/plugins/onlyne-agent-pi"
+#   sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json
+# 各 role key 先播合法 32 字节占位 key（base64(32×0x01)=AQEBAQ...AQE=）——非法 key 全量 parse 连 client init 都跑不动
 onlyne-client init --workspace .onlyne/ws/$TOPO/<role>   # 逐 role 产真 key，回填 spec.toml
 onlyne-server generate --root .                          # 渲染 ws（vendor 插件、零绝对路径）
 onlyne-server start --root .                             # detached+pid；判活用 status 的 socket_present

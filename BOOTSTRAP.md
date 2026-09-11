@@ -53,7 +53,7 @@ onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protoc
 | 3 | `.onlyne/templates/flywheel/<role>/AGENTS.md` | role 深规 | 该 role ws |
 | 4 | `.onlyne/templates/flywheel/<role>/.pi/settings.json` | 模型三元组 | 该 role ws（generate 时并入插件引用） |
 | 5 | `pool/ideas.jsonl` | 种子 idea（硬门字段） | scout 消费 |
-| 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 必须含 `"{{agent_package}}"` 占位符，否则该 role 零插件、pi 起会话没工具直接死在 assign |
+| 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 是哨兵字面值 `"__AGENT_PACKAGE_ABS__"`，装配时 `sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json` 同步替换；generate 的 settings 重写只认 spec 字面值==settings 字面值，产物即 `../.onlyne/agent/onlyne-agent-pi`。`{{agent_package}}` 占位符在 settings 渲成无 `../` 形态＝pi 0.85.1 拒载（源码+ARIS 双实证，beta.3@125e351 与 d0573e3 同此）|
 | 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填；未 init 前先播合法长度 32 字节占位（`AWAAAAAAAA...AAA=`），非法 key 会让全量 parse 连 `client init` 都跑不动 | 握手 |
 | 8 | `.pi/SYSTEM.md`、`README.md` | 口径微调（一般不动） | supervisor 会话 |
 
@@ -65,7 +65,8 @@ completion 走 origin 自动通道不经 ACL）。promote check 4 机器核这�
 
 1. **server 活**：`onlyne-server start --root .`（自带 detached+pid）后 `onlyne-server status --root .` 的 `socket_present=true` 是真相（`run` 不写 pid、`status.running` 只认 pid 文件，别拿它判活）。
 2. **client 连**：每个启用 role `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。
-3. **端到端一发**：单 role `send --from _supervisor --to <role> --text "ping"` 得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
+0. **渲染抽检**：`python3 -c "import json;print(json.load(open('<ws>/.pi/settings.json'))['packages'])"` 必须是 `['../.onlyne/agent/onlyne-agent-pi']` 且 `<ws>/.onlyne/agent/onlyne-agent-pi/` 有货（`{{agent_package}}` 占位符形态渲成无 ../ 的 `.onlyne/agent/…`＝pi 0.85.1 拒载，beta.3 与 d0573e3 源码同此，ARIS 真机实证）。
+2. **client 连**：每个启用 role `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。 得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
 
 ## 5. promote.sh 九检（校验语义）
 

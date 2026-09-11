@@ -69,8 +69,10 @@ for r in $ROLES; do
   python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INCOMPLETE (reason above)"
 import json,sys
 d = json.load(open(sys.argv[1]))
+import os
 assert d.get("defaultProvider") and d.get("defaultModel") and d.get("defaultThinkingLevel"), "defaultProvider/defaultModel/defaultThinkingLevel required non-empty"
-assert "{{agent_package}}" in d.get("packages", []), "packages must contain \"{{agent_package}}\" (else generate vendors zero plugins and the role dies at assign)"
+pkgs = d.get("packages", [])
+assert len(pkgs) == 1 and (pkgs[0] == "__AGENT_PACKAGE_ABS__" or os.path.isabs(pkgs[0])), f'packages={[p for p in pkgs]}: need sentinel or absolute literal ({{agent_package}} placeholder renders un-loadable in settings)' 
 PY_CHECK2
 done
 
@@ -171,6 +173,10 @@ spec = tomllib.load(open(sys.argv[1], "rb"))
 pkg = (spec.get("server") or {}).get("agent_package", "")
 assert pkg and os.path.isabs(pkg), f"agent_package={pkg!r}: absolute local path required (fill at assembly)"
 meta = json.load(open(os.path.join(pkg, "package.json")))
+import glob
+for s in glob.glob(os.path.join((spec.get("server") or {}).get("template_root", ".onlyne/templates"), "*", "*", ".pi", "settings.json")):
+    pk = json.load(open(s)).get("packages", [])
+    assert len(pk) == 1 and pk[0] == pkg, f"{s}: packages {pk} not sed-synced with agent_package"
 parts = [int(x) for x in meta.get("version", "0").split("-")[0].split(".")]
 assert (parts + [0, 0])[:3] >= [1, 0, 0], f"pi plugin version {meta.get('version')} < 1.0.0"
 PY_PKG

@@ -1,6 +1,6 @@
 {
   "packages": [
-    "{{agent_package}}"
+    "__AGENT_PACKAGE_ABS__"
   ],
   "defaultProvider": "",
   "defaultModel": "",
