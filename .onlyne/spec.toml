@@ -46,8 +46,8 @@ prose = """你是 research flywheel 的 scout（前沿侦察员）。检索→�
 admin = false
 max_sessions = 1
 reuse = true
-allowed_senders = ["_supervisor", "critic", "model", "bench"]   # 第一发/新轮/失败回传
-allowed_targets = ["model"]
+allowed_senders = ["_supervisor", "critic", "model", "bench", "writer"]   # 第一发/新轮/失败回传/补检索
+allowed_targets = ["model"]   # 补检索边 writer→scout 的下游仍是正常建模接力，无新边
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
@@ -57,7 +57,7 @@ prose = """你是 research flywheel 的 model（建模）。读 idea.json 与证
 admin = false
 max_sessions = 1
 reuse = true
-allowed_senders = ["scout"]
+allowed_senders = ["scout", "critic"]   # critic→model：revise 触及理论时直补建模
 allowed_targets = ["bench", "writer", "scout"]     # scout 仅失败回传边
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
@@ -75,23 +75,23 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "writer"
 key = "ed25519/REPLACE_ME"
-prose = """你是 research flywheel 的 writer（成稿）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete outcome=cancelled 静默交回，等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>.md：结论先行，每个数字标注来源路径，open questions 单独一节。figure 兼职归你：数据图 matplotlib 从 measured/ 重绘、脚本与成图落 papers/figs/<run-id>/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后 handoff critic 送审（稿件+证据+figs 清单路径）。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md。"""
+prose = """你是 research flywheel 的 writer（成稿）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete outcome=cancelled 静默交回，等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>.md：结论先行，每个数字标注来源路径，open questions 单独一节。figure 兼职归你：数据图 matplotlib 从 measured/ 重绘、脚本与成图落 papers/figs/<run-id>/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后 handoff critic 送审（稿件+证据+figs 清单路径）。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md；涉理论 handoff model 补推导，涉证据 handoff scout 补检索。"""
 admin = false
 max_sessions = 1
 reuse = true
 allowed_senders = ["model", "bench", "critic"]
-allowed_targets = ["critic"]
+allowed_targets = ["critic", "scout"]   # scout→writer→scout：稿中检索缺口回补
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "critic"
 key = "ed25519/REPLACE_ME"
-prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise→handoff writer；accept/reject 本跳自归档（keep 留 papers/、pool 状态改 keep；failed 记 verdict.md、改 failed），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
+prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质 handoff writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 状态改 keep；failed 记 verdict.md、改 failed），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
 admin = false
 max_sessions = 1
 reuse = true
 allowed_senders = ["writer"]
-allowed_targets = ["writer", "scout"]
+allowed_targets = ["writer", "scout", "model"]   # model=理论级 revise 直达
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 # 超时与重试有默认即省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
