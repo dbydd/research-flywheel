@@ -176,7 +176,7 @@ PY_PKG
 
 # --- check 9: v1 toolchain + backend candidates --------------------------------
 for b in onlyne onlyne-server onlyne-client pi; do
-  command -v "$b" >/dev/null || fail "binary MISSING:: $b (build onlyne @ v1.0.0-beta.2, copy target/release/* into PATH)"
+  command -v "$b" >/dev/null || fail "binary MISSING:: $b (build onlyne @ v1.0.0-beta.3, copy target/release/* into PATH)"
 done
 V1_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
 python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} (want >= 1.0.0)"

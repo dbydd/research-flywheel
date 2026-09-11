@@ -32,13 +32,13 @@ flowchart TD
 crates.io 的 `onlyne` 0.5.x 是旧形态占名，npm 的 `pi-onlyne` ≤0.9.1 是旧协议——都不要装。
 
 ```bash
-git clone -b v1.0.0-beta.2 https://github.com/dbydd/onlyne && cd onlyne
+git clone -b v1.0.0-beta.3 https://github.com/dbydd/onlyne && cd onlyne
 cargo build --release
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
 onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protocol_version，fail-fast
 ```
 
-版本闸钉 tag（tag 未切时钉 commit `d0f4e60`，切标后改回 tag 名）。v1 见到 legacy `.onlyne/`
+版本闸钉 tag `v1.0.0-beta.3`（= 125e351；beta.2/d0f4e60 因 plugins glob 回归作废，禁钉）。v1 见到 legacy `.onlyne/`
 （含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入——这是特性：旧树先整目录
 `mv .onlyne .onlyne.v0-archive/`（迁移前用旧 CLI 把在飞任务记 failed 收官、`sqlite3` 导旧 ledger CSV 进 runs/）。
 
@@ -102,5 +102,5 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 - note 打给离线 role 得 `recipient_offline` 是语义不是 bug；要排队就发 task。
 - 同 `op_id` 换内容重发得 `conflict`；重试原帧重发。
 - prose 改完必须 `server reload`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）；先 `--dry-run` 看 spec-diff。
-- role 会话默认 `-ns`（--no-skills）：要 skill 的 role 把 session_command 里 `-ns` 摘掉。
+- role 会话默认不带 `-ns`（omp 裁定：模板 skills 三件套靠 pi 发现进会话）。「确定零 skill 的极简 role」装机者自选加回。
 - `promote.sh --dry-run` 零写入可反复跑；正式跑需用户逐项确认退役清单（脚本会打印）。

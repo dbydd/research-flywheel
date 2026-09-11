@@ -48,7 +48,7 @@ max_sessions = 1
 reuse = true
 allowed_senders = ["_supervisor", "critic", "model", "bench"]   # 第一发/新轮/失败回传
 allowed_targets = ["model"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "model"
@@ -59,7 +59,7 @@ max_sessions = 1
 reuse = true
 allowed_senders = ["scout"]
 allowed_targets = ["bench", "writer", "scout"]     # scout 仅失败回传边
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "bench"
@@ -70,7 +70,7 @@ max_sessions = 1
 reuse = true
 allowed_senders = ["model"]
 allowed_targets = ["writer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "writer"
@@ -81,7 +81,7 @@ max_sessions = 1
 reuse = true
 allowed_senders = ["model", "bench", "critic"]
 allowed_targets = ["critic"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "critic"
@@ -92,7 +92,7 @@ max_sessions = 1
 reuse = true
 allowed_senders = ["writer"]
 allowed_targets = ["writer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 # 超时与重试有默认即省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
 # [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。某 role 实验要长跑就给它
