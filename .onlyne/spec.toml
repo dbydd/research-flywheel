@@ -1,8 +1,8 @@
 # Onlyne v1.0.0 research-flywheel spec —— 模板版（唯一事实源）
 #
-# 解析即启动校验：未知键与类型错误直接拒绝（`spec.toml:<行号>: <消息>`）。
-# 改完用 `onlyne server reload --root <root>`（`--dry-run` 配 spec-diff 预览）。
-# 定稿顺序（F1 死锁修法：全量 parse 下非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
+# 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
+# 改完用 `onlyne server reload --root <root>`，配 `--dry-run` 可预览 spec-diff。
+# 定稿顺序（F1 死锁修法：全量 parse 之下，非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
 #   1) 空根 `onlyne-server init --root .`（产 keys/cert_pin）
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
 #   3) 各 role key 先播合法 32 字节占位 base64（AWAAAAAAAA...AAA= 形）
@@ -22,8 +22,8 @@ fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
 # v1 pi 插件 = onlyne 仓内 plugins/onlyne-agent-pi（无 npm 发布）。
-# 装配时填本机 clone 的绝对路径；generate 一次性读它、vendor 进每个 ws 的
-# .onlyne/agent/pi-onlyne/ 并把 settings 改写为工作区内相对引用（产物零绝对路径）。
+# 装配时填本机 clone 的绝对路径。generate 一次性读它，vendor 进每个 ws 的
+# .onlyne/agent/pi-onlyne/，并把 settings 改写为工作区内相对引用（产物零绝对路径）。
 agent_package = "__AGENT_PACKAGE_ABS__"          # 装配时与五份模板 settings 同步 sed（见 BOOTSTRAP §3 表行6）；
 # generate 的 settings 重写只认「spec 字面值==settings 字面值」：装配者 sed "s|__AGENT_PACKAGE_ABS__|/abs/.../plugins/onlyne-agent-pi|g" 一次替换 spec+templates 全部出现点，
 # 渲染产物即 "../.onlyne/agent/onlyne-agent-pi"（pi 可加载形态）。beta.4(2666ede) 起 {{agent_package}} 占位符也渲成 ../ 形态、三态全合法；哨兵跨版本兼容（beta.3+），沿用。
@@ -31,8 +31,8 @@ template_root = ".onlyne/templates"
 
 # ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----
 # 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --file <payload>`
-# （落账 admin=true）；角色的 completion 回执自动回流 origin（origin==收件方时免 ACL，
-# 实证：scout 无指向 critic 的边也能把回执排队送达 critic），_supervisor 收件箱是 ledger
+# （落账 admin=true）。角色的 completion 回执自动回流 origin（origin==收件方时免 ACL，
+# 实证：scout 无指向 critic 的边也能把回执排队送达 critic）。_supervisor 收件箱是 ledger
 # 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，环就不进 supervisor。
 # key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
 [[client]]
@@ -104,6 +104,6 @@ allowed_senders = ["writer"]
 allowed_targets = ["writer", "scout", "model"]   # model=理论级 revise 直达
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
-# 超时与重试有默认即省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
-# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。某 role 实验要长跑就给它
-# 追加 [client.timeout] running_ms 覆盖（每个 [[client]] 块后紧跟一节）。
+# 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
+# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。某个 role 的实验要长跑，就给它
+# 追加一节 [client.timeout] 覆盖 running_ms（每个 [[client]] 块后紧跟一节）。

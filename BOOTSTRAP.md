@@ -1,8 +1,8 @@
 # BOOTSTRAP —— 模板到主题的装配流程
 
-读者：拿到本模板 clone 的人（或替他干活的 supervisor 会话）。装配 = 把通用骨架填成
-一个具体研究主题的飞轮，产出一条 `theme/<slug>` 分支与一套可通电的 onlyne v1 拓扑。
-装配期间不起集群、不跑实验；红线是 `.agents/AGENTS.md` 与 `.onlyne/spec.toml` 的结构完整。
+读者：拿到本模板 clone 的人，或者替他干活的 supervisor 会话。
+
+装配这项工作的定义：把通用骨架填成一个具体研究主题的飞轮，产出一条 `theme/<slug>` 分支，以及一套可通电的 onlyne v1 拓扑。装配期间不启动集群，不跑实验。红线是 `.agents/AGENTS.md` 与 `.onlyne/spec.toml` 的结构保持完整。
 
 ## 0. 全景
 
@@ -21,15 +21,15 @@ flowchart TD
 
 ## 1. 上下文面（v1 谁读什么）
 
-- `.agents/AGENTS.md` → promote 时复制为 root `AGENTS.md`。pi 沿父目录链把它拼进树内**每个**会话（role ws 在 root 之下），是全局约定的唯一载体。
-- `.onlyne/spec.toml` → 拓扑唯一真相。`prose` 字段是 role 身份提示词：welcome 时下发、client 缓存进 `client.db`、pi 插件注入会话。改 prose 后 `onlyne server reload` 生效，旧 receipt 会话拿新 welcome。
-- `.onlyne/templates/flywheel/<role>/AGENTS.md` → 该 role 的深规（工作顺序、产物纪律），generate 渲进 ws 后经 pi 链进该 role 每个会话。
-- `.onlyne/templates/flywheel/<role>/.pi/settings.json` → 模型三元组（provider/model/thinkingLevel）；generate 会把 `agent_package` 的插件 vendor 进 ws 并改写 settings 指向工作区内副本。
+- `.agents/AGENTS.md` → promote 时复制为 root `AGENTS.md`。pi 沿父目录链把它拼进树内**每个**会话（role ws 在 root 之下）。它是全局约定的唯一载体。
+- `.onlyne/spec.toml` → 拓扑唯一真相。`prose` 字段是 role 身份提示词：welcome 时下发，client 缓存进 `client.db`，pi 插件注入会话。改 prose 后 `onlyne server reload` 生效，旧 receipt 会话拿新 welcome。
+- `.onlyne/templates/flywheel/<role>/AGENTS.md` → 该 role 的深规（工作顺序、产物纪律）。generate 渲进 ws 后，经 pi 链进该 role 每个会话。
+- `.onlyne/templates/flywheel/<role>/.pi/settings.json` → 模型三元组（provider/model/thinkingLevel）。generate 会把 `agent_package` 的插件 vendor 进 ws，并改写 settings 指向工作区内副本。
 - root `.pi/SYSTEM.md` → supervisor 会话的注入指引（admin 面、空转判定、职责边界）。
 
 ## 2. 工具链安装（无发布渠道，源码构建）
 
-crates.io 的 `onlyne` 0.5.x 是旧形态占名，npm 的 `pi-onlyne` ≤0.9.1 是旧协议——都不要装。
+crates.io 上的 `onlyne` 0.5.x 是旧形态占名。npm 上的 `pi-onlyne` ≤0.9.1 是旧协议。这两个都不要装。
 
 ```bash
 git clone -b v1.0.0-beta.4 https://github.com/dbydd/onlyne && cd onlyne   # 2666ede；beta.3 亦兼容（哨兵方案跨版本）
@@ -39,11 +39,9 @@ codesign --force --sign - ~/.cargo/bin/onlyne*   # macOS 必做：复制后的�
 onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手报 protocol_version，fail-fast
 ```
 
-动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制只有 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
+动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制的动词面是 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
 
-版本闸钉 tag `v1.0.0-beta.4`（= 2666ede；beta.2/d0f4e60 因 glob 回归作废禁钉，beta.3/125e351 兼容哨兵方案）。v1 见到 legacy `.onlyne/`
-（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入——这是特性：旧树先整目录
-`mv .onlyne .onlyne.v0-archive/`（迁移前用旧 CLI 把在飞任务记 failed 收官、`sqlite3` 导旧 ledger CSV 进 runs/）。
+版本闸钉 tag `v1.0.0-beta.4`（= 2666ede）。beta.2/d0f4e60 因 glob 回归作废禁钉。beta.3/125e351 兼容哨兵方案。v1 见到 legacy `.onlyne/`（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入，这是设计内的行为。旧树先整目录 `mv .onlyne .onlyne.v0-archive/`。迁移前用旧 CLI 把在飞任务记 failed 收官，用 `sqlite3` 导旧 ledger CSV 进 runs/。
 
 ## 3. 主题要改的面（文件级清单）
 
@@ -58,23 +56,20 @@ onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手�
 | 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填；未 init 前先播合法长度 32 字节占位（`AWAAAAAAAA...AAA=`），非法 key 会让全量 parse 连 `client init` 都跑不动 | 握手 |
 | 8 | `.pi/SYSTEM.md`、`README.md` | 口径微调（一般不动） | supervisor 会话 |
 
-relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目
-`allowed_targets` 含 B；`_supervisor` 永不出现在任何 `allowed_targets`（上行零常驻边，
-completion 走 origin 自动通道不经 ACL）。promote check 4 机器核这条。
+relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。`_supervisor` 永不出现在任何 `allowed_targets`（上行零常驻边，completion 走 origin 自动通道不经 ACL）。promote check 4 机器核这条。
 
 ## 4. 通电三门（promote 之后，一次性）
 
-1. **server 活**：`onlyne-server start --root .`（自带 detached+pid）后 `onlyne-server status --root .` 的 `socket_present=true` 是真相（`run` 不写 pid、`status.running` 只认 pid 文件，别拿它判活）。
-2. **client 连**：每个启用 role `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。
-0. **渲染抽检**：`python3 -c "import json;print(json.load(open('<ws>/.pi/settings.json'))['packages'])"` 必须是 `['../.onlyne/agent/onlyne-agent-pi']` 且 `<ws>/.onlyne/agent/onlyne-agent-pi/` 有货（`{{agent_package}}` 占位符形态渲成无 ../ 的 `.onlyne/agent/…`＝pi 0.85.1 拒载，beta.3 与 d0573e3 源码同此，ARIS 真机实证）。
-2. **client 连**：每个启用 role `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。 得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
+1. **server 活**：`onlyne-server start --root .`（自带 detached+pid）后 `onlyne-server status --root .` 的 `socket_present=true` 是真相。`run` 不写 pid，`status.running` 只认 pid 文件，别拿它判活。
+2. **client 连**：每个启用 role 在 `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。此时能得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
+3. **渲染抽检**：`python3 -c "import json;print(json.load(open('<ws>/.pi/settings.json'))['packages'])"` 必须是 `['../.onlyne/agent/onlyne-agent-pi']`，且 `<ws>/.onlyne/agent/onlyne-agent-pi/` 有货。`{{agent_package}}` 占位符形态渲成无 ../ 的 `.onlyne/agent/…`＝pi 0.85.1 拒载（beta.3 与 d0573e3 源码同此，ARIS 真机实证）。
 
 ## 5. promote.sh 九检（校验语义）
 
-1 THEME 槽清空；2 每 role 模板目录 + settings 三元组非空；3 `★` 恰好一个且是 spec 在册 role；
-4 spec[[client]]==模板目录、_supervisor admin=true、prose 非空、relay 边双向闭合、targets 不含 _supervisor；
-5 角色表与 spec 逐名对齐；6 种子 idea 过 schema 硬门；7 payload/ 与 research/ 有实物；
-8 agent_package 绝对路径存在且 package.json ≥1.0.0；9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 zellij→orca→fake，`ONLYNE_BACKEND` 可钉）。
+1 THEME 槽清空。2 每 role 模板目录 + settings 三元组非空。3 `★` 恰好一个且是 spec 在册 role。
+4 spec[[client]]==模板目录、_supervisor admin=true、prose 非空、relay 边双向闭合、targets 不含 _supervisor。
+5 角色表与 spec 逐名对齐。6 种子 idea 过 schema 硬门。7 payload/ 与 research/ 有实物。
+8 agent_package 绝对路径存在且 package.json ≥1.0.0。9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 zellij→orca→fake，`ONLYNE_BACKEND` 可钉）。
 
 actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.json`（stage=live、roles、entry_role）→
 退役装配材料（`.agents/AGENTS.md`、`BOOTSTRAP.md`、`.agents/skills/flywheel-setup/`）→ commit。
@@ -102,10 +97,10 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 
 ## 8. 常见坑
 
-- `onlyne-server status` 连不上 = 未通电（不是故障）；通电用 `onlyne-server start`（detached+pid），判活看 `socket_present`。
-- note 打给离线 role 得 `recipient_offline` 是语义不是 bug；要排队就发 task。
-- 同 `op_id` 换内容重发得 `conflict`；重试原帧重发。
-- prose 改完必须 `onlyne reload --server-root .`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）；先 `--dry-run` 看 spec-diff。
-- e2e/验证脚本开头清库或 `onlyne control ... recycle` 收残 session（v1 无自动回收，D12 设计）。
-- role 会话默认不带 `-ns`（omp 裁定：模板 skills 三件套靠 pi 发现进会话）。「确定零 skill 的极简 role」装机者自选加回。
-- `promote.sh --dry-run` 零写入可反复跑；正式跑需用户逐项确认退役清单（脚本会打印）。
+- `onlyne-server status` 连不上等于未通电，属于正常状态。通电用 `onlyne-server start`（detached+pid），判活看 `socket_present`。
+- note 打给离线 role 得 `recipient_offline`，这是设计内的语义。要排队就发 task。
+- 同 `op_id` 换内容重发得 `conflict`。重试时原帧重发。
+- prose 改完必须跑 `onlyne reload --server-root .`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）。先 `--dry-run` 看 spec-diff。
+- e2e/验证脚本开头清库，或者用 `onlyne control ... recycle` 收残 session（v1 无自动回收，D12 设计）。
+- role 会话默认不带 `-ns`（omp 裁定：模板 skills 三件套靠 pi 发现进会话）。「确定零 skill 的极简 role」由装机者自选加回。
+- `promote.sh --dry-run` 零写入，可反复跑。正式跑需要用户逐项确认退役清单，脚本会打印清单。

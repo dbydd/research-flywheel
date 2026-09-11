@@ -1,13 +1,17 @@
-基于 onlyne v1.0.0 的全自动科研飞轮模板。workspace = role（记忆+设定+历史文件），session = 手头一件工作，任务 = session = 一跳。
+# Research Flywheel v3
 
-工作模型是射后不理：恢复上下文 → 工作 → `handoff` 激发下游（可选）→ 落文件 → `onlyne_complete` 交活退出。session 对下游零等待；投递即返回一行 receipt JSON，过程与回执全进 server ledger。成果经文件回来，接力任务唤醒下一个单位。环路开放，靠 supervisor 或人闭合。
+这是一个基于 onlyne v1.0.0 的自动科研飞轮模板。它把一个研究主题拆给五个 role。每个 role 拿到一跳任务，产物写回磁盘，再把下一跳任务交给下游。
+
+workspace 表示一个 role 的长期工作区，里面有记忆、设定、历史文件。session 表示这个 role 当前手上的一件工作。任务、session、一跳是一回事。
+
+飞轮按“射后不理”工作：恢复上下文 → 工作 → `handoff` 激发下游（可选）→ 写文件 → `onlyne_complete` 交活退出。role 不等下游回执。投递后立即返回一行 receipt JSON。过程与回执都写进 server ledger。结果通过文件返回。下一条接力任务会唤醒下一个 role。环路长期打开，由 supervisor 或人来停下。
 
 ## 前置
 
-- onlyne v1.0.0-beta.4（源码构建：clone -b + `cargo build --release`，五产物进 PATH；无 crates.io/npm 渠道）
-- `pi`（role 会话由 client 起，插件 `plugins/onlyne-agent-pi` 经 generate vendor 进各 ws，零 npm 依赖）
-- 会话后端二选一在场：`orca` 或 `zellij`（`ONLYNE_BACKEND` 探测序 zellij→orca→fake）
-- 已配置的 pi model/provider
+- onlyne v1.0.0-beta.4。需要源码构建：clone -b + `cargo build --release`，再把五个产物放进 PATH。crates.io/npm 两个渠道都没有 v1 发布。
+- `pi`。role 会话由 client 启动。插件 `plugins/onlyne-agent-pi` 通过 generate vendor 到各 ws。它零 npm 依赖。
+- 会话后端需要 `orca` 或 `zellij`。`ONLYNE_BACKEND` 的探测序是 zellij→orca→fake。
+- pi model/provider 已经配好。
 
 ## 起飞
 
@@ -39,11 +43,12 @@ onlyne tui
 └─ critic  对照证据审稿 → verdict.md → 唤醒 writer（revise）或 supervisor（accept/reject）
 ```
 
-接力拓扑完整描述在根目录 `AGENTS.md` 的宏观流一节——每个 session 自动继承该文件。调度面与运维词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`（supervisor）与 `onlyne-role/SKILL.md`（worker）。
+根目录 `AGENTS.md` 写了完整接力拓扑。每个 session 都会自动继承它。调度与运维词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`。worker 纪律见 `.agents/skills/onlyne-role/SKILL.md`。
 
 ## 协议样例
 
-（v0 的 marquee 流水灯样例随 onlyne-swarm 退役；v1 的五节点环示例见 onlyne 仓 `examples/supervisor/`。）
+v0 的 marquee 流水灯样例已经随 onlyne-swarm 退役。v1 的五节点环示例在 onlyne 仓 `examples/supervisor/`。
+
 ## 动力源
 
-seed 由人给（方向+问题）。之后每轮收尾，supervisor 从论文 open questions 或失败结论提取下一条 idea 入池。idea 无证据或无评测契约不进池。自激发无熔断，终结靠人：`onlyne control cancel --task <id>`（v1 按 task 血缘收敛）或 TUI 终结键。
+第一颗 seed 由人给，内容是方向和问题。之后每轮结束，supervisor 从论文 open questions 或失败结论提取下一条 idea 入池。idea 需要证据和评测契约。缺任一项就不入池。自激发没有熔断。人用 `onlyne control cancel --task <id>` 终结任务族；v1 会按 task 血缘收敛。也可以在 TUI 里按终结键。
