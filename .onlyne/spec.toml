@@ -1,0 +1,99 @@
+# Onlyne v1.0.0 research-flywheel spec —— 模板版（唯一事实源）
+#
+# 解析即启动校验：未知键与类型错误直接拒绝（`spec.toml:<行号>: <消息>`）。
+# 改完用 `onlyne server reload --root <root>`（`--dry-run` 配 spec-diff 预览）。
+# REPLACE_ME 值由 `onlyne-server init`（cert_pin）与 `onlyne-client init`（key）产出。
+# 运行期没有任何配置 API：这份文件就是全部。
+#
+# THEME:research-question —— 主题问题与判进标准写进 root AGENTS.md，此处只放拓扑。
+
+[server]
+name = "flywheel"                                  # 集群名；{{cluster}}/{{server_name}} 占位符的源头
+listen = "127.0.0.1:7812"
+cert_pin = "sha256/REPLACE_ME"
+note_queue = false                                 # note 不排队：目标离线即 recipient_offline
+fault_history_days = 14
+resync_lag = 256
+heartbeat_timeout_ms = 30000
+# v1 pi 插件 = onlyne 仓内 plugins/onlyne-agent-pi（无 npm 发布）。
+# 装配时填本机 clone 的绝对路径；generate 一次性读它、vendor 进每个 ws 的
+# .onlyne/agent/pi-onlyne/ 并把 settings 改写为工作区内相对引用（产物零绝对路径）。
+agent_package = ""                                 # 例："/abs/path/onlyne/plugins/onlyne-agent-pi"
+template_root = ".onlyne/templates"
+
+# ---- supervisor：admin mount，跑在 server-root 本身，通常不起 client 进程。----
+# 它的 send 走 `--from _supervisor`（落账 admin=true）；角色的 completion 回执
+# 自动回流 origin，_supervisor 收件箱是 ledger 里的 queued 行，pull 式读。
+# 角色侧零指向 _supervisor 的上行边（allowed_targets 里不给），环就不进 supervisor。
+[[client]]
+role = "_supervisor"
+key = "ed25519/0000000000000000000000000000000000000000000000000000000000000000"  # 占位；不起 client 即不验
+prose = """你是飞轮的 supervisor（admin mount）。你不进工作环：取 idea 派工、归档 verdict、起新一轮都在 role 手里。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to scout --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec-diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+admin = true
+max_sessions = 1
+reuse = true
+allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
+allowed_targets = ["scout"]                        # 只保留第一发与人工唤醒 scout 的边
+session_command = []
+
+# ---- 飞轮五角色。拓扑 = 角色表 = 这里；relay 一律 handoff（parent_task+hop 血缘）。----
+# 共用条款在 root AGENTS.md（pi 沿父目录链进每个 role 会话），prose 只放身份与上报纪律。
+
+[[client]]
+role = "scout"                                     # ★ entry role（第一发投递对象）
+key = "ed25519/REPLACE_ME"
+prose = """你是 research flywheel 的 scout（前沿侦察员）。检索→盘点→按 idea schema 入池；入池后自取一条 queued idea 固化 runs/<run-id>/idea.json（status=running），handoff 给 model 建模任务（任务书指向 idea.json 与 research/ 证据）。失败回传接收口：收到正文首行 `> hop-failed:` 的接力时，把结论记入 runs/ 并从 pool 取下一条 queued 续环。你 handoff 的下游只有 model。不跑实验，不下结论。"""
+admin = false
+max_sessions = 1
+reuse = true
+allowed_senders = ["_supervisor", "critic", "model", "bench"]   # 第一发/新轮/失败回传
+allowed_targets = ["model"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+
+[[client]]
+role = "model"
+key = "ed25519/REPLACE_ME"
+prose = """你是 research flywheel 的 model（建模）。读 idea.json 与证据→derivation.md 推导→关键断言用宿主 lean 形式化→方法与评测器各出一份 spec 落 runs/<run-id>/spec.md。代码与评测器由 bench 按 spec 落地；你对 bench handoff 评测任务、就绪后对 writer handoff 成稿任务（注明待 measured/）。Lean 失败：把失败命令与断言位置写进 derivation.md，handoff scout 失败回传（正文首行 `> hop-failed:`），不再下派。"""
+admin = false
+max_sessions = 1
+reuse = true
+allowed_senders = ["scout"]
+allowed_targets = ["bench", "writer", "scout"]     # scout 仅失败回传边
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+
+[[client]]
+role = "bench"
+key = "ed25519/REPLACE_ME"
+prose = """你是 research flywheel 的 bench（跑批与测量）。按 runs/<run-id>/spec.md 落地 experiment/ 与 evaluation/，跑 baseline 与 candidate，原始 stdout/stderr、配置、种子、耗时逐条落 runs/<run-id>/measured/，汇总与 delta 写 measured/summary.md：每个 objective 一个实测值，每个 constraint 一个 pass/fail。命令失败也归档，不伪造数值，不改评测器语义。落盘后 handoff writer 续作（指向 summary.md）；跑不动时 handoff scout 失败回传（正文首行 `> hop-failed:` + 现场路径）。"""
+admin = false
+max_sessions = 1
+reuse = true
+allowed_senders = ["model"]
+allowed_targets = ["writer", "scout"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+
+[[client]]
+role = "writer"
+key = "ed25519/REPLACE_ME"
+prose = """你是 research flywheel 的 writer（成稿）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete outcome=cancelled 静默交回，等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>.md：结论先行，每个数字标注来源路径，open questions 单独一节。figure 兼职归你：数据图 matplotlib 从 measured/ 重绘、脚本与成图落 papers/figs/<run-id>/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后 handoff critic 送审（稿件+证据+figs 清单路径）。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md。"""
+admin = false
+max_sessions = 1
+reuse = true
+allowed_senders = ["model", "bench", "critic"]
+allowed_targets = ["critic"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+
+[[client]]
+role = "critic"
+key = "ed25519/REPLACE_ME"
+prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise→handoff writer；accept/reject 本跳自归档（keep 留 papers/、pool 状态改 keep；failed 记 verdict.md、改 failed），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
+admin = false
+max_sessions = 1
+reuse = true
+allowed_senders = ["writer"]
+allowed_targets = ["writer", "scout"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions", "-ns"]
+
+# 超时与重试有默认即省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
+# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。某 role 实验要长跑就给它
+# 追加 [client.timeout] running_ms 覆盖（每个 [[client]] 块后紧跟一节）。

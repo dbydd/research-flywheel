@@ -1,6 +1,5 @@
 {
   "packages": [
-    "npm:pi-onlyne@^0.9.1",
     "npm:context-mode"
   ]
 }

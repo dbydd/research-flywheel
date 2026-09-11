@@ -24,7 +24,7 @@ git 动作只许它做。
 问用户：需要哪些 role？谁唤醒谁（上游→下游）？哪个模型档位配给哪个 role（provider /
 model / effort）？需要几个评测器？哪个 role 是第一发的入口（entry，恰好一个）？
 
-写 `.agents/.schedule/<role>/template.workspace.jsonc`：增删目录，每个的 `name` 与目录名
+改 `.onlyne/spec.toml` 的 [[client]] 并同步 `.onlyne/templates/flywheel/<role>/`：增删条目与目录，prose=身份与上报
 一致、`role` 非空、`model` 三字段按主题填写、`back_edges` 按唤醒关系填写。
 角色名唯一事实源是这里的目录名，别处出现的角色名都从这里生成。
 
@@ -36,11 +36,11 @@ model / effort）？需要几个评测器？哪个 role 是第一发的入口（
 
 写五个 THEME 槽（都在 `.agents/AGENTS.md`）：`research-question`、`runs-layout`、
 `evaluation-contract`、`role-table`、`entry-role`。角色表列
-`role | 职责 | 上游 | 下游 | entry | model`，每行对应 `.schedule/` 一个目录，`★` 恰好一个。
+`role | 职责 | 上游 | 下游 | entry | model`，每行对应 spec.toml 一个 [[client]] 与 templates 一个目录，`★` 恰好一个。
 同步改 `.pi/SYSTEM.md` 的 supervisor 职责（派工目标名来自角色表；`--to scout` 之类的
 旧写法按表替换）、`README.md` 的用户面描述。
 
-自查：角色表与 `.schedule/` 对齐（无多余无缺失）；`★` 恰好一个且与 `entry-role` 槽同名；
+自查：角色表与 spec.toml 对齐（无多余无缺失）；`★` 恰好一个且与 `entry-role` 槽同名；relay 边双向闭合（A→B 则 B 的 allowed_senders 含 A）；
 无残留 `<!-- THEME:` 标记。
 
 ## D 种子
@@ -62,7 +62,7 @@ done_when/status`；`evidence` 非空数组；`evaluation.objectives` 非空；`
 ./scripts/promote.sh --dry-run
 ```
 
-全绿才往下；红项逐条回 C/D 修。常见红项：THEME 残留、`★` 数量不对、角色表与 `.schedule/`
+全绿才往下；红项逐条回 C/D 修。常见红项：THEME 残留、`★` 数量不对、角色表与 spec.toml
 不一致、seed schema 缺字段、`workspace sync` 报 dangling、`pi-onlyne` 版本下限不够、
 二进制缺失。
 
@@ -81,15 +81,15 @@ idle 提醒。把那三行原文转述给用户：scheduler 要人另起，这�
 ## G 第一发
 
 先向用户转述 §6.5 的现场清单：tasks 0 行、`.ws/<role>` 无 session、`runs/` 空、`papers/`
-空、pool 只有种子；`onlyne-swarm run` 是通电不是开跑；启动靠一发注入。再问：研究方向
+空、pool 只有种子；`onlyne-server run` + 各 `onlyne-client run` 是通电不是开跑；启动靠一发注入。再问：研究方向
 现在给不给、第一发由谁投（supervisor 写 `payload/first.md` 投，还是用户自己在 CLI 投）。
 
 写 `payload/first.md`（问题、约束、期望），执行：
 
 ```bash
-onlyne-swarm submit --to <entry_role> --payload payload/first.md
+onlyne --server-root . send --from _supervisor --to <entry_role> --file payload/first.md
 ```
 
-自查：`onlyne-swarm status` 的 tasks 出现 ≥1 行且起始 role 有 session；随后 `runs/` 或
+自查：`onlyne ledger` 出现首发 in_flight 行且起始 role 有 session；随后 `runs/` 或
 `research/` 开始有产物。此后环在 role 之间靠接力自转，supervisor 不进环，人工不再推。
-常驻推荐 `onlyne-swarm run --detach`（`onlyne-swarm stop` 收）。
+常驻推荐 server 前台 tab（`onlyne server stop` 收）；client 各一起 tab 或用 ONLYNE_BACKEND=zellij 归位。

@@ -5,5 +5,5 @@
 配完跑 `./scripts/promote.sh --dry-run`，逐项过校验后向用户复述将删除
 哪些文件，用户确认再执行 `./scripts/promote.sh`。
 
-红线：落定前不起 scheduler，不跑领域实验，不动 `.agents/AGENTS.md` 与
-`.agents/skills/onlyne-swarm/`。
+红线：落定前不起 onlyne server/client，不跑领域实验，不动 `.agents/AGENTS.md`、
+`.onlyne/spec.toml` 的结构与 `.agents/skills/onlyne-{supervisor,role}/`。

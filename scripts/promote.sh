@@ -47,23 +47,29 @@ if grep -q "<!-- THEME:" .agents/AGENTS.md; then
   fail "THEME slots REMAIN:: $LEFT"
 fi
 
-# --- collect roles (single source of truth) ---------------------------------
-[ -d .agents/.schedule ] || fail ".agents/.schedule/ MISSING"
-ROLES="$(ls .agents/.schedule/ | tr '\n' ' ')"
-[ -n "$ROLES" ] || fail ".agents/.schedule/  needs >=1 role dir"
+# --- collect roles (single source of truth: spec.toml [[client]]) ----------
+SPEC=".onlyne/spec.toml"
+TOPO="${TOPO:-flywheel}"
+TPLDIR=".onlyne/templates/$TOPO"
+[ -f "$SPEC" ] || fail "$SPEC MISSING (v1 central truth)"
+[ -d "$TPLDIR" ] || fail "$TPLDIR MISSING (role content templates)"
+ROLES="$(python3 - "$SPEC" <<'PY_ROLES'
+import tomllib, sys
+spec = tomllib.load(open(sys.argv[1], "rb"))
+print(" ".join(c["role"] for c in spec.get("client", []) if c["role"] != "_supervisor"))
+PY_ROLES
+)" || fail "spec.toml parse FAILED (python3>=3.11 tomllib)"
+[ -n "$ROLES" ] || fail "spec.toml has no [[client]] roles"
 
-# --- check 2: each role template --------------------------------------------
+# --- check 2: per-role template dir + model triplet -------------------------
 for r in $ROLES; do
-  T=".agents/.schedule/$r/template.workspace.jsonc"
-  [ -f "$T" ] || fail "$T MISSING"
-  python3 - "$T" "$r" <<'PY_CHECK2' || fail "$T INVALID (reason above)"
+  A="$TPLDIR/$r/AGENTS.md"; S="$TPLDIR/$r/.pi/settings.json"
+  [ -f "$A" ] || fail "$A MISSING"
+  [ -f "$S" ] || fail "$S MISSING"
+  python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INCOMPLETE (reason above)"
 import json,sys
-p, want = sys.argv[1], sys.argv[2]
-d = json.load(open(p))
-assert d.get("name") == want, f"name={d.get('name')!r} vs dirname {want!r} MISMATCH"
-assert d.get("role"), "role EMPTY"
-m = d.get("model") or {}
-assert m.get("provider") and m.get("model") and m.get("effort"), "model.provider/model/effort REQUIRED"
+d = json.load(open(sys.argv[1]))
+assert d.get("defaultProvider") and d.get("defaultModel") and d.get("defaultThinkingLevel"), "defaultProvider/defaultModel/defaultThinkingLevel required non-empty"
 PY_CHECK2
 done
 
@@ -79,72 +85,28 @@ print(name)
 PY_ENTRY
 )"
 [ -n "$ENTRY" ] || fail "entry_role EMPTY (star row parse FAILED)"
-[ -d ".agents/.schedule/$ENTRY" ] || fail "entry_role '$ENTRY'  has no .schedule dir"
+printf '%s' " $ROLES " | grep -q " $ENTRY " || fail "entry_role '$ENTRY' not a spec [[client]] role"
 
-# --- check 4: workspace sync green, zero dangling ------------------------------
-# dangling counts loopback FIFOs that only exist while workspace daemons run.
-# promote.sh never starts daemons, so this check spawns the daemon set that
-# `run` would start, syncs against live FIFOs, then stops them. Same code
-# path as the scheduler (daemon::ensure_all), minus signal handling.
-ONLYNE_BIN="${ONLYNE_BIN:-onlyne}" export ONLYNE_BIN
-# daemon-backed sync helper is embedded below via a temp file
-HELPER="$(mktemp)"
-cat > "$HELPER" <<'PY_DAEMONS'
-import json, os, subprocess, sys, time
-root = os.getcwd()
-env = dict(os.environ)
-swarm_bin = subprocess.run(["command", "-v", "onlyne-swarm"], capture_output=True, text=True, shell=True).stdout.strip()
-onlyne_bin = env.get("ONLYNE_BIN", "onlyne")
-tree = json.load(open(".agents/.schedule.json")) if os.path.exists(".agents/.schedule.json") else None
-roles = sorted(os.listdir(".agents/.schedule"))
-ws_dirs = ["."] + [os.path.join(".ws", r) for r in roles]
-procs = []
-for ws in ws_dirs:
-    sock = os.path.join(ws, ".onlyne/run/s")
-    alive = False
-    if os.path.exists(sock):
-        import socket as _s
-        try:
-            s = _s.socket(_s.AF_UNIX, _s.SOCK_STREAM)
-            s.settimeout(2)
-            s.connect(os.path.abspath(sock))
-            s.sendall(b'{"id":"ping","op":"ping"}\n')
-            alive = b'"ok":true' in s.recv(256)
-            s.close()
-        except OSError:
-            alive = False
-    if not alive:
-        p = subprocess.Popen([onlyne_bin, "--workspace", os.path.abspath(ws), "run"],
-                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        procs.append(p)
-for _ in range(50):
-    time.sleep(0.1)
-    ready = True
-    for ws in ws_dirs:
-        if not os.path.exists(os.path.join(ws, ".onlyne/channels/loopback/in")):
-            ready = False
-            break
-    if ready:
-        break
-r = subprocess.run(["onlyne-swarm", "workspace", "sync"], capture_output=True, text=True)
-for p in procs:
-    p.terminate()
-for p in procs:
-    try:
-        p.wait(timeout=10)
-    except Exception:
-        p.kill()
-if r.returncode != 0:
-    print(r.stdout + r.stderr)
-    sys.exit(1)
-print(r.stdout)
-PY_DAEMONS
-SYNC_OUT="$(python3 "$HELPER" "$ROOT" 2>&1)" || { RC=$?; rm -f "$HELPER"; fail "workspace sync FAILED: $SYNC_OUT"; }
-rm -f "$HELPER"
-DANGLING="$(printf '%s' "$SYNC_OUT" | python3 -c 'import json,sys;print(len(json.load(sys.stdin).get("dangling",[])))' 2>/dev/null || echo "?")"
-[ "$DANGLING" = "0" ] || fail "workspace sync dangling not zero"
+# --- check 4: spec==templates, supervisor admin, relay edges closed ---------
+python3 - "$SPEC" "$TPLDIR" <<'PY_SPEC' || fail "spec/templates MISMATCH (reason above)"
+import tomllib, sys, os
+spec = tomllib.load(open(sys.argv[1], "rb"))
+clients = {c["role"]: c for c in spec.get("client", [])}
+tpl = {d for d in os.listdir(sys.argv[2]) if os.path.isdir(os.path.join(sys.argv[2], d))}
+assert (tpl - {"_supervisor"}) == (set(clients) - {"_supervisor"}), f"templates {sorted(tpl)} vs spec {sorted(clients)}"
+sup = clients.get("_supervisor")
+assert sup and sup.get("admin") is True, "[[client]] _supervisor with admin=true REQUIRED"
+for r, c in clients.items():
+    assert c.get("prose"), f"[[client]] {r}: prose EMPTY"
+    for x in c.get("allowed_targets", []):
+        assert x != "_supervisor", f"{r}: allowed_targets includes _supervisor (uplink must stay zero)"
+        tgt = clients.get(x)
+        assert tgt is not None, f"{r}: targets unknown role {x}"
+        s = tgt.get("allowed_senders", [])
+        assert r in s or "*" in s, f"{r}->{x}: {x} lacks the sender edge"
+PY_SPEC
 
-# --- check 5: role table covers .schedule exactly ------------------------------
+# --- check 5: role table matches spec [[client]] exactly -----------------------
 TABLE_ROLES="$(python3 - <<'PY_TABLE'
 text = open(".agents/AGENTS.md").read()
 names = []
@@ -164,10 +126,10 @@ print(" ".join(names))
 PY_TABLE
 )"
 for r in $ROLES; do
-  printf '%s' " $TABLE_ROLES " | grep -q " $r " || fail "table MISSING role '$r'(.schedule has it, table lacks it)"
+  printf '%s' " $TABLE_ROLES " | grep -q " $r " || fail "table MISSING role '$r' (spec has it, table lacks it)"
 done
 for t in $TABLE_ROLES; do
-  printf '%s' " $ROLES " | grep -q " $t " || fail "table EXTRA role '$t'(table has it, .schedule lacks it)"
+  printf '%s' " $ROLES " | grep -q " $t " || fail "table EXTRA role '$t' (table has it, spec lacks it)"
 done
 
 # --- check 6: seed ideas -------------------------------------------------------
@@ -201,52 +163,29 @@ if ! ls research/ 2>/dev/null | grep -vq "^\.gitkeep$"; then
   fail "research/ needs a domain file besides .gitkeep"
 fi
 
-# --- check 8: pi-onlyne version floor -------------------------------------------
-python3 - .pi/settings.json <<'PY_PKGS' || fail ".pi/settings.json pi-onlyne floor not met (reason above)"
-import json, os, sys
-d = json.load(open(sys.argv[1]))
-base = os.path.dirname(os.path.abspath(sys.argv[1]))
-FLOOR = [0, 9, 1]
-def vge(s):
-    try:
-        parts = [int(x) for x in s.split("-")[0].split(".")]
-    except ValueError:
-        return False
-    return (parts + [0, 0])[:3] >= FLOOR
-ok = False
-for p in d.get("packages", []):
-    if p.startswith("npm:pi-onlyne@"):
-        ok = ok or vge(p.split("@", 2)[-1].lstrip("^~>= "))
-    elif "pi-onlyne" in p:
-        pj = os.path.join(p if os.path.isabs(p) else os.path.join(base, p), "package.json")
-        try:
-            meta = json.load(open(pj))
-            ok = ok or (meta.get("name") == "pi-onlyne" and vge(meta.get("version", "0")))
-        except OSError:
-            pass
-assert ok, f"packages={d.get('packages', [])} (want pi-onlyne >= {'.'.join(map(str, FLOOR))}, npm or local path)"
-PY_PKGS
+# --- check 8: [server].agent_package resolves to v1 pi plugin ------------------
+python3 - "$SPEC" <<'PY_PKG' || fail "agent_package INVALID (reason above)"
+import tomllib, sys, os, json
+spec = tomllib.load(open(sys.argv[1], "rb"))
+pkg = (spec.get("server") or {}).get("agent_package", "")
+assert pkg and os.path.isabs(pkg), f"agent_package={pkg!r}: absolute local path required (fill at assembly)"
+meta = json.load(open(os.path.join(pkg, "package.json")))
+parts = [int(x) for x in meta.get("version", "0").split("-")[0].split(".")]
+assert (parts + [0, 0])[:3] >= [1, 0, 0], f"pi plugin version {meta.get('version')} < 1.0.0"
+PY_PKG
 
-# --- check 9: binaries -----------------------------------------------------------
-for b in onlyne-swarm onlyne pi; do
-  command -v "$b" >/dev/null || fail "binary MISSING:: $b"
+# --- check 9: v1 toolchain + backend candidates --------------------------------
+for b in onlyne onlyne-server onlyne-client pi; do
+  command -v "$b" >/dev/null || fail "binary MISSING:: $b (build onlyne @ v1.0.0-beta.2, copy target/release/* into PATH)"
 done
-if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  fail "runtime MISSING:: need one of herdr/zellij/orca (SWARM_RUNTIME=auto probes in that order)"
-fi
-SWARM_VER="$(onlyne-swarm --version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "$SWARM_VER" <<'PY_VER' || fail "onlyne-swarm --version=$SWARM_VER (want >= 0.7.0)"
+V1_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
+python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} (want >= 1.0.0)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [0, 7, 0], "version too old"
+assert (parts + [0, 0])[:3] >= [1, 0, 0], "version too old (v0 line is legacy protocol; exit 2 on legacy .onlyne/)"
 PY_VER
-if command -v onlyne >/dev/null; then
-  ONLYNE_VER="$(onlyne --version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-  python3 - "$ONLYNE_VER" <<'PY_ONE' || fail "onlyne --version=$ONLYNE_VER (want >= 0.6.0 for busy/idle IPC)"
-import sys
-parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [0, 6, 0], "version too old"
-PY_ONE
+if ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
+  warn "no zellij/orca on PATH: ONLYNE_BACKEND will probe to fake (role sessions need a real backend)"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
@@ -263,7 +202,7 @@ if [ "$PAYLOAD_MISSING" = "1" ]; then
 else
   info "  4) payload/ exists, skip mkdir"
 fi
-info "  5) onlyne-swarm workspace create generates .ws/"
+info "  5) runtime power-on stays manual (AGENTS cold-start: server init/generate/run, client run)"
 info "  6) remove assembly material: ${RETIRE[*]}"
 info "  7) git add -A && commit"
 if [ "$DRY_RUN" = "1" ]; then
@@ -296,16 +235,17 @@ if [ "$PAYLOAD_MISSING" = "1" ]; then
   mkdir -p payload
   touch payload/.gitkeep
 fi
-onlyne-swarm workspace create >/dev/null || fail "workspace create FAILED"
 rm -rf "${RETIRE[@]}"
 git add -A
 git commit -qm "feat(bootstrap): promote template to theme $THEME"
 
 cat <<EOF
-1) run in this dir terminal: onlyne-swarm run            # start scheduler (human runs it, script starts no daemon)
-2) open another terminal:      pi                           # this session is the supervisor
-3) flywheel is now fully idle: 0 tasks, empty runs/, seeds only in pool.
-   starting the scheduler is power-on; one more step to turn it:
-   give the supervisor a research direction, or run directly
-   onlyne-swarm submit --to $ENTRY --payload payload/first.md
+1) run in this dir terminal: onlyne server init --root . --listen <port>, fill spec.toml pins/keys/agent_package,
+   onlyne server generate --root ., then onlyne-server run --root .     # power-on, human runs it
+2) open another terminal:    pi                                        # this session is the supervisor (_supervisor admin mount)
+3) start each role client:   onlyne-client run --workspace .onlyne/ws/$TOPO/<role>
+4) flywheel fully idle now:  empty ledger, empty runs/, seeds only in pool.
+   power-on is not running; to turn the ring give the supervisor a direction, or run:
+   onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
 EOF
+

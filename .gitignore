@@ -8,11 +8,13 @@
 .pi/schedule-prompts.json
 .pi/schedule-prompts-settings.json
 
-# onlyne / swarm runtime state (regenerate with `onlyne-swarm init` + `workspace sync`)
-# root 描述文件是模板本体，必须跟踪；其余 .onlyne/ 是运行时
+# onlyne v1 runtime state (regenerate: onlyne server init / generate)
+# spec.toml 与 templates/ 是模板真相必须跟踪；其余 .onlyne/ 是运行时
 .onlyne/*
-!.onlyne/swarm.workspace.jsonc
-.ws/
+!.onlyne/spec.toml
+!.onlyne/templates/
+!.onlyne/templates/**
+.onlyne.v0-archive/
 # The marquee protocol example ships its instance Pi settings and prompt
 # wrappers. Runtime-only .onlyne/ and onlyne_in/ under those instances stay
 # ignored by the patterns below.
