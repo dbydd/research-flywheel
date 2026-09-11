@@ -1,0 +1,11 @@
+{
+  "packages": [
+    "../../onlyne/harness/pi-onlyne",
+    "npm:context-mode",
+    "npm:@abix5/pi-hindsight",
+    "npm:pi-web-access"
+  ],
+  "defaultProvider": "axonhub",
+  "defaultModel": "generic-researcher-weak",
+  "defaultThinkingLevel": "medium"
+}

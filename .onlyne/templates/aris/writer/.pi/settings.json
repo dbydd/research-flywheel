@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "__AGENT_PACKAGE_ABS__"
+  ],
+  "defaultProvider": "axonhub",
+  "defaultModel": "generic-researcher-weak",
+  "defaultThinkingLevel": "medium"
+}

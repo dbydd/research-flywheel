@@ -1,0 +1,42 @@
+# OS / editor
+.DS_Store
+*.lock
+
+# pi local state
+.pi/sessions/
+.pi/hindsight/
+.pi/schedule-prompts.json
+
+# onlyne v1 运行态（regenerate: onlyne server init / generate）
+# spec.toml 与 templates/ 是模板真相必须跟踪；其余 .onlyne/ 是运行时
+.onlyne/*
+!.onlyne/spec.toml
+!.onlyne/templates/
+!.onlyne/templates/**
+.onlyne.v0-archive/
+# The marquee protocol example ships its instance Pi settings and prompt
+# wrappers. Runtime-only .onlyne/ and onlyne_in/ under those instances stay
+# ignored by the patterns below.
+!examples/
+!examples/marquee/
+!examples/marquee/.ws/
+!examples/marquee/.ws/*/
+!examples/marquee/.ws/*/.pi/
+!examples/marquee/.ws/*/.pi/**
+!examples/marquee/.ws/*/prompts/
+!examples/marquee/.ws/*/prompts/**
+**/onlyne_in/
+**/channels/loopback/{in,out}
+
+# knowledge products (pool/, runs/, research/, papers/) stay tracked
+!.gitkeep
+
+# vault 软链（运行态，不入 git）
+obsidian/
+
+# 探针/拟合大二进制不入 git（可由 experiment/ 脚本再生；废弃口径见各 run DEPRECATED.md）
+**/probes/
+**/fits/
+# Python 编译产物
+__pycache__/
+*.py[cod]
