@@ -35,7 +35,8 @@ crates.io 的 `onlyne` 0.5.x 是旧形态占名，npm 的 `pi-onlyne` ≤0.9.1 �
 git clone -b v1.0.0-beta.4 https://github.com/dbydd/onlyne && cd onlyne   # 2666ede；beta.3 亦兼容（哨兵方案跨版本）
 cargo build --release   # 全新 clone 实测 ~60s
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
-onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protocol_version，fail-fast
+codesign --force --sign - ~/.cargo/bin/onlyne*   # macOS 必做：复制后的二进制签名失效，直接 exec 收 SIGKILL
+onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手报 protocol_version，fail-fast
 ```
 
 动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制只有 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
