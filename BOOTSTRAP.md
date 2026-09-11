@@ -32,11 +32,13 @@ flowchart TD
 crates.io 的 `onlyne` 0.5.x 是旧形态占名，npm 的 `pi-onlyne` ≤0.9.1 是旧协议——都不要装。
 
 ```bash
-git clone -b v1.0.0-beta.3 https://github.com/dbydd/onlyne && cd onlyne
-cargo build --release
+git clone -b v1.0.0-beta.3 https://github.com/dbydd/onlyne && cd onlyne   # 未打 tag 时用 d0573e3 tip
+cargo build --release   # 全新 clone 实测 ~60s
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
 onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protocol_version，fail-fast
 ```
+
+动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制只有 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
 
 版本闸钉 tag `v1.0.0-beta.3`（= 125e351；beta.2/d0f4e60 因 plugins glob 回归作废，禁钉）。v1 见到 legacy `.onlyne/`
 （含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入——这是特性：旧树先整目录
@@ -51,8 +53,8 @@ onlyne version   # 1.0.0 线；与模板 spec 形状不匹配时握手报 protoc
 | 3 | `.onlyne/templates/flywheel/<role>/AGENTS.md` | role 深规 | 该 role ws |
 | 4 | `.onlyne/templates/flywheel/<role>/.pi/settings.json` | 模型三元组 | 该 role ws（generate 时并入插件引用） |
 | 5 | `pool/ideas.jsonl` | 种子 idea（硬门字段） | scout 消费 |
-| 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor |
-| 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填 | 握手 |
+| 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 必须含 `"{{agent_package}}"` 占位符，否则该 role 零插件、pi 起会话没工具直接死在 assign |
+| 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填；未 init 前先播合法长度 32 字节占位（`AWAAAAAAAA...AAA=`），非法 key 会让全量 parse 连 `client init` 都跑不动 | 握手 |
 | 8 | `.pi/SYSTEM.md`、`README.md` | 口径微调（一般不动） | supervisor 会话 |
 
 relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目
@@ -61,7 +63,7 @@ completion 走 origin 自动通道不经 ACL）。promote check 4 机器核这�
 
 ## 4. 通电三门（promote 之后，一次性）
 
-1. **server 活**：`onlyne server status` 有回包；`wait-ready` 通过。
+1. **server 活**：`onlyne-server start --root .`（自带 detached+pid）后 `onlyne-server status --root .` 的 `socket_present=true` 是真相（`run` 不写 pid、`status.running` 只认 pid 文件，别拿它判活）。
 2. **client 连**：每个启用 role `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。
 3. **端到端一发**：单 role `send --from _supervisor --to <role> --text "ping"` 得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
 
@@ -98,9 +100,10 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 
 ## 8. 常见坑
 
-- `onlyne server status` 连不上 = 未通电（不是故障）；起 server 用前台 tab，状态可见。
+- `onlyne-server status` 连不上 = 未通电（不是故障）；通电用 `onlyne-server start`（detached+pid），判活看 `socket_present`。
 - note 打给离线 role 得 `recipient_offline` 是语义不是 bug；要排队就发 task。
 - 同 `op_id` 换内容重发得 `conflict`；重试原帧重发。
-- prose 改完必须 `server reload`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）；先 `--dry-run` 看 spec-diff。
+- prose 改完必须 `onlyne reload --server-root .`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）；先 `--dry-run` 看 spec-diff。
+- e2e/验证脚本开头清库或 `onlyne control ... recycle` 收残 session（v1 无自动回收，D12 设计）。
 - role 会话默认不带 `-ns`（omp 裁定：模板 skills 三件套靠 pi 发现进会话）。「确定零 skill 的极简 role」装机者自选加回。
 - `promote.sh --dry-run` 零写入可反复跑；正式跑需用户逐项确认退役清单（脚本会打印）。

@@ -16,9 +16,9 @@
 ./scripts/promote.sh --dry-run && ./scripts/promote.sh
 
 # 1. 通电（一次性；人执行，supervisor 会话不起常驻）
-onlyne server init --root . --listen 127.0.0.1:7812   # 产 keys/cert_pin，回填 spec.toml
-onlyne server generate --root .                       # 渲染 .onlyne/ws/flywheel/<role>/
-onlyne-server run --root .                            # 前台 tab 保可见
+onlyne-server init --root . --listen 127.0.0.1:7812   # 产 keys/cert_pin，回填 spec.toml（key 先播合法占位再逐 role client init 换真身）
+onlyne-server generate --root .                       # 渲染 .onlyne/ws/flywheel/<role>/
+onlyne-server start --root .                            # detached+pid；判活看 socket_present
 
 # 2. 每 role 起 client（各一 tab）
 onlyne-client run --workspace .onlyne/ws/flywheel/scout   # model/bench/writer/critic 同理

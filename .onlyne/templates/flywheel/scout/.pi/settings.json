@@ -1,5 +1,7 @@
 {
-  "packages": [],
+  "packages": [
+    "{{agent_package}}"
+  ],
   "defaultProvider": "",
   "defaultModel": "",
   "defaultThinkingLevel": ""

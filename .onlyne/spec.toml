@@ -2,7 +2,13 @@
 #
 # 解析即启动校验：未知键与类型错误直接拒绝（`spec.toml:<行号>: <消息>`）。
 # 改完用 `onlyne server reload --root <root>`（`--dry-run` 配 spec-diff 预览）。
-# REPLACE_ME 值由 `onlyne-server init`（cert_pin）与 `onlyne-client init`（key）产出。
+# 定稿顺序（F1 死锁修法：全量 parse 下非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
+#   1) 空根 `onlyne-server init --root .`（产 keys/cert_pin）
+#   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
+#   3) 各 role key 先播合法 32 字节占位 base64（AWAAAAAAAA...AAA= 形）
+#   4) 逐 role `onlyne-client init --workspace <ws>` 拿真 key 替换
+#   5) `onlyne-server generate` → `onlyne-server start`（run 不写 pid，status 的 running 只认 pid 文件，
+#      判活用 socket_present）→ `onlyne reload`
 # 运行期没有任何配置 API：这份文件就是全部。
 #
 # THEME:research-question —— 主题问题与判进标准写进 root AGENTS.md，此处只放拓扑。
@@ -21,13 +27,15 @@ heartbeat_timeout_ms = 30000
 agent_package = ""                                 # 例："/abs/path/onlyne/plugins/onlyne-agent-pi"
 template_root = ".onlyne/templates"
 
-# ---- supervisor：admin mount，跑在 server-root 本身，通常不起 client 进程。----
-# 它的 send 走 `--from _supervisor`（落账 admin=true）；角色的 completion 回执
-# 自动回流 origin，_supervisor 收件箱是 ledger 里的 queued 行，pull 式读。
-# 角色侧零指向 _supervisor 的上行边（allowed_targets 里不给），环就不进 supervisor。
+# ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----
+# 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --file <payload>`
+# （落账 admin=true）；角色的 completion 回执自动回流 origin（origin==收件方时免 ACL，
+# 实证：scout 无指向 critic 的边也能把回执排队送达 critic），_supervisor 收件箱是 ledger
+# 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，环就不进 supervisor。
+# key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
 [[client]]
 role = "_supervisor"
-key = "ed25519/0000000000000000000000000000000000000000000000000000000000000000"  # 占位；不起 client 即不验
+key = "ed25519/AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="  # 合法长度占位（base64 32×0x01）；不起 client 即不验真身
 prose = """你是飞轮的 supervisor（admin mount）。你不进工作环：取 idea 派工、归档 verdict、起新一轮都在 role 手里。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to scout --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec-diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
 admin = true
 max_sessions = 1

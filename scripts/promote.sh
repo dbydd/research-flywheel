@@ -70,6 +70,7 @@ for r in $ROLES; do
 import json,sys
 d = json.load(open(sys.argv[1]))
 assert d.get("defaultProvider") and d.get("defaultModel") and d.get("defaultThinkingLevel"), "defaultProvider/defaultModel/defaultThinkingLevel required non-empty"
+assert "{{agent_package}}" in d.get("packages", []), "packages must contain \"{{agent_package}}\" (else generate vendors zero plugins and the role dies at assign)"
 PY_CHECK2
 done
 

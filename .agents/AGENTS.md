@@ -19,8 +19,8 @@ session 对下游零等待。投递即返回一行 receipt JSON，后续全在 l
 
 ## 目录
 
-- `.onlyne/spec.toml`：拓扑唯一真相（[server] + 每 role 一个 [[client]]：prose、ACL、timeout、intent）。未知键直接拒启动（`spec.toml:<行号>`）；运行期零配置 API，改动落这份文件再 `onlyne server reload`。
-- `.onlyne/templates/flywheel/<role>/`：role 内容模板（AGENTS.md 深规、`.pi/settings.json` 模型位）。`onlyne server generate` 渲染出 ws，产物零绝对路径、整目录可 mv。
+- `.onlyne/spec.toml`：拓扑唯一真相（[server] + 每 role 一个 [[client]]：prose、ACL、timeout、intent）。未知键直接拒启动（`spec.toml:<行号>`）；运行期零配置 API，改动落这份文件再 `onlyne reload --server-root .`。
+- `.onlyne/templates/flywheel/<role>/`：role 内容模板（AGENTS.md 深规、`.pi/settings.json` 模型位）。`onlyne-server generate` 渲染出 ws（spec 里出现的每个 role 都要有模板目录，缺一个全不写退 4；_supervisor 也要 stub），产物零绝对路径、整目录可 mv。
 - `.onlyne/`（其余）：v1 运行时（state.db、run/s、keys、ws、logs）。除 spec.toml 与 templates/ 外不入 git。legacy 布局会被 v1 以 exit 2 拒绝并零写入，旧树退役时整目录改名 `.onlyne.v0-archive/`。
 - `pool/ideas.jsonl`：idea 池（唯一队列，一行一条，见下 schema）。scout 追加并自取消费；supervisor 不碰队列。
 - `runs/<run-id>/`：一轮 idea 的全部过程件。`idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
@@ -106,19 +106,20 @@ role 增删以 `.onlyne/spec.toml` 的 [[client]] 为准，本表与 `allowed_ta
 装配完成的瞬间，工作区处于这些事实下：
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
-- v1 运行时未起：`onlyne server status` 无 socket；`ws/` 未生成；spec.toml 的 REPLACE_ME 未替换。
+- v1 运行时未起：`onlyne-server status` 无 socket；`ws/` 未生成；spec.toml 的 REPLACE_ME 未替换。
 - `tasks` 空，`runs/` 空，`papers/` 空，`pool/ideas.jsonl` 只有种子或空。
-- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne server start` 属于通电，第一发属于开跑。
+- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server start` 属于通电，第一发属于开跑。
 
 通电顺序（一次性，装配收官时做）：
 
 ```bash
-onlyne server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin
-# 把 cert_pin 与各 role 的 ed25519 key 填入 .onlyne/spec.toml（role key 由 onlyne-client init 产出）
-# 填 [server].agent_package = "<onlyne checkout>/plugins/onlyne-agent-pi"
-onlyne server generate --root .                          # 渲染 ws（产物零绝对路径）
-onlyne-server run --root . &                             # 或前台 tab；ONLYNE_BACKEND 选后端
-onlyne-client run --workspace <ws/<topo>/<role>>         # 每 role 一个 client，起法见 BOOTSTRAP
+onlyne-server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin
+# 回填 spec.toml：cert_pin、agent_package="<onlyne checkout>/plugins/onlyne-agent-pi"；
+# 各 role key 先播合法 32 字节占位（AWAAAAAAAA...AAA=）——全量 parse 下非法 key 连 client init 都跑不动
+onlyne-client init --workspace .onlyne/ws/$TOPO/<role>   # 逐 role 产真 key，回填 spec.toml
+onlyne-server generate --root .                          # 渲染 ws（vendor 插件、零绝对路径）
+onlyne-server start --root .                             # detached+pid；判活用 status 的 socket_present
+onlyne-client run --workspace .onlyne/ws/$TOPO/<role>    # 每 role 一个 client（各一 tab）
 ```
 
 启动动作二选一：
@@ -133,12 +134,12 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
 
 ## 维护与配置（supervisor 用）
 
-- `spec.toml` 是唯一真相：[[client]] 的 prose/ACL/`max_sessions`/`reuse` 与 `[client.timeout]`（ready_ms=30000、running_ms=120000、idle_ms=60000）、`[client.intent]`（attempts=3、backoff_ms=[1000,2000,4000]）都在 role 条目上配。改完 `onlyne server reload`（`--dry-run`/`spec-diff` 预览），失败保旧 spec 并记 `fault{spec_reload_failed}`。
+- `spec.toml` 是唯一真相：[[client]] 的 prose/ACL/`max_sessions`/`reuse` 与 `[client.timeout]`（ready_ms=30000、running_ms=120000、idle_ms=60000）、`[client.intent]`（attempts=3、backoff_ms=[1000,2000,4000]）都在 role 条目上配。改完 `onlyne reload --server-root .`（`--dry-run`/`spec-diff` 预览），失败保旧 spec 并记 `fault{spec_reload_failed}`。
 - 后端选择：`ONLYNE_BACKEND` env（`auto|zellij|orca|exec|fake`）。空值与 `auto` 按能力探测，顺序 orca→zellij→fake；命令行型 role 用 zellij/orca 起 session_command。SWARM_RUNTIME 已退役。
 - role 模型/思考档 = `.onlyne/templates/flywheel/<role>/.pi/settings.json` 三元组；生成后 ws 内的 `.pi/**` 归 role 与 supervisor 所有，重 generate 前先看 spec 的模板发现规则（templates/<topo>/<role>/，basename=role 名）。
 - ws 整目录 `mv` 即搬迁（设计内能力），client 全部路径自 `--workspace` 推导，intents/游标随 `.onlyne/` 同行；搬完重启该 client。
 - 故障运维：`onlyne faults --open-only` 看核心检测；`onlyne repair inspect|retry|close|fail|ack`、`rebind|adopt` 把任务指回活 pane。`DeliveryState::Exhausted` 是终态，只有这里的显式决定能重开。
-- 生命周期：`onlyne server start|stop|status|wait-ready`；`onlyne client run|start|stop|status`。停环先 server stop，client 各自退出；杀进程禁按名字猜，先查 pid 文件（`.onlyne/run/`）与祖先链。
+- 生命周期：`onlyne-server init|run|start|stop|status|generate`（通电用 start，run 不写 pid、status.running 只认 pid 文件，判活看 socket_present）；`onlyne-client run|start|stop|status`。查询与运维动词全在瘦入口 `onlyne --server-root .`。停环先 server stop，client 各自退出；杀进程禁按名字猜，先查 pid 文件（`.onlyne/run/`）与祖先链。
 - 错误词汇表：`acl_denied`＝spec 缺边；`unauthorized`＝key 未注册；`recipient_offline`＝note 打离线 role；`duplicate`＝同 op_id 原帧重发（返回原 receipt）；`conflict`＝同 op_id 换了body；`not_admin`＝未注册身份用 `--from`。被拒不落账。
 - 观察：`onlyne --server-root . ledger|sessions|watch --follow --tier durable`；`onlyne tui` 两页板（role 网络图 + ledger）。
 - 子集群上报：本 root 若挂到更大集群，把本 role 条目 `aggregate` 填父层身份，用 `onlyne cluster export-prose` 交接口文案；子层 role 名从不出现在父层 ledger。
