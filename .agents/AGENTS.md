@@ -113,7 +113,7 @@ role 增删以 `.onlyne/spec.toml` 的 [[client]] 为准，本表与 `allowed_ta
 通电顺序（一次性，装配收官时做）：
 
 ```bash
-onlyne-server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin
+onlyne-server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin   # 多树并机查重：7813=ARIS live，第二集群自选 7814+
 # 回填 spec.toml 的 cert_pin；哨兵统一 sed：
 #   ABS="<onlyne checkout>/plugins/onlyne-agent-pi"
 #   sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json
