@@ -110,6 +110,7 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 
 ## 8. 常见坑
 
+- 四二进制装好后任何 `onlyne` 命令报 command not found 或行为像旧版：先核 `which onlyne` 与 `~/.cargo/bin` 是否在 PATH、`onlyne version` 读数是否 ≥ 预期 tag——双份安装（cargo install 与手 cp 并存）时 PATH 序决定谁生效，这是新人第一坑。
 - `onlyne-server status` 连不上等于未通电，属于正常状态。通电用 `onlyne-server start`（detached+pid），判活看 `socket_present`。
 - note 打给离线 role 得 `recipient_offline`，这是设计内的语义。要排队就发 task。
 - 同 `op_id` 换内容重发得 `conflict`。重试时原帧重发。
