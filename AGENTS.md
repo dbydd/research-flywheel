@@ -47,7 +47,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## 目录
 
-- `pool/ideas.jsonl`：idea 池，也是唯一队列，一行一条 JSON，schema 见下。侦察位追加，supervisor 消费。
+- `pool/ideas.md`：idea 池，也是唯一队列，一条 idea 一个小节，checkbox 状态机 + note 追加行，格式见下。scout 取单消费，critic/scout 写终态与新行。
 - `runs/<run-id>/`：一轮 idea 的全部过程件，含 `idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，文件名为 `<run-id>.md`。
@@ -59,19 +59,20 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（generate 渲出的角色工作区，产物零绝对路径）。
 - v0 遗物冻结在 `.onlyne.v0-archive/`，内含旧 FIFO，勿递归读。
 - 台账：v1 账本在 server store，用 `onlyne ledger --server-root .` pull 式读；v0 流水冻结导出 `runs/v0-ledger.csv`。
+- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现）。现有两个：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律）。writer 出图出稿前、critic 审文字面时先读对应 skill。
 - 主题状态：stage/entry_role 记在本文件（角色表 ★ 行与冷启动节），v1 无 flywheel.json。
 
 路径约定：本文件与一切任务书里的路径都相对 swarm root。配套四条：
 
 - worker session 的 cwd 在 `.ws/<name>/`，root 即 `../../`。读写知识文件用这个锚点；发现文件不存在先 `pwd` 确认站位。
 - 工作面口径：草稿、中间件、探针、staged 代码先落在自己实例的 `work/`（私有，不入 git）；定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
-- 追加式台账直写 root：pool/ideas.jsonl、frontier-notes.md、run-log.md、measured/ 流件。
+- 追加式台账直写 root：pool/ideas.md、frontier-notes.md、run-log.md、measured/ 流件。
 - peer 实例的 `../../<peer>/work/` 可只读翻看；交接与审稿判据是任务书与 root 发布物。
 - vault 软链在 root `obsidian/` 下，worker 侧用 `../../obsidian/...` 访问，解析目标是同一 vault。
 
 ## Obsidian vault 对接与写作规范（全员遵守）
 
-- vault 根：`/Users/dbydd/OneDrive/new_document/humanresources`。root `obsidian/` 下四个软链直达 vault 相应位置：`obsidian/论文`→`论文/`（原文 PDF 归档）、`obsidian/reports`→`reports/`（精读报告）、`obsidian/draft`→`draft/`（日常学习与 idea）、`obsidian/templates`→`templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在 ARIS 树里复制 vault 文件。
+- vault 根：`~/OneDrive/new_document/humanresources`（vault 根，装配机自定）。root `obsidian/` 下四个软链直达 vault 相应位置：`obsidian/论文`→`论文/`（原文 PDF 归档）、`obsidian/reports`→`reports/`（精读报告）、`obsidian/draft`→`draft/`（日常学习与 idea）、`obsidian/templates`→`templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在 ARIS 树里复制 vault 文件。
 - 写作规范唯一入口：`obsidian/templates/writing-and-report-guide.md`；精读报告骨架用 `obsidian/templates/paper-report.md`。
 - 该规范覆盖所有用户可见文字：`derivation.md`、`measured/summary.md`、`papers/<run-id>/main.tex` 与编译出的 `main.pdf`、`verdict.md`、`revisions.md`、vault 落库的精读报告。
 - 规范要点：直接陈述、累加式、结论先行；数字带单位与出处（Table/Figure/公式编号或文件路径）；论文事实与「我的分析」分区；流程用 mermaid；数学用 `$$…$$` 独立公式块；YAML frontmatter 可解析；内部链接与 wikilink 可达。
@@ -81,7 +82,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `draft/` 是 idea 源之一：scout 每跳先读 `obsidian/draft/00-索引.md` 再读相关笔记，把值得开正式链路的判断转为 pool idea（`evidence` 指到 `obsidian/draft/<笔记>.md` 具体章节，`origin` 用 `derived` 并注明来源笔记）。
 - 半成品纪律沿用 vault 约定：未核对结论进「证据边界与待核对项」，不直接当 claim 写进稿件。
 - 人物画像不归本工作区：不读不写 vault 的 `人物/`、`关系图谱/`；reading/writing 任务保持人物档案创建关闭，已有规范人物页可 wikilink 引用，不新建。
-- 精读报告自检跑 vault 校验器（只读调用，不往 vault 写脚本）：`env no_proxy='*' NO_PROXY='*' http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= python3 /Users/dbydd/OneDrive/new_document/humanresources/scripts/validate_reading_report.py <report.md>`，按其报错修 frontmatter、围栏、`$$` 定界符、来源锚点与内部链接。
+- 精读报告自检跑 vault 校验器（只读调用，不往 vault 写脚本）：`env no_proxy='*' NO_PROXY='*' http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= python3 ~/OneDrive/new_document/humanresources/scripts/validate_reading_report.py <report.md>`，按其报错修 frontmatter、围栏、`$$` 定界符、来源锚点与内部链接。
 
 ## runs/<run-id>/ 布局（ARIS 主题增补）
 
@@ -98,11 +99,12 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 - objectives：每条 `{metric, evaluator, direction, epsilon, baseline}`。`evaluator` 是 `evaluation/` 下评测器的路径与运行命令；`direction` 取 `higher`/`lower`；`epsilon` 是判定阈值（提升幅度）；`baseline` 来源写清（基线配置、种子、数据切分，缺一视为无效基线）。实测值来自 `measured/`，评测 verdict 与实测一致才 pass。
 - constraints：`check` 项含数据泄漏检查（训练/评测切分隔离声明）、随机种子固定声明、时间预算声明；每条 `{check, description}`，bench 在 `measured/summary.md` 给 pass/fail。
+- 基线切分：主度量评测面切一份 held-out（比例写进契约）。lean/measured 迭代只在训练面跑；verdict 用冻结候选在 held-out 跑一次定生死，失败禁回炉再优化（防对评测面调参）。理念源：NVlabs/SoL-Pi 双 split 纪律，见 research/frontier-notes.md。
 - pass_rule：`all`（ARIS 主题默认全过才 accept；探索性 idea 可在种子里写 `any` 并说明理由）。
 
 idea 的 `evaluation` 字段按本节直接填写，缺项的 idea 不进池。
 
-## onlyne v1 工具面（v1.0.0-beta.3=125e351，两树同闸）
+## onlyne v1 工具面（v1.0.0 GA + CLI 热补 main@ae429d2，两树同闸）
 
 - 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne server reload --server-root .`（--dry-run 配 spec-diff 预览），运行期零回写。
 - role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`（note 不建 session 不排队，离线 recipient_offline）；`onlyne_complete {outcome:"done"|"failed", text}` 交活。
@@ -126,24 +128,22 @@ idea 的 `evaluation` 字段按本节直接填写，缺项的 idea 不进池。
 
 输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。
 
-## idea schema（pool/ideas.jsonl 一行一条 JSON）
+## idea 格式（pool/ideas.md 一条一个小节）
 
-字段：
+```markdown
+## [ ] <id>
+- origin: user_seed|derived | parent_run: <run-id 或 —> | question: <一句话>
+- hypothesis: <可检验的假设>
+- method: <做法要点>
+- evidence: <非空路径数组，逗号分隔，含 research/frontier-notes.md>
+- evaluation: {"objectives":[{metric,evaluator,direction,epsilon,baseline}], "constraints":[{check,description}], "pass_rule":"all"|"any"}
+- done_when: <完成的 observable 判据>
+- note: <追加式备注，一行一条，后来的写上面>
+```
 
-- `id`
-- `origin`，取 user_seed|derived
-- `parent_run`
-- `question`
-- `hypothesis`
-- `method`
-- `evidence`，非空路径数组，含 research/frontier-notes.md
-- `evaluation`
-- `done_when`
-- `status`，取 queued|running|keep|failed
+状态机：`[ ]` queued → `[>]` running（scout 取单时改）→ `[x]` keep / `[!]` failed（critic 归档时改）。`evaluation` 行保持 JSON 内联，字段口径与历史 `.archive/ideas-v1.jsonl` 一致。
 
-`evaluation`: `{objectives:[{metric,evaluator,direction,epsilon,baseline}], constraints:[{check,description}], pass_rule:"all"|"any"}`。
-
-三条进池硬门：evidence 为空、objectives 为空、done_when 为空，任一条命中即不进池。
+四条进池硬门：evidence 为空、objectives 为空、done_when 为空、headroom 预筛不过，任一条命中即不进节。headroom 预筛：写进池子前沿上单行判据——哪个 measured/ 数字或 frontier-notes 行暴露了缺口、余量多大。指得出数字才占下游 rollout；指不出的候选不写进节，负证据照记进 frontier-notes 一行，下轮检索先翻旧账。
 
 ## 角色表（本主题拓扑的唯一事实源）
 
@@ -156,9 +156,9 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | role | 职责 | 上游 | 下游 | entry | model |
 |---|---|---|---|---|---|
 | scout | 前沿检索与 idea 入池 + 取 queued 派工（ARIS `/idea-discovery`：research-lit→idea-creator→novelty-check） | critic, model/bench（失败回传）, writer（补检索） | model | ★ | axonhub/supercheap/low |
-| model | 推导 + Lean 形式化 + 出 spec（ARIS `/experiment-bridge` 前半：plan→spec；不写 `experiment/` 代码） | scout, critic（revise-理论） | bench, writer, scout（失败回传/补检索） | | axonhub/generic-researcher-powerful/high |
+| model | 推导 + Lean 形式化 + 出 spec（ARIS `/experiment-bridge` 前半：plan→spec；不写 `experiment/` 代码） | scout, critic（revise-理论） | bench, writer, scout（失败回传/补检索） | | axonhub/generic-researcher-powerful/max |
 | bench | 跑批与测量，按 model spec 落地并落 `measured/`（ARIS `/experiment-bridge` 后半：deploy→collect） | model | writer, scout（失败回传） | | axonhub/supercheap/minimal |
-| writer | 成稿（ARIS `/paper-writing`：plan→figure→write→compile；初稿与修订稿） | model, bench, critic（revise-文字） | critic, scout（补检索） | | axonhub/generic-researcher-weak/medium |
+| writer | 成稿（ARIS `/paper-writing`：plan→figure→write→compile；初稿与修订稿） | model, bench, critic（revise-文字） | critic, scout（补检索） | | axonhub/supercheap/high |
 | critic | 审稿 verdict + 归档 + 提下一条 idea（ARIS `/auto-review-loop` 4 轮评审 + cross-model jury + `/rebuttal` 语义：revise 循环或 accept/reject 终局） | writer | writer（revise-文字）/ model（revise-理论）/ scout（accept/reject 开新轮） | | axonhub/generic-researcher-powerful/high |
 
 四条边各自含义：
@@ -212,7 +212,7 @@ scout
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
 - server 未跑（装配不起常驻进程）；`onlyne-server run --root .` 通电后逐 role `onlyne client start` 挂载。
-- `tasks` 表 0 行，`.ws/<role>` 下无 session，`runs/` 空，`papers/` 空，`pool/ideas.jsonl` 只有种子或空。
+- `tasks` 表 0 行，`.ws/<role>` 下无 session，`runs/` 空，`papers/` 空，`pool/ideas.md` 只有种子或空。
 - 飞轮是反应式的：没有入站任务就什么都不会发生。`server run`+`client start` 属于通电，属于开跑。
 
 启动动作二选一：
@@ -225,15 +225,17 @@ supervisor 只负责把第一发投进 `★` role，不参与后续流转；环�
 
 本主题的起始 role 是投第一发时 `--to` 的那个名字（见上表 entry 列，★=scout）。第一发落地后环自转：起始 role 取 queued 固化 idea.json 派 model，后续每轮的推进靠接力任务，启动只需要一发，supervisor 不参与流转。
 
-## 维护与配置（supervisor 用，2026-09-11 按 onlyne v1.0.0-beta.3 重写）
+## 维护与配置（supervisor 用，2026-09-12 按 v1.0.0 GA 对表；beta.3 期条款已就地更新）
 
 - 配置唯一入口是 `.onlyne/spec.toml`（拓扑/prose/ACL/timeout/intent/agent_package/cert_pin）与 `.onlyne/templates/aris/`（细则+模型三元组）。
 - 生效路径：spec 改→reload；模板改→该 role generate --force。无 sync/overlay/bootstrap 概念。
-- 装役：beta.3 构建于 `/Users/dbydd/Documents/progs/onlyne-v1-build`（worktree add tag），四二进制以绝对路径使用；PATH 统一装役由 research-flywheel 执行（喊他即可）。v0 的 onlyne-swarm 系不再使用。
-- server 常驻 = Orca 可见前台 tab `onlyne-v1-server`（`onlyne-server run --root .`，Ctrl-C 即停环）。
+- 装役：现役 = redesign worktree 构建、`~/.cargo/bin` 五件（onlyne 1.0.0 + server/client/tui/gateway），热补单 main@ae429d2 已含；crates.io 发布中（6/18），全绿后统一写 `cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` 与 `pi install npm:pi-onlyne`。插件 canonical = redesign worktree 的 `plugins/onlyne-agent-pi`（仓库 b810f1d 已删 integrations/pi-onlyne 旧孪生=无守卫过期码），spec `agent_package` 与五模板 settings 的 packages 均指该绝对路径；v1.0.0 tag 后增量（cli socket 修复/spec alias/tui 岛剪枝/manifest 钉版）随下次 build 带上。
+- server/tui 常驻 = 在 **ARIS worktree 的可见前台 tab** 里跑（`orca terminal create --worktree path:<本树> --command "onlyne-server run --root ."`，tui 同款），关 tab 即停环；禁入任何 agent 后台。client 起 tab 的 worktree 决定会话 spawn 定向（错配案：hub 起 client 继承它方 ORCA_WORKTREE_ID → 会话 cd 进错检出即死）。
 - 五角色 client = `onlyne client start --workspace .onlyne/ws/aris/<role>` 守护态（pid/socket 在 ws 运行面）；重启环后逐个 start，或 `client run` 进各自 tab。
-- 崩溃残留处理：`onlyne server repair`（清 running delivery 类残留在 v1 的对应物），再用 `onlyne faults` 看故障队列（intent exhausted 落此，`repair retry` 人工续）。
+- 崩溃残留处理：`onlyne server repair`（清 running delivery 类残留在 v1 的对应物），再用 `onlyne faults` 看故障队列（intent exhausted 落此，`repair retry` 人工续
+- 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne server repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
 - 杀单个 client 用其 ws pid 文件精确 PID，禁止 pkill 按名杀。
+- 清理孤儿进程前先核对身份：`brew services`、launchd、其他 app 拉起的常驻服务不属于 swarm。杀之前查 launchd label / 父进程 / 端口归属，只回收 `.onlyne/run/` pid 文件与 client 注册表里存在的进程。误杀系统服务比留一个孤儿严重得多。
 - hindsight bank 重建、hindsight.json 实例面条款：v1 插件无该子系统，实例 `.pi/` 归装机者自管，暂不提供集中重建步骤（需要时按 pi hindsight 扩展原生方式现场配）。
 
 ## 纪律

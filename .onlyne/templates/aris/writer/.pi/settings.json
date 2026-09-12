@@ -3,6 +3,6 @@
     "__AGENT_PACKAGE_ABS__"
   ],
   "defaultProvider": "axonhub",
-  "defaultModel": "generic-researcher-weak",
-  "defaultThinkingLevel": "medium"
+  "defaultModel": "supercheap",
+  "defaultThinkingLevel": "high"
 }
