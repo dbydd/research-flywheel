@@ -10,8 +10,9 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ## 前置
 
-- onlyne v1.0.0-beta.4。需要源码构建：clone -b + `cargo build --release`，再把五个产物放进 PATH。crates.io/npm 两个渠道都没有 v1 发布。
-- `pi`。role 会话由 client 启动。插件 `plugins/onlyne-agent-pi` 通过 generate vendor 到各 ws。它零 npm 依赖。
+- onlyne v1.0.0。发布渠道一行装齐：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名）。
+- `pi`，插件走 `pi install npm:pi-onlyne`（latest=1.0.0，含 relay 守卫）。role 会话由 client 启动，generate 把插件 vendor 到各 ws，ws 内副本零 npm 依赖。
+- 源码构建作备用：`git clone -b v1.0.0 https://github.com/dbydd/onlyne` + `cargo build --release`，五产物放 PATH。macOS 上 cp 完必做 `codesign --force --sign -`——复制后的二进制签名失效，直接 exec 收 SIGKILL。
 - 会话后端需要 `orca` 或 `zellij`。`ONLYNE_BACKEND` 的探测序是 orca→zellij→fake。
 - pi model/provider 已经配好。
 

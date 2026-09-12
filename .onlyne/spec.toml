@@ -21,12 +21,13 @@ note_queue = false                                 # note 不排队：目标离�
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# v1 pi 插件 = onlyne 仓内 plugins/onlyne-agent-pi（无 npm 发布）。
-# 装配时填本机 clone 的绝对路径。generate 一次性读它，vendor 进每个 ws 的
-# .onlyne/agent/pi-onlyne/，并把 settings 改写为工作区内相对引用（产物零绝对路径）。
+# v1 pi 插件有两条获取路：`pi install npm:pi-onlyne`（latest=1.0.0，含 relay 守卫），
+# 或本机 onlyne checkout 的 plugins/onlyne-agent-pi。装配时填插件包目录的绝对路径。
+# generate 一次性读它，vendor 进每个 ws 的 .onlyne/agent/pi-onlyne/，
+# 并把 settings 改写为工作区内相对引用（产物零绝对路径）。
 agent_package = "__AGENT_PACKAGE_ABS__"          # 装配时与五份模板 settings 同步 sed（见 BOOTSTRAP §3 表行6）；
 # generate 的 settings 重写只认「spec 字面值==settings 字面值」：装配者 sed "s|__AGENT_PACKAGE_ABS__|/abs/.../plugins/onlyne-agent-pi|g" 一次替换 spec+templates 全部出现点，
-# 渲染产物即 "../.onlyne/agent/onlyne-agent-pi"（pi 可加载形态）。beta.4(2666ede) 起 {{agent_package}} 占位符也渲成 ../ 形态、三态全合法；哨兵跨版本兼容（beta.3+），沿用。
+# 渲染产物即 "../.onlyne/agent/onlyne-agent-pi"（pi 可加载形态）。v1.0.0 起 {{agent_package}} 占位符也渲成 ../ 形态、三态全合法；哨兵跨版本兼容（beta.3 起），沿用。
 template_root = ".onlyne/templates"
 
 # ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----

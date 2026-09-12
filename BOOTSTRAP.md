@@ -41,20 +41,30 @@ flowchart TD
 - `.onlyne/templates/flywheel/<role>/.pi/settings.json` → 模型三元组（provider/model/thinkingLevel）。generate 会把 `agent_package` 的插件 vendor 进 ws，并改写 settings 指向工作区内副本。
 - root `.pi/SYSTEM.md` → supervisor 会话的注入指引（admin 面、空转判定、职责边界）。
 
-## 2. 工具链安装（无发布渠道，源码构建）
-crates.io 上的 `onlyne` 0.5.x 是旧形态占名。npm 上的 `pi-onlyne` ≤0.9.1 是旧协议。这两个都不要装。（预告：v1 正式版后续将发布到 crates.io，届时本节改为 `cargo install` 一条路，源码构建降为备用。）
+## 2. 工具链安装（发布渠道为主，源码构建备用）
+
+主路走发布渠道：
 
 ```bash
-git clone -b v1.0.0-beta.4 https://github.com/dbydd/onlyne && cd onlyne   # 2666ede；beta.3 亦兼容（哨兵方案跨版本）
+cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui   # crate onlyne-cli 装出的 bin 叫 onlyne，其余同名
+pi install npm:pi-onlyne   # latest=1.0.0，含 relay 守卫
+onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手报 protocol_version，fail-fast
+```
+
+名字陷阱：crates.io 上的 `onlyne` 0.5.x 与 `onlyne-swarm` 0.6.x 是旧形态占名；v1 的五个 crate 叫 `onlyne-cli`/`onlyne-server`/`onlyne-client`/`onlyne-gateway`/`onlyne-tui`。npm 上的 `pi-onlyne` ≤0.9.1 是旧协议，≥1.0.0 即 v1；安装时钉 1.0.0。
+
+备用路走源码构建（crates.io 限流补发期间用，或要跟 main 分支）：
+
+```bash
+git clone -b v1.0.0 https://github.com/dbydd/onlyne && cd onlyne
 cargo build --release   # 全新 clone 实测 ~60s
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
 codesign --force --sign - ~/.cargo/bin/onlyne*   # macOS 必做：复制后的二进制签名失效，直接 exec 收 SIGKILL
-onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手报 protocol_version，fail-fast
 ```
 
 动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制的动词面是 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
 
-版本闸钉 tag `v1.0.0-beta.4`（= 2666ede）。beta.2/d0f4e60 因 glob 回归作废禁钉。beta.3/125e351 兼容哨兵方案。v1 见到 legacy `.onlyne/`（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入，这是设计内的行为。旧树先整目录 `mv .onlyne .onlyne.v0-archive/`。迁移前用旧 CLI 把在飞任务记 failed 收官，用 `sqlite3` 导旧 ledger CSV 进 runs/。
+版本闸钉正式 tag `v1.0.0`。beta 线已收：beta.2/d0f4e60 因 glob 回归作废，beta.3/125e351 与 beta.4/2666ede 兼容哨兵方案，装正式版即可。v1 见到 legacy `.onlyne/`（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入，这是设计内的行为。旧树先整目录 `mv .onlyne .onlyne.v0-archive/`。迁移前用旧 CLI 把在飞任务记 failed 收官，用 `sqlite3` 导旧 ledger CSV 进 runs/。
 
 ## 3. 主题要改的面（文件级清单）
 
@@ -65,7 +75,7 @@ onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手�
 | 3 | `.onlyne/templates/flywheel/<role>/AGENTS.md` | role 深规 | 该 role ws |
 | 4 | `.onlyne/templates/flywheel/<role>/.pi/settings.json` | 模型三元组 | 该 role ws（generate 时并入插件引用） |
 | 5 | `pool/ideas.md` | 种子 idea（硬门字段，小节制） | scout 消费 |
-| 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 是哨兵字面值 `"__AGENT_PACKAGE_ABS__"`，装配时 `sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json` 同步替换；generate 的 settings 重写只认 spec 字面值==settings 字面值，产物即 `../.onlyne/agent/onlyne-agent-pi`。`{{agent_package}}` 占位符在 settings 渲成无 `../` 形态＝pi 0.85.1 拒载（源码+ARIS 双实证，beta.3@125e351 与 d0573e3 同此）|
+| 6 | `[server].agent_package` | pi 插件包目录的绝对路径：`pi install npm:pi-onlyne` 装出的 `pi-onlyne` 目录，或本机 onlyne checkout 的 `plugins/onlyne-agent-pi` | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 是哨兵字面值 `"__AGENT_PACKAGE_ABS__"`，装配时 `sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json` 同步替换；generate 的 settings 重写只认 spec 字面值==settings 字面值，产物即 `../.onlyne/agent/onlyne-agent-pi`。`{{agent_package}}` 占位符在 settings 渲成无 `../` 形态＝pi 0.85.1 拒载（源码+ARIS 双实证，beta.3@125e351 与 d0573e3 同此）|
 | 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填；未 init 前先播合法长度 32 字节占位（`AWAAAAAAAA...AAA=`），非法 key 会让全量 parse 连 `client init` 都跑不动 | 握手 |
 | 8 | `.pi/SYSTEM.md`、`README.md` | 口径微调（一般不动） | supervisor 会话 |
 
@@ -76,6 +86,8 @@ relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含
 1. **server 活**：`onlyne-server start --root .`（自带 detached+pid）后 `onlyne-server status --root .` 的 `socket_present=true` 是真相。`run` 不写 pid，`status.running` 只认 pid 文件，别拿它判活。
 2. **client 连**：每个启用 role 在 `onlyne roles` 显示 connected；welcome/provisioned 完成（首轮 attach 自动）。此时能得 receipt `state=in_flight`，role 会话里出现任务注入，`onlyne ledger` 有投递与 ack 行。绿了再批量起其余 client。
 3. **渲染抽检**：`python3 -c "import json;print(json.load(open('<ws>/.pi/settings.json'))['packages'])"` 必须是 `['../.onlyne/agent/onlyne-agent-pi']`，且 `<ws>/.onlyne/agent/onlyne-agent-pi/` 有货。`{{agent_package}}` 占位符形态渲成无 ../ 的 `.onlyne/agent/…`＝pi 0.85.1 拒载（beta.3 与 d0573e3 源码同此，ARIS 真机实证）。
+
+拓扑纪律：daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可见 tab，不进 agent 后台；`onlyne-client` 从目标 worktree 自己的 tab 起，worktree 错配会开错检出。
 
 ## 5. promote.sh 九检（校验语义）
 
