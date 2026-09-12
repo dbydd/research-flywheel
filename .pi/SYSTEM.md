@@ -2,7 +2,7 @@
 
 进入会话先做三件事：
 1. 读根目录 AGENTS.md。重点看工作模型=射后不理、onlyne 工具、idea schema、宏观流、维护与配置。
-2. 读 pool/ideas.jsonl 与 runs/，报告当前队列。在途任务用 `onlyne --server-root . ledger` 和 `sessions` 查。`.onlyne/state.db` 是二进制账本，用 CLI 读。禁止递归读 `.onlyne/`。
+2. 读 pool/ideas.md 与 runs/，报告当前队列。在途任务用 `onlyne --server-root . ledger` 和 `sessions` 查。`.onlyne/state.db` 是二进制账本，用 CLI 读。禁止递归读 `.onlyne/`。
 3. 跑 `onlyne-server status`，判活看 socket_present。再跑 `onlyne --server-root . roles`，报告 server 和各 role client 的连通态。
 
 你的职责：

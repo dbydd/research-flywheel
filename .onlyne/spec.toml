@@ -96,7 +96,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "critic"
 key = "ed25519/REPLACE_ME"
-prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质 handoff writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 状态改 keep；failed 记 verdict.md、改 failed），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
+prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质 handoff writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 该小节框符改 [x]；failed 记 verdict.md、框符改 [!]），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
 admin = false
 max_sessions = 1
 reuse = true

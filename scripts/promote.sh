@@ -135,27 +135,32 @@ for t in $TABLE_ROLES; do
   printf '%s' " $ROLES " | grep -q " $t " || fail "table EXTRA role '$t' (table has it, spec lacks it)"
 done
 
-# --- check 6: seed ideas -------------------------------------------------------
-if [ ! -f pool/ideas.jsonl ]; then
-  fail "pool/ideas.jsonl MISSING"
+# --- check 6: seed ideas (markdown pool) ----------------------------------------
+POOL="pool/ideas.md"
+if [ ! -f "$POOL" ]; then
+  fail "$POOL MISSING"
 fi
-SEED_LINES="$(grep -c . pool/ideas.jsonl || true)"
-if [ "$SEED_LINES" = "0" ]; then
-  warn "pool/ideas.jsonl empty (0 seeds allowed, continuing)"
+SEED_N="$(sed -n 's/^## \[[ >x!]\] \([^ ]*\).*/\1/p' "$POOL" | wc -l | tr -d ' ')"
+if [ "$SEED_N" = "0" ]; then
+  warn "$POOL 无 idea 小节（0 seeds allowed, continuing）"
 else
-  python3 - pool/ideas.jsonl <<'PY_SEEDS' || fail "pool/ideas.jsonl schema INVALID (reason above)"
-import json,sys
-req = ["id","origin","question","hypothesis","method","evidence","evaluation","done_when","status"]
-for i, line in enumerate(open(sys.argv[1]), 1):
-    line = line.strip()
-    if not line:
-        continue
-    d = json.loads(line)
-    for k in req:
-        assert k in d, f"line {i}:  MISSING field  {k}"
-    assert isinstance(d["evidence"], list) and d["evidence"], f"line {i}:  evidence must be non-empty array"
-    assert (d.get("evaluation") or {}).get("objectives"), f"line {i}:  evaluation.objectives EMPTY"
-    assert d.get("done_when"), f"line {i}:  done_when EMPTY"
+  python3 - "$POOL" <<'PY_SEEDS' || fail "pool/ideas.md schema INVALID (reason above)"
+import sys, re, json
+txt = open(sys.argv[1], encoding='utf-8').read()
+parts = re.split(r'^## \[([ >x!])\] (\S+)[ \t]*$', txt, flags=re.M)
+triples = list(zip(parts[1::3], parts[2::3], parts[3::3]))
+assert triples, "没有任何 '## [符] id' 小节"
+for sym, sid, body in triples:
+    assert sym in (' ', '>', 'x', '!'), f"{sid}: 非法状态框 [{sym}]"
+    for k in ("origin", "parent_run", "question", "hypothesis", "method", "evidence", "done_when"):
+        m = re.search(r'(?:^[-*][ \t]+| \| )' + k + r':[ \t]*(\S.*)$', body, flags=re.M)
+        assert m and m.group(1).strip(), f"{sid}: 字段 {k} 缺失或为空"
+    assert re.search(r'(?:^[-*][ \t]+| \| )evidence:[ \t]*(?![,\s]$)\S', body, flags=re.M), f"{sid}: evidence 为空"
+    ev = re.search(r'(?:^[-*][ \t]+| \| )evaluation:[ \t]*(\{.*\})[ \t]*$', body, flags=re.M)
+    assert ev, f"{sid}: evaluation 非单行 JSON"
+    obj = json.loads(ev.group(1))
+    assert obj.get("objectives"), f"{sid}: evaluation.objectives EMPTY"
+    assert obj.get("pass_rule") in ("all", "any"), f"{sid}: pass_rule 缺失或非法"
 PY_SEEDS
 fi
 

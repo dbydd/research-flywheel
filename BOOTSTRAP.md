@@ -11,7 +11,7 @@ flowchart TD
   A[clone 模板] --> B[A 定题：THEME 槽×5]
   B --> C[B 拓扑：spec.toml [[client]] 增删 + ACL 边]
   C --> D[C 起草：角色文案/模型三元组/任务书口径]
-  D --> E[D 种子：pool/ideas.jsonl ≥1 条硬门字段]
+  D --> E[D 种子：pool/ideas.md ≥1 条硬门字段]
   E --> F[装工具链：onlyne beta + 构建]
   F --> G[promote.sh --dry-run 九检]
   G --> H[人确认 → promote.sh 落分支]
@@ -51,7 +51,7 @@ onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手�
 | 2 | `.onlyne/spec.toml` [[client]] | role 增删、prose、allowed_*、timeout/intent、max_sessions/reuse | `server reload` |
 | 3 | `.onlyne/templates/flywheel/<role>/AGENTS.md` | role 深规 | 该 role ws |
 | 4 | `.onlyne/templates/flywheel/<role>/.pi/settings.json` | 模型三元组 | 该 role ws（generate 时并入插件引用） |
-| 5 | `pool/ideas.jsonl` | 种子 idea（硬门字段） | scout 消费 |
+| 5 | `pool/ideas.md` | 种子 idea（硬门字段，小节制） | scout 消费 |
 | 6 | `[server].agent_package` | 本机 onlyne checkout 的 `plugins/onlyne-agent-pi` 绝对路径 | generate vendor 进 `<ws>/.onlyne/agent/onlyne-agent-pi/`（目录名=basename）；模板 `.pi/settings.json` 的 packages 是哨兵字面值 `"__AGENT_PACKAGE_ABS__"`，装配时 `sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json` 同步替换；generate 的 settings 重写只认 spec 字面值==settings 字面值，产物即 `../.onlyne/agent/onlyne-agent-pi`。`{{agent_package}}` 占位符在 settings 渲成无 `../` 形态＝pi 0.85.1 拒载（源码+ARIS 双实证，beta.3@125e351 与 d0573e3 同此）|
 | 7 | `[server].cert_pin` / 各 role `key` | `server init` / `client init` 产出回填；未 init 前先播合法长度 32 字节占位（`AWAAAAAAAA...AAA=`），非法 key 会让全量 parse 连 `client init` 都跑不动 | 握手 |
 | 8 | `.pi/SYSTEM.md`、`README.md` | 口径微调（一般不动） | supervisor 会话 |
@@ -82,7 +82,7 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 | A 定题 | 研究什么、什么算进步、禁区 | 五个 THEME 槽 | 槽内注释块全部替换 |
 | B 拓扑 | role 增删、边、模型档位、长跑 timeout | spec.toml + templates/ 目录 | check 2/4/5 绿 |
 | C 起草 | 术语、runs 结构、稿件口径、★ 选谁 | 槽、role prose/AGENTS、SYSTEM/README | 角色表==spec，★ 恰好一个 |
-| D 种子 | 首批 idea | pool/ideas.jsonl | check 6 硬门绿 |
+| D 种子 | 首批 idea | pool/ideas.md | check 6 硬门绿 |
 | E 装具 | 工具链、agent_package | §2 全套 + spec [server] | check 8/9 绿 |
 | F 落分支 | 复核 dry-run 清单，人确认 | promote.sh | stage=live |
 | G 通电+第一发 | 方向给不给、谁投 | server/clients、payload/first.md | §4 三门绿 + ledger 首行 in_flight |

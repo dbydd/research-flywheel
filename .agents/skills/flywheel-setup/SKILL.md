@@ -41,7 +41,7 @@ description: Guide a fresh clone through theme assembly. Use when the user says 
 
 问用户：首批 idea 方向，1–3 个。
 
-写 `pool/ideas.jsonl`，每行一个 JSON：`id/origin/question/hypothesis/method/evidence/evaluation/done_when/status`。`evidence` 是非空数组。`evaluation.objectives` 非空。`done_when` 非空。首批 `origin` 用 `user_seed`，`status` 用 `queued`。
+写 `pool/ideas.md`：文件头状态图例行（`[ ]` queued · `[>]` running · `[x]` keep · `[!]` failed），一条 idea 一个小节 `## [ ] <id>`，字段行 `- key: value`（origin/parent_run/question 合一行 ` | ` 分隔，evidence 逗号分隔路径，evaluation 单行 JSON，note 行追加式后来的写上面，格式模板见 root AGENTS.md `## idea 格式` 节）。`evidence` 非空。`evaluation.objectives` 非空。`done_when` 非空。首批 `origin` 用 `user_seed`，框符用 `[ ]`。
 
 同时写 `research/` 领域锚点文件，含 `frontier-notes.md` 表头与至少一条真实来源记录。
 
