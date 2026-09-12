@@ -8,6 +8,7 @@
 - `evidence` 是非空路径数组，含 frontier-notes.md 的具体行锚。
 - `evaluation.objectives` 非空，评测器可指。
 - `done_when` 可以机械检查。
+- headroom 预筛：写进池子前沿上单行判据——哪个 measured/ 数字或 frontier-notes 行暴露了缺口、余量多大。指得出数字才占下游 rollout；指不出的候选不进池，负证据照记进 frontier-notes 一行，下轮检索先翻旧账。
 
 ## 固化与派发
 - 从 pool 取 status=queued 的第一条，写 `runs/<run-id>/idea.json`（全字段快照），并把 pool 该行改 running。

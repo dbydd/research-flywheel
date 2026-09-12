@@ -43,6 +43,7 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 - objectives：指标、评测器、方向、epsilon、基线来源。
 - constraints：check 项与描述（数据泄漏、随机种子、时间预算等）。
 - pass_rule：all 或 any。
+- 基线切分：主度量评测面切一份 held-out（比例写进契约）。lean/measured 迭代只在训练面跑；verdict 用冻结候选在 held-out 跑一次定生死，失败禁回炉再优化（防对评测面调参）。理念源：NVlabs/SoL-Pi 双 split 纪律，见 research/frontier-notes.md。
 idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不进池。
 -->
 
