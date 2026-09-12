@@ -23,7 +23,7 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 - `.onlyne/spec.toml`：拓扑唯一真相。里面有 [server] 一节，以及每 role 一个 [[client]]：prose、ACL、timeout、intent。出现未知键时启动直接被拒，报错形如 `spec.toml:<行号>`。运行期没有配置 API。改动落这份文件，然后跑 `onlyne reload --server-root .`。
 - `.onlyne/templates/flywheel/<role>/`：role 内容模板。里面有 AGENTS.md 深规和 `.pi/settings.json` 模型位。`onlyne-server generate` 渲染出 ws。spec 里出现的每个 role 都要有模板目录，缺一个就全不写并退 4；_supervisor 也需要 stub。产物零绝对路径，整目录可 mv。
 - `.onlyne/` 的其余部分：v1 运行时，含 state.db、run/s、keys、ws、logs。除 spec.toml 与 templates/ 外都不入 git。legacy 布局会被 v1 以 exit 2 拒绝并且零写入。旧树退役时把整目录改名 `.onlyne.v0-archive/`。
-- `pool/ideas.jsonl`：idea 池，也是唯一队列。一行一条，schema 见下。scout 追加并自取消费。supervisor 不碰队列。
+- `pool/ideas.md`：idea 池，也是唯一队列。一条 idea 一个小节，checkbox 状态机 + note 追加行，格式见下。scout 追加并自取消费。supervisor 不碰队列。
 - `runs/<run-id>/`：一轮 idea 的全部过程件。里面有 `idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
 - `papers/`：成稿（`<run-id>.md`）与 `figs/<run-id>/`。figs 里放绘图脚本、成图、mermaid/tikz 源。图随稿件走，critic 的追溯锚点保持单一。figure 由 writer 兼职制作，没有独立的画图 role。
 - `research/`：证据。`frontier-notes.md` 是联网检索记录，格式为 URL 加单行结论，追加式。
@@ -68,11 +68,20 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 
 输入路径必须真实存在。接收方 session 是全新上下文。任务书里没写的路径它找不到。
 
-## idea schema（pool/ideas.jsonl 一行一条 JSON）
+## idea 格式（pool/ideas.md 一条一个小节）
 
-字段：`id`、`origin`(user_seed|derived)、`parent_run`、`question`、`hypothesis`、`method`、`evidence`（非空路径数组，含 research/frontier-notes.md）、`evaluation`、`done_when`、`status`(queued|running|keep|failed)。
+```markdown
+## [ ] <id>
+- origin: user_seed|derived | parent_run: <run-id 或 —> | question: <一句话>
+- hypothesis: <可检验的假设>
+- method: <做法要点>
+- evidence: <非空路径数组，逗号分隔，含 research/frontier-notes.md>
+- evaluation: {"objectives":[{metric,evaluator,direction,epsilon,baseline}], "constraints":[{check,description}], "pass_rule":"all"|"any"}
+- done_when: <完成的 observable 判据>
+- note: <追加式备注，一行一条，后来的写上面>
+```
 
-`evaluation`: `{objectives:[{metric,evaluator,direction,epsilon,baseline}], constraints:[{check,description}], pass_rule:"all"|"any"}`。evidence 为空、objectives 为空、done_when 为空，三者任缺一项就不进池。
+状态机：`[ ]` queued → `[>]` running（scout 取单时改）→ `[x]` keep / `[!]` failed（critic 归档时改）。`evaluation` 行保持 JSON 内联。四条进池硬门：evidence 为空、objectives 为空、done_when 为空、headroom 预筛不过，任一条命中即不进节。headroom 预筛：入池前沿上单行判据——哪个 measured/ 数字或 frontier-notes 行暴露了缺口、余量多大；指得出数字才占下游 rollout，指不出的候选负证据记 frontier-notes 一行即可。
 
 ## 角色表（叙述视图；拓扑真相在 spec.toml）
 
@@ -108,7 +117,7 @@ role 增删以 `.onlyne/spec.toml` 的 [[client]] 为准。本表与 `allowed_ta
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
 - v1 运行时未起：`onlyne-server status` 无 socket；`ws/` 未生成；spec.toml 的 REPLACE_ME 未替换。
-- `tasks` 空，`runs/` 空，`papers/` 空，`pool/ideas.jsonl` 里是种子或空。
+- `tasks` 空，`runs/` 空，`papers/` 空，`pool/ideas.md` 里是种子或空。
 - 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server start` 属于通电，第一发属于开跑。
 
 通电顺序（一次性，装配收官时做）：
@@ -154,4 +163,4 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
 - 改 `experiment/`、`evaluation/` 前先读 runs/ 里上一轮记录。改动在任务产物里写明。
 - 数值只从 measured/ 引。报告只写跑出来的东西。
 - 失败也交活：跑不动的结论写进 runs/，用 `onlyne_complete {outcome:"failed"}` 交失败报告。text 首行写 `> hop-failed: <原因>` 加现场路径，让下游有据可依。
-- 发布面/工作面边界：草稿、中间件、探针、staged 代码先落 role 自己的 ws（私有区）。定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。追加式台账（pool/ideas.jsonl、frontier-notes.md、run-log.md、measured/ 流件）直写 root，接力唤醒要求实时。peer 的 ws 可以只读翻看。交接与审稿判据仍是任务书与 root 发布物。
+- 发布面/工作面边界：草稿、中间件、探针、staged 代码先落 role 自己的 ws（私有区）。定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。追加式台账（pool/ideas.md、frontier-notes.md、run-log.md、measured/ 流件）直写 root，接力唤醒要求实时。peer 的 ws 可以只读翻看。交接与审稿判据仍是任务书与 root 发布物。
