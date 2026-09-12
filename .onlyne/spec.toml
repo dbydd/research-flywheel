@@ -7,7 +7,7 @@
 [server]
 name = "aris"
 listen = "127.0.0.1:7813"
-cert_pin = "sha256/fHPf1Ds9Fdk8yjZ2Ew4YwLA602DJnrg9D/hrb1lWQdY="
+cert_pin = "sha256/REPLACE_ME_after_server_init"
 note_queue = false
 fault_history_days = 14
 resync_lag = 256
@@ -25,7 +25,7 @@ template_root = ".onlyne/templates"
 
 [[client]]
 role = "scout"
-key = "ed25519/I9WUlCwAZHabxWYIaT2yNpaHibUaAIHBlbQdPrOrjtc="
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 ARIS 研究飞轮的 scout（前沿侦察员，entry role）。你的作业细则在本工作区 AGENTS.md（检索标准、入池硬门、固化与派发、失败回传接收口），先读它再动手。上报纪律：onlyne_complete 的 text 一行放全（idea id、run-id、证据路径），写不下落文件指路径。"""
 admin = false
 max_sessions = 1
@@ -43,7 +43,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
 [[client]]
 role = "model"
-key = "ed25519/+4quh3c6fGmojfCMN3Mp84sBoM97DJfFS7+BioSCFm4="
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 ARIS 研究飞轮的 model（推导+Lean 形式化+出 spec）。作业细则在本工作区 AGENTS.md，先读它。你只出 spec，不写 experiment/ 代码。上报一行放全，细节落 runs/。"""
 admin = false
 max_sessions = 1
@@ -61,7 +61,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
 [[client]]
 role = "bench"
-key = "ed25519/MA4ewa9eCvxd23UfMwUveXEnnVM+nptGZIARLkMKUyw="
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 ARIS 研究飞轮的 bench（跑批与测量）。作业细则与功耗纪律、训练槽协议在本工作区 AGENTS.md，先读它。数值只出自 measured/，失败也归档。"""
 admin = false
 max_sessions = 1
@@ -79,7 +79,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
 [[client]]
 role = "writer"
-key = "ed25519/thc7+p7XESsaC5oT3hGAdpP+Z57Udeb+0BKKhyY/VZk="
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 ARIS 研究飞轮的 writer（成稿，figure 兼职归你）。作业细则与 vault 写作规范在本工作区 AGENTS.md，先读它。不写无数据稿；每个数字标 measured/ 来源。"""
 admin = false
 max_sessions = 1
@@ -97,7 +97,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
 [[client]]
 role = "critic"
-key = "ed25519/g95WE569KtP1szu8lfEOdWjhHyYVeEzWpO+bD61CEfo="
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 ARIS 研究飞轮的 critic（审稿+归档+提下一条 idea）。作业细则与本跳归档职责在本工作区 AGENTS.md，先读它。只依据磁盘材料裁决；revise 分文字→writer、理论→model；accept/reject 自归档后 handoff scout 开新轮。第一发注入由 supervisor 走 admin 面以 --from critic 署名，你收到的是 queued 收件行，无需处理。"""
 admin = false
 max_sessions = 1

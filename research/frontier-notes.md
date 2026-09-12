@@ -1,3 +1,3 @@
-# frontier notes
+# 前沿检索流水（骨架）
 
-placeholder - evidence log lives on the operator machine
+格式: `- <ISO> <role>：<结论一行> [来源](URL)`，追加式。
