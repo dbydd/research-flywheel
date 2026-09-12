@@ -19,6 +19,7 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 
 ## 目录
 
+- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制）。现有两个：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律）。writer 出图出稿前、critic 审文字面时先读对应 skill。
 - `.onlyne/spec.toml`：拓扑唯一真相。里面有 [server] 一节，以及每 role 一个 [[client]]：prose、ACL、timeout、intent。出现未知键时启动直接被拒，报错形如 `spec.toml:<行号>`。运行期没有配置 API。改动落这份文件，然后跑 `onlyne reload --server-root .`。
 - `.onlyne/templates/flywheel/<role>/`：role 内容模板。里面有 AGENTS.md 深规和 `.pi/settings.json` 模型位。`onlyne-server generate` 渲染出 ws。spec 里出现的每个 role 都要有模板目录，缺一个就全不写并退 4；_supervisor 也需要 stub。产物零绝对路径，整目录可 mv。
 - `.onlyne/` 的其余部分：v1 运行时，含 state.db、run/s、keys、ws、logs。除 spec.toml 与 templates/ 外都不入 git。legacy 布局会被 v1 以 exit 2 拒绝并且零写入。旧树退役时把整目录改名 `.onlyne.v0-archive/`。
@@ -140,6 +141,8 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
 - role 模型/思考档 = `.onlyne/templates/flywheel/<role>/.pi/settings.json` 三元组。生成后 ws 内的 `.pi/**` 归 role 与 supervisor 所有。重 generate 前先看 spec 的模板发现规则（templates/<topo>/<role>/，basename=role 名）。
 - ws 整目录 `mv` 即搬迁，这是设计内能力。client 的全部路径自 `--workspace` 推导，intents/游标随 `.onlyne/` 同行。搬完重启该 client。
 - 故障运维：`onlyne faults --open-only` 看核心检测。`onlyne repair inspect|retry|close|fail|ack` 与 `rebind|adopt` 把任务指回活 pane。`DeliveryState::Exhausted` 是终态，重开要经过这里的显式决定。
+- 重启 client 后先 `onlyne ledger` 找 working 行，逐行 `onlyne repair inspect --task <id>`。pane 已死而 ledger 停在 working 的行不会自愈，faults 也是空的，只能逐条人工确认后 `onlyne repair close --task <id> --outcome <done|failed>` 销账。
+- 清理孤儿进程前先核对身份：`brew services`、launchd、其他 app 拉起的常驻服务不属于 swarm。杀之前查 launchd label / 父进程 / 端口归属，只回收 `.onlyne/run/` pid 文件与 client 注册表里存在的进程。误杀系统服务比留一个孤儿严重得多。
 - 生命周期：`onlyne-server init|run|start|stop|status|generate`。通电用 start；run 不写 pid，status.running 只认 pid 文件，判活看 socket_present。`onlyne-client run|start|stop|status`。查询与运维动词全在瘦入口 `onlyne --server-root .`。停环先 server stop，client 各自退出。杀进程不要按名字猜，先查 pid 文件（`.onlyne/run/`）与祖先链。
 - 错误词汇表：`acl_denied`＝spec 缺边；`unauthorized`＝key 未注册；`recipient_offline`＝note 打离线 role；`duplicate`＝同 op_id 原帧重发（返回原 receipt）；`conflict`＝同 op_id 换了 body；`not_admin`＝未注册身份用 `--from`。被拒不落账。
 - 观察：`onlyne --server-root . ledger|sessions|watch --follow --tier durable`；`onlyne tui` 有两页板（role 网络图 + ledger）。

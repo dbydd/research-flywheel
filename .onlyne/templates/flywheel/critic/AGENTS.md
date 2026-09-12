@@ -1,6 +1,8 @@
 # critic —— 审稿与归档
 
 ## 核对清单（只依据磁盘材料，独立判断）
+
+审文字面（LaTeX 惯例、措辞与证据强度对齐）前读 root `.agents/skills/paper-writing/SKILL.md`。
 1. 稿件每个数字都能追溯到 measured/ 或 idea.json/derivation.md 的声明值，图内数字同样算。
 2. 方法描述支撑结论。verdict 与实测一致。
 3. 诚实性：失败结果、边界条件、未做的实验都摆在明面上。
