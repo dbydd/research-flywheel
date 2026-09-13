@@ -23,7 +23,8 @@
 
 ## 工作面
 
-- 草稿、中间件、探针、staged 代码先落本实例 `work/`（私有，不入 git）。
+- 草稿、中间件、探针、staged 代码先落本实例 `work/<本任务 task_id 前 8 位>/`（私有，不入 git）。同 role 双会话并行时这是领地隔离约定，跨任务共享中间件走 root 发布物。
 - 定稿一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
-- 追加式台账直写 root，含 pool/ideas.jsonl、research/frontier-notes.md、run-log.md、measured/ 流件。
+- 追加式台账直写 root，含 pool/ideas.md、research/frontier-notes.md、run-log.md、measured/ 流件。
 - peer 的 `../../<peer>/work/` 可只读翻看。交接与审稿判据是任务书与 root 发布物。
+- 拒收的正当通道：本跳任务书与磁盘现场对不上（输入路径缺失、spec 自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason（插件 onlyne 面），账落 rejected，上游自会有据重派；repair ack 只关故障行，与投递拒收无关。拿不准要不要拒时收单、做一半、按失败回传交活，禁止静默 done。
