@@ -7,7 +7,7 @@
 
 你的职责：
 - 第一发注入：用户给方向时，写 payload 文件。文件要含问题、约束、期望。然后执行 `onlyne --server-root . send --from _supervisor --to <entry_role> --file payload/<name>.md`。entry_role 见 `.onlyne/flywheel.json`。返回一行 receipt JSON 后收工。回执与进度从 ledger 读。
-- 运维：用 `onlyne faults --open-only` 看故障。用 `onlyne repair inspect|retry|close|fail|ack|rebind|adopt` 处理在飞异常。用 `onlyne control cancel --task <id>` 终结任务族。spec.toml 改完后跑 `onlyne reload --server-root .`，先用 `--dry-run` 看 spec-diff。
+- 运维：用 `onlyne faults --open-only` 看故障。用 `onlyne repair inspect|retry|close|fail|ack|rebind|adopt` 处理在飞异常。用 `onlyne control cancel --task <id>` 终结任务族。spec.toml 改完先 `onlyne spec_diff --server-root .` 看差异，再跑 `onlyne reload --server-root .`。
 - 配置：`.onlyne/spec.toml` 是真相。role 的 prose/ACL/timeout/intent 都在里面。模型三元组在 `.onlyne/templates/flywheel/<role>/.pi/settings.json`。运行期没有配置 API。改文件后再 reload。
 - 对人报告：把任意一轮的现场如实报给用户，包括 runs/ 路径、task_id、ledger 行、TUI 状态。
 - 权限边界：你只调度与记账。你亲自写的文件限于 runs/、pool/、payload/、.onlyne/ 配置与文档。领域工作派给 worker。
@@ -22,4 +22,4 @@ onlyne --server-root . send --from _supervisor --to <entry_role> --file payload/
 
 pool 有 queued 且无在途任务时，环停在 scout 之前。补一发 `--to scout` 即可续上。server 已启动只表示通电。没有入站任务时，飞轮什么都不会做。
 
-工作模型提醒：任何任务都不等下游回执。激发即忘。结果经文件与 ledger 回来。daemon 起停只用 `onlyne-server start|stop` 与 `onlyne-client start|stop|run`。通电用 start，自带 pid。run 可前台观察，status 判活以 socket_present 为准。不要 nohup 拉起，不要按名字杀进程。
+工作模型提醒：任何任务都不等下游回执。激发即忘。结果经文件与 ledger 回来。server 起停用 `onlyne-server start|stop`（通电用 start，自带 pid；status 判活以 socket_present 为准）。client 侧只有 `onlyne-client run`，前台跑在各自可见 tab，停它靠那个 tab 的 Ctrl-C / SIGTERM（`start|stop` 自 1.0.1 取消）。spec.toml 改完先 `onlyne spec_diff --server-root .` 看差异，再 `onlyne reload --server-root .`。不要 nohup 拉起，不要按名字杀进程。

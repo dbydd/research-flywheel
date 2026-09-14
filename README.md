@@ -1,6 +1,6 @@
 # Research Flywheel v3
 
-这是一个基于 onlyne v1.0.0 的自动科研飞轮模板。它把一个研究主题拆给五个 role。每个 role 拿到一跳任务，产物写回磁盘，再把下一跳任务交给下游。
+这是一个基于 onlyne v1 的自动科研飞轮模板。工具链与 pi 插件都跟各渠道的最新版走。它把一个研究主题拆给五个 role。每个 role 拿到一跳任务，产物写回磁盘，再把下一跳任务交给下游。
 
 **新人第一步：读 [`BOOTSTRAP.md`](BOOTSTRAP.md) 的「开场协议」节。** 把树 clone 下来后直接对你的 agent 会话说一句「帮我看看这棵树」即可——会话会主动介绍这套飞轮、核装 onlyne 依赖、问清你的研究主题与部署方式，然后代你完成装配。手工装配也走同一份文档。
 
@@ -10,16 +10,17 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ## 前置
 
-- onlyne v1.0.0。发布渠道一行装齐：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名）。
-- `pi`，插件走 `pi install npm:pi-onlyne`（latest=1.0.0，含 relay 守卫）。role 会话由 client 启动，generate 把插件 vendor 到各 ws，ws 内副本零 npm 依赖。
-- 源码构建作备用：`git clone -b v1.0.0 https://github.com/dbydd/onlyne` + `cargo build --release`，五产物放 PATH。macOS 上 cp 完必做 `codesign --force --sign -`——复制后的二进制签名失效，直接 exec 收 SIGKILL。
-- 会话后端需要 `orca` 或 `zellij`。`ONLYNE_BACKEND` 的探测序是 orca→zellij→fake。
+- onlyne v1 最新版（不钉版本号，新 fix 全部随 latest 发）。发布渠道一行装齐：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名）。已装过要升级，同一条命令加 `--force` 重跑。兼容判据是 `onlyne version` 的 `protocol:1`。
+- `pi`，插件走 `pi install npm:pi-onlyne`（拉 npm latest，relay 守卫在内）。role 会话由 client 启动，generate 把插件 vendor 到各 ws，ws 内副本零 npm 依赖。
+- 源码构建作备用：`git clone https://github.com/dbydd/onlyne`（默认分支 main，未发布的 fix 在这儿）+ `cargo build --release`，五产物放 PATH。macOS 上 cp 完必做 `codesign --force --sign -`——复制后的二进制签名失效，直接 exec 收 SIGKILL。
+- 会话后端需要 `herdr`、`orca` 或 `zellij`。`ONLYNE_BACKEND` 留空或 `auto` 时探测序是 herdr→orca→zellij，探不到退 fake；`onlyne-client doctor` 打印本机判定。
 - pi model/provider 已经配好。
 
 ## 起飞
 
 ```bash
-# 0. clone 后照 BOOTSTRAP.md 装配主题（THEME 槽、角色拓扑、种子 idea）
+# 0. clone 后照 BOOTSTRAP.md 装配主题（THEME 槽、角色拓扑、种子 idea）；装具一律追 latest
+onlyne version        # protocol 读 1 即兼容；号落后就按「前置」两条命令重跑（cargo install --force / pi install npm:pi-onlyne）
 ./scripts/promote.sh --dry-run && ./scripts/promote.sh
 
 # 1. 通电（一次性；人执行，supervisor 会话不起常驻）

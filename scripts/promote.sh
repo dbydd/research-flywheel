@@ -183,7 +183,7 @@ for s in glob.glob(os.path.join((spec.get("server") or {}).get("template_root", 
     pk = json.load(open(s)).get("packages", [])
     assert len(pk) == 1 and pk[0] == pkg, f"{s}: packages {pk} not sed-synced with agent_package"
 parts = [int(x) for x in meta.get("version", "0").split("-")[0].split(".")]
-assert (parts + [0, 0])[:3] >= [1, 0, 0], f"pi plugin version {meta.get('version')} < 1.0.0"
+assert (parts + [0, 0])[:3] >= [1, 0, 0], f"pi plugin version {meta.get('version')} below 1.0.0 floor (run `pi install npm:pi-onlyne` for latest)"
 PY_PKG
 
 # --- check 9: v1 toolchain + backend candidates --------------------------------
@@ -191,13 +191,13 @@ for b in onlyne onlyne-server onlyne-client pi; do
   command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui)"
 done
 V1_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} (want >= 1.0.0)"
+python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} below 1.0.0 floor (track latest: cargo install --force the five onlyne crates)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [1, 0, 0], "version too old (v0 line is legacy protocol; exit 2 on legacy .onlyne/)"
+assert (parts + [0, 0])[:3] >= [1, 0, 0], "below the 1.0.0 floor (v0 line is legacy protocol; exit 2 on legacy .onlyne/); install latest"
 PY_VER
-if ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no zellij/orca on PATH: ONLYNE_BACKEND will probe to fake (role sessions need a real backend)"
+if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
+  warn "no herdr/zellij/orca on PATH: ONLYNE_BACKEND will probe to fake (role sessions need a real backend)"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"

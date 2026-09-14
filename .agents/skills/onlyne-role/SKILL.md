@@ -22,11 +22,13 @@ exists for that task. Work it, then report the way the ledger reads.
 Report upward by completing the task. The completion row is what the supervisor polls.
 
 ```bash
-onlyne complete --task <task-id> --outcome done --text "<one-line result>"
+onlyne complete --task <task-id> --outcome done --head-from local --text "<one-line result>"
 ```
 
 or, inside a pi session, the `onlyne_complete{outcome, text}` tool.
 
+- `--head-from` is required and chooses the head's source: `local` truncates your `--text`
+  into `out_head` on this side, `ledger` reads back the head already stored for the row.
 - Your `--text` becomes the ledger `out_head` verbatim: one line, whitespace-collapsed,
   capped at 200 characters. Put the whole answer there; it is the only upward channel.
 - `--outcome done|failed|cancelled`. Provable impossibility → `failed` with the reason in
@@ -46,7 +48,10 @@ returns `acl_denied` before a row exists. Ring or fan-out shapes live in your pr
 mechanics here never change.
 
 `onlyne_send{to, text, kind}` covers the same ground from a pi session: `kind:"task"` mints
-a fresh family, `kind:"note"` (default) is free text with no session on the other side.
+a fresh family, `kind:"note"` (default) is free text that rides an already-live session on
+the receiving role — a role that is offline, or online with every session settled, refuses
+it with `recipient_offline`. Follow-up instructions for your own in-flight task are notes;
+new work is a task.
 
 ## Rules of the ring
 

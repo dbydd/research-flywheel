@@ -26,7 +26,7 @@ flowchart TD
   B --> C[B 拓扑：spec.toml [[client]] 增删 + ACL 边]
   C --> D[C 起草：角色文案/模型三元组/任务书口径]
   D --> E[D 种子：pool/ideas.md ≥1 条硬门字段]
-  E --> F[装工具链：onlyne beta + 构建]
+  E --> F[装工具链：onlyne latest]
   F --> G[promote.sh --dry-run 九检]
   G --> H[人确认 → promote.sh 落分支]
   H --> I[通电：server init/generate/run + clients]
@@ -41,30 +41,37 @@ flowchart TD
 - `.onlyne/templates/flywheel/<role>/.pi/settings.json` → 模型三元组（provider/model/thinkingLevel）。generate 会把 `agent_package` 的插件 vendor 进 ws，并改写 settings 指向工作区内副本。
 - root `.pi/SYSTEM.md` → supervisor 会话的注入指引（admin 面、空转判定、职责边界）。
 
-## 2. 工具链安装（发布渠道为主，源码构建备用）
+## 2. 工具链安装（发布渠道为主，源码构建备用；版本策略＝始终追 latest）
+
+onlyne 发版频繁，1.0.0 之后每个小版本装的都是 bug fix 与增量能力。全文所有装具命令都取渠道当时的 latest，没有任何版本号需要装机者改。各 crate 版本号独立前进（server 常领先 cli 若干补丁），别拿一个二进制的号推断另一个。
 
 主路走发布渠道：
 
 ```bash
 cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui   # crate onlyne-cli 装出的 bin 叫 onlyne，其余同名
-pi install npm:pi-onlyne   # latest=1.0.0，含 relay 守卫
-onlyne version   # {"onlyne-cli":"1.0.0","protocol":1}；协议不匹配握手报 protocol_version，fail-fast
+pi install npm:pi-onlyne   # npm latest：relay 守卫、activity panel、delivery-keyed 注入都在里面
+onlyne version   # {"onlyne-cli":"<latest>","protocol":1,...}；兼容判据是 protocol=1，不匹配握手报 protocol_version，fail-fast
+cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui   # 升级＝同一条命令重跑（--force 覆盖已装版本）
 ```
 
-名字陷阱：crates.io 上的 `onlyne` 0.5.x 与 `onlyne-swarm` 0.6.x 是旧形态占名；v1 的五个 crate 叫 `onlyne-cli`/`onlyne-server`/`onlyne-client`/`onlyne-gateway`/`onlyne-tui`。npm 上的 `pi-onlyne` ≤0.9.1 是旧协议，≥1.0.0 即 v1；安装时钉 1.0.0。
+要复现某个旧版本的故障时才用 `npm:pi-onlyne@<version>` 这种钉法；日常安装与升级都走 latest。
 
-备用路走源码构建（crates.io 限流补发期间用，或要跟 main 分支）：
+名字陷阱：crates.io 上的 `onlyne` 0.5.x 与 `onlyne-swarm` 0.6.x 是旧形态占名；v1 的五个 crate 叫 `onlyne-cli`/`onlyne-server`/`onlyne-client`/`onlyne-gateway`/`onlyne-tui`。npm 上的 `pi-onlyne` ≤0.9.1 讲旧协议，≥1.0.0 讲 protocol 1，latest 即最新修复。
+
+备用路走源码构建（要跟 main 上尚未发布的 fix，或 crates.io 限流补发期间用）：
 
 ```bash
-git clone -b v1.0.0 https://github.com/dbydd/onlyne && cd onlyne
+git clone https://github.com/dbydd/onlyne && cd onlyne   # 默认分支 main，fix 落在这儿；不钉 tag
 cargo build --release   # 全新 clone 实测 ~60s
 cp target/release/{onlyne,onlyne-server,onlyne-client,onlyne-gateway,onlyne-tui} ~/.cargo/bin/
 codesign --force --sign - ~/.cargo/bin/onlyne*   # macOS 必做：复制后的二进制签名失效，直接 exec 收 SIGKILL
 ```
 
-动词面（勘正版，照抄进任何脚本）：瘦入口 `onlyne --server-root <root>` 持有 `send|control|ledger|faults|roles|sessions|watch|history|reload|repair_*`；`onlyne-server` 二进制的动词面是 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|start|stop|status|roles|sessions|history|watch`（ws 面用 `--workspace <ws>`）。`onlyne control` 的通用 flag 在子命令前：`onlyne control --server-root R --from _supervisor --task <id> [--reason ...] probe`。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
+后续更新：同目录 `git pull && cargo build --release`，重跑上面两条（cp + codesign）。
 
-版本闸钉正式 tag `v1.0.0`。beta 线已收：beta.2/d0f4e60 因 glob 回归作废，beta.3/125e351 与 beta.4/2666ede 兼容哨兵方案，装正式版即可。v1 见到 legacy `.onlyne/`（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入，这是设计内的行为。旧树先整目录 `mv .onlyne .onlyne.v0-archive/`。迁移前用旧 CLI 把在飞任务记 failed 收官，用 `sqlite3` 导旧 ledger CSV 进 runs/。
+动词面（照发布版 `--help` 核过，抄进脚本前用 `--help` 复核当期形态）：瘦入口 `onlyne --server-root <root>` 持有 `send|reply|complete|handoff|ack|reject|control|who|ping|status|roles|sessions|ledger|faults|watch|history|spec_diff|reload|generate|wait-ready|repair|cluster|tui|version`；`onlyne-server` 二进制的动词面是 `init|run|start|stop|status|generate`；`onlyne-client` 持有 `run|init|status|roles|sessions|history|watch|agent|doctor`（ws 面一律 `--workspace <ws>`）。client 侧没有 `start`/`stop`——`run` 是唯一启动动词且待在前台，后台化归运维（可见 tab、launchd）。`onlyne-client doctor` 只读打印本机主机探测结果，通电前跑一次最省事。`--from`/`--task` 这类 flag 是全局的，子命令前后都认：`onlyne control cancel --task <id> --from bench --reason r` 与 `onlyne control --task <id> cancel` 同解。send 回执 `{"ok":true,"data":{kind,msg_id,op_id,state,task}}`，task 为 uuid v4、state 取 in_flight|queued。
+
+版本闸只设下限，不钉版本：promote check 9 核 `onlyne version` ≥ 1.0.0，这条线划在 v0 旧协议之外，装 latest 自然满足。beta 线（beta.2/d0f4e60、beta.3/125e351、beta.4/2666ede）作废，正式版从 1.0.0 起算，往后的补丁全是修复与新增。v1 见到 legacy `.onlyne/`（含旧 state.db 表 / `channels/` / swarm marker）会 exit 2 且零写入，这是设计内的行为。旧树先整目录 `mv .onlyne .onlyne.v0-archive/`。迁移前用旧 CLI 把在飞任务记 failed 收官，用 `sqlite3` 导旧 ledger CSV 进 runs/。
 
 ## 3. 主题要改的面（文件级清单）
 
@@ -94,7 +101,7 @@ relays 一致性铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含
 1 THEME 槽清空。2 每 role 模板目录 + settings 三元组非空。3 `★` 恰好一个且是 spec 在册 role。
 4 spec[[client]]==模板目录、_supervisor admin=true、prose 非空、relay 边双向闭合、targets 不含 _supervisor。
 5 角色表与 spec 逐名对齐。6 种子 idea 过 schema 硬门。7 payload/ 与 research/ 有实物。
-8 agent_package 绝对路径存在且 package.json ≥1.0.0。9 四二进制在 PATH、`onlyne version` ≥1.0.0、zellij/orca 至少一个（探测序 orca→zellij→fake，`ONLYNE_BACKEND` 可钉）。
+8 agent_package 绝对路径存在且 package.json 版本 ≥1.0.0（下限）。9 四二进制在 PATH、`onlyne version` ≥1.0.0（下限，日常装 latest）、herdr/orca/zellij 至少一个（探测序 herdr→orca→zellij，探不到退 fake；`ONLYNE_BACKEND` 可点名，`onlyne-client doctor` 看本机判定）。
 
 actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.json`（stage=live、roles、entry_role）→
 退役装配材料（`.agents/AGENTS.md`、`BOOTSTRAP.md`、`.agents/skills/flywheel-setup/`）→ commit。
@@ -122,11 +129,12 @@ actions：建 `theme/<slug>` 分支 → root AGENTS.md → `.onlyne/flywheel.jso
 
 ## 8. 常见坑
 
-- 四二进制装好后任何 `onlyne` 命令报 command not found 或行为像旧版：先核 `which onlyne` 与 `~/.cargo/bin` 是否在 PATH、`onlyne version` 读数是否 ≥ 预期 tag——双份安装（cargo install 与手 cp 并存）时 PATH 序决定谁生效，这是新人第一坑。
+- 四二进制装好后任何 `onlyne` 命令报 command not found 或行为像旧版：先核 `which onlyne` 与 `~/.cargo/bin` 是否在 PATH、`onlyne version` 读数是否 ≥ 1.0.0 且为渠道当前 latest（落后就 `cargo install --force` 重跑）——双份安装（cargo install 与手 cp 并存）时 PATH 序决定谁生效，这是新人第一坑。
+- 新 fix 出来只升 server 或只升 client 会出现半边行为：握手 protocol 相同、语义不同，账难对。升级把五个 crate 一次跑完，插件 `pi install npm:pi-onlyne` 同批更新，`onlyne version` 的 `binaries` 字段能看出各兄弟二进制取自哪条 PATH。
 - `onlyne-server status` 连不上等于未通电，属于正常状态。通电用 `onlyne-server start`（detached+pid），判活看 `socket_present`。
-- note 打给离线 role 得 `recipient_offline`，这是设计内的语义。要排队就发 task。
+- note 打给离线 role、或打给在线但手头无 working session 的 role，都得 `recipient_offline`（server 的 `note_queue=false` 下两条门都在）。要排队就把 `[server].note_queue` 设 true 并带 `--ttl`，或者改发 task。
 - 同 `op_id` 换内容重发得 `conflict`。重试时原帧重发。
-- prose 改完必须跑 `onlyne reload --server-root .`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）。先 `--dry-run` 看 spec-diff。
+- prose 改完必须跑 `onlyne reload --server-root .`（原子校验，坏 spec 保旧并记 `fault{spec_reload_failed}`）。reload 没有 `--dry-run`；看待应用差异用只读动词 `onlyne spec_diff --server-root .`。
 - e2e/验证脚本开头清库，或者用 `onlyne control ... recycle` 收残 session（v1 无自动回收，D12 设计）。
 - role 会话默认不带 `-ns`（omp 裁定：模板 skills 三件套靠 pi 发现进会话）。「确定零 skill 的极简 role」由装机者自选加回。
 - `promote.sh --dry-run` 零写入，可反复跑。正式跑需要用户逐项确认退役清单，脚本会打印清单。
