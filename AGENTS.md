@@ -1,10 +1,10 @@
-# Research Flywheel v3 — swarm 公共约定（约定骨架）
+# Research Flywheel v3 — onlyne v1 公共约定（约定骨架）
 
-这份文件放在 swarm root。pi 沿父目录自动拼上下文，树内每个 session 都读到同一份约定。
+这份文件放在 server-root（本仓根目录）。pi 沿父目录自动拼上下文，树内每个 session 都读到同一份约定。
 
 两个词先说清：workspace = role，指该角色的「记忆 + 设定 + 历史文件」；session = 该 role 手头的一件工作，做一跳就结束。
 
-一切信息落文件。每个结论都能回溯到 runs/、papers/ 或 .onlyne/ledger.jsonl 的路径。
+一切信息落文件。每个结论都能回溯到 runs/、papers/ 或 ledger 行（`onlyne ledger --server-root .`）。
 
 ## 研究问题（ARIS 复刻）
 
@@ -59,16 +59,16 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（generate 渲出的角色工作区，产物零绝对路径）。
 - v0 遗物冻结在 `.onlyne.v0-archive/`，内含旧 FIFO，勿递归读。
 - 台账：v1 账本在 server store，用 `onlyne ledger --server-root .` pull 式读；v0 流水冻结导出 `runs/v0-ledger.csv`。
-- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现）。现有两个：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律）。writer 出图出稿前、critic 审文字面时先读对应 skill。
+- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制）。现有四个：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律）、`onlyne-supervisor`（集群运维面：通电、派工、看账、repair）、`onlyne-role`（role 会话侧 handoff/complete 纪律）。writer 出图出稿前、critic 审文字面时先读对应 skill；supervisor 与 role 会话开工前读 onlyne-* 对应那篇。
 - 主题状态：stage/entry_role 记在本文件（角色表 ★ 行与冷启动节），v1 无 flywheel.json。
 
-路径约定：本文件与一切任务书里的路径都相对 swarm root。配套四条：
+路径约定：本文件与一切任务书里的路径都相对 server-root。配套五条：
 
-- worker session 的 cwd 在 `.ws/<name>/`，root 即 `../../`。读写知识文件用这个锚点；发现文件不存在先 `pwd` 确认站位。
-- 工作面口径：草稿、中间件、探针、staged 代码先落在自己实例的 `work/`（私有，不入 git）；定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
+- role session 的 cwd 在 `.onlyne/ws/aris/<role>/`，root 即 `../../../../`。读写知识文件用这个锚点；发现文件不存在先 `pwd` 确认站位。
+- 工作面口径：草稿、中间件、探针、staged 代码先落在自己 ws 的 `work/`（私有，不入 git）；定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
 - 追加式台账直写 root：pool/ideas.md、frontier-notes.md、run-log.md、measured/ 流件。
-- peer 实例的 `../../<peer>/work/` 可只读翻看；交接与审稿判据是任务书与 root 发布物。
-- vault 软链在 root `obsidian/` 下，worker 侧用 `../../obsidian/...` 访问，解析目标是同一 vault。
+- peer 实例的 `../../<peer>/work/`（同一 `.onlyne/ws/aris/` 下的兄弟 ws）可只读翻看；交接与审稿判据是任务书与 root 发布物。
+- vault 软链在 root `obsidian/` 下，worker 侧用 `../../../../obsidian/...` 访问，解析目标是同一 vault。
 
 ## Obsidian vault 对接与写作规范（全员遵守）
 
@@ -104,18 +104,19 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 idea 的 `evaluation` 字段按本节直接填写，缺项的 idea 不进池。
 
-## onlyne v1 工具面（v1.0.0 GA + CLI 热补 main@ae429d2，两树同闸）
+## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
 
-- 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne server reload --server-root .`（--dry-run 配 spec-diff 预览），运行期零回写。
-- role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`（note 不建 session 不排队，离线 recipient_offline）；`onlyne_complete {outcome:"done"|"failed", text}` 交活。
+- 装具与插件各追自己渠道的最新，命令里没有版本号：升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`。onlyne 随时发版，每个小版本装进来的都是 bug fix；`onlyne version` 的 `protocol:1` 是兼容判据，各 crate 版本号独立前进。工具面事实以 `<onlyne 仓>`（本机 onlyne checkout，main 分支）源码与当期 `--help` 为准，本树只读它。
+- 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne reload --server-root .`（`reload` 无 `--dry-run`，看待应用差异用只读动词 `onlyne spec_diff --server-root .`，别名 `spec-diff` 同解），运行期零回写。
+- role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`；note 骑在对方已活的 session 上，目标离线或在线无 working session 都直接 `recipient_offline`（本 spec `note_queue = false`；要排队先把该键设 true 并带 `--ttl`，到点记 expired）。`onlyne_complete {outcome:"done"|"failed"|"cancelled", text}` 交活。
 - 接力派下一跳用 bash `onlyne handoff --to <role> --task <当前task_id> --text "<任务书>"`（parent_task+hop 血缘顺链；task_id 在注入帧头、`/onlyne` 或 receipt JSON 里查）。
 - 失败交活用 complete outcome=failed，或 handoff 正文首行 `> hop-failed: <原因>`。
-- 产物未齐用 outcome=cancelled，或干脆不 complete 等 idle 回收（回收 = 换一个全新 session id，旧档案留 .pi/sessions 可查）。
+- 产物未齐用 outcome=cancelled（bash 面 `onlyne complete --task <id> --outcome cancelled --head-from local --text "<说明>"`；`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head），或干脆不 complete 等 idle 回收（回收 = 换一个全新 session id，旧档案留 .pi/sessions 可查）。
 - 观测命令：`onlyne status|roles|sessions|ledger|faults|watch|history --server-root .`；pi 内 `/onlyne`。op_id 换体重发 conflict，重试原帧重发。
 - supervisor 不注册 [[client]]：cwd=server-root 走 admin 面。第一发 `onlyne send --server-root . --from critic --to scout --file payload/first.md`（--from 须已注册持边角色，落账 admin=true）。
 - 角色零上行边：completion 走 origin 免 ACL 特例自动回账，进来源 role 收件箱（queued 行，pull 式），反边不用声明。
-- control：`onlyne control cancel|recycle|probe|snapshot --task <id>`（属主或 admin 角色署名）。backend：ONLYNE_BACKEND=zellij|orca|fake，探测序 orca→zellij→fake（omp 勘误 2026-09-11，实现推翻 v1-PLAN 旧序）。
-- 调度参数承接：per-role `[client.timeout]{ready_ms,running_ms,idle_ms}`（bench running_ms=3600000 承接旧 busy_secs）+ `[client.intent]{attempts=100000, backoff 六档}`（attempts=0 表示首次失败即 exhausted，已弃用）。
+- control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。backend：`ONLYNE_BACKEND` 取 `herdr|orca|zellij|exec|fake|auto`，留空或 `auto` 时探测序 herdr→orca→zellij，`exec`/`fake` 只认点名，探不到 `onlyne-client run` 退 5 并报 NO_SUPPORTED_HOST（判定在 `<onlyne 仓>/crates/onlyne-session/src/backend/mod.rs::select_backend_from_env`）；`onlyne-client doctor` 只读打印本机判定，恒退 0。
+- 调度参数承接：per-role `[client.timeout]{ready_ms,running_ms,idle_ms}`（默认 30000/120000/60000，bench running_ms=3600000 承接旧 busy_secs）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
 
 ## 任务书四段（handoff/send 的 text）
 
@@ -184,7 +185,7 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 - `generic-researcher-weak` 科研能力强，能指导 worker 写代码，必要时自己小写两段。
 - `supercheap` 写代码强且便宜，经常思考过度把自己绕晕，不能长时间独立工作。bench 配 low effort，2026-09-09 自 minimal 上调一档，仍为压住它别加戏。
 
-supervisor 会话档位见根 `.onlyne/swarm.workspace.jsonc`（`generic-researcher-weak` + medium，维护位）。
+supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-researcher-weak` + medium，维护位）。role 档位见 `.onlyne/templates/aris/<role>/.pi/settings.json`，改完 `onlyne-server generate --root . --template aris/<role> --role <role> --force` 落到该 ws。
 
 scout
 
@@ -211,9 +212,9 @@ scout
 装配完成的瞬间，工作区处于这些事实下：
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
-- server 未跑（装配不起常驻进程）；`onlyne-server run --root .` 通电后逐 role `onlyne client start` 挂载。
-- `tasks` 表 0 行，`.ws/<role>` 下无 session，`runs/` 空，`papers/` 空，`pool/ideas.md` 只有种子或空。
-- 飞轮是反应式的：没有入站任务就什么都不会发生。`server run`+`client start` 属于通电，属于开跑。
+- v1 运行时未起：`onlyne-server status` 无 socket，`onlyne-client status --workspace .onlyne/ws/aris/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne-server run --root .`，五个 role client 各占一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（client 侧只有 `run`，`start`/`stop` 自 1.0.1 取消）。
+- `tasks` 表 0 行，`runs/` 空，`papers/` 空，`pool/ideas.md` 只有种子或空。
+- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server run` 与五个 `onlyne-client run` 属于通电，第一发属于开跑。
 
 启动动作二选一：
 
@@ -225,16 +226,16 @@ supervisor 只负责把第一发投进 `★` role，不参与后续流转；环�
 
 本主题的起始 role 是投第一发时 `--to` 的那个名字（见上表 entry 列，★=scout）。第一发落地后环自转：起始 role 取 queued 固化 idea.json 派 model，后续每轮的推进靠接力任务，启动只需要一发，supervisor 不参与流转。
 
-## 维护与配置（supervisor 用，2026-09-12 按 v1.0.0 GA 对表；beta.3 期条款已就地更新）
+## 维护与配置（supervisor 用；版本口径 = 追 latest，条款以 `<onlyne 仓>` main 源码复核）
 
 - 配置唯一入口是 `.onlyne/spec.toml`（拓扑/prose/ACL/timeout/intent/agent_package/cert_pin）与 `.onlyne/templates/aris/`（细则+模型三元组）。
 - 生效路径：spec 改→reload；模板改→该 role generate --force。无 sync/overlay/bootstrap 概念。
-- 装役：现役 = redesign worktree 构建、`~/.cargo/bin` 五件（onlyne 1.0.0 + server/client/tui/gateway），热补单 main@ae429d2 已含；crates.io 发布中（6/18），全绿后统一写 `cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` 与 `pi install npm:pi-onlyne`。插件 canonical = redesign worktree 的 `plugins/onlyne-agent-pi`（仓库 b810f1d 已删 integrations/pi-onlyne 旧孪生=无守卫过期码），spec `agent_package` 与五模板 settings 的 packages 均指该绝对路径；v1.0.0 tag 后增量（cli socket 修复/spec alias/tui 岛剪枝/manifest 钉版）随下次 build 带上。
+- 装役：五件 `onlyne` / `onlyne-server` / `onlyne-client` / `onlyne-gateway` / `onlyne-tui` 装 crates.io latest，插件 `pi install npm:pi-onlyne`（同为 latest）。onlyne 发版频繁，内容基本全是 bug fix，本机长期跑 main 源码构建。策略口径：本树文档与脚本一律不钉版本、不写 tag 名，只设 `protocol=1` 下限。排查工具行为以 `<onlyne 仓>`（本机 onlyne checkout，main）源码与当期 `--help` 为准，role 会话只读。
 - server/tui 常驻 = 在 **ARIS worktree 的可见前台 tab** 里跑（`orca terminal create --worktree path:<本树> --command "onlyne-server run --root ."`，tui 同款），关 tab 即停环；禁入任何 agent 后台。client 起 tab 的 worktree 决定会话 spawn 定向（错配案：hub 起 client 继承它方 ORCA_WORKTREE_ID → 会话 cd 进错检出即死）。
-- 五角色 client = `onlyne client start --workspace .onlyne/ws/aris/<role>` 守护态（pid/socket 在 ws 运行面）；重启环后逐个 start，或 `client run` 进各自 tab。
-- 崩溃残留处理：`onlyne server repair`（清 running delivery 类残留在 v1 的对应物），再用 `onlyne faults` 看故障队列（intent exhausted 落此，`repair retry` 人工续
-- 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne server repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
-- 杀单个 client 用其 ws pid 文件精确 PID，禁止 pkill 按名杀。
+- 五角色 client = 各一个可见前台 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
+- 崩溃残留处理：`onlyne faults --open-only` 看核心检测（intent exhausted 落此），`onlyne repair inspect|retry|close|fail|ack --task <id>` 处置；投递层之外的残影走下面的恢复纪律。
+- 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。语义按源码校准：`close` 记 cancelled、`fail` 记 failed，两者都经 `retire_task_resource` 向属主 client 发 `Command::Cancel`（`<onlyne 仓>/crates/onlyne-server/src/faults.rs:336-368`），pane 一并回收。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
+- `onlyne-client` 不写 pid 文件（pid 真相在 server 侧 client_registry）。停某个 client 用 `ps` 按 args+cwd 精确匹配该 ws 的 `onlyne-client run` 进程再定点发信号，禁止 pkill 按名杀。
 - 清理孤儿进程前先核对身份：`brew services`、launchd、其他 app 拉起的常驻服务不属于 swarm。杀之前查 launchd label / 父进程 / 端口归属，只回收 `.onlyne/run/` pid 文件与 client 注册表里存在的进程。误杀系统服务比留一个孤儿严重得多。
 - hindsight bank 重建、hindsight.json 实例面条款：v1 插件无该子系统，实例 `.pi/` 归装机者自管，暂不提供集中重建步骤（需要时按 pi hindsight 扩展原生方式现场配）。
 

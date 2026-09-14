@@ -22,10 +22,10 @@ session 对下游零等待。结果经文件与账本（`onlyne ledger --server-
 
 ## 前置
 
-- onlyne v1.0.0 五件套：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余四个 crate 名=bin 名）；备用路 `git clone -b v1.0.0` + `cargo build --release`
-- pi + 插件：`pi install npm:pi-onlyne`（latest=1.0.0，含接力守卫）；找代码认仓库 `plugins/onlyne-agent-pi`，装包认 `pi-onlyne`
-- `orca`（含 `orca` CLI）与已配置的 pi model/provider
-- 拓扑纪律：server/tui 跑在**本 worktree 的可见前台 tab**（关 tab 即停环），不进任何 agent 后台；client 用 `onlyne client start` 守护态，且必须从本 worktree 的 tab 起（client 起 tab 的 worktree 决定会话 spawn 定向）
+- onlyne v1 五件套（装 latest，命令里没有版本号；升级＝同一条命令加 `--force` 重跑）：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余四个 crate 名=bin 名）；备用路 `git clone https://github.com/dbydd/onlyne`（默认分支 main，未发布的 fix 在这儿）+ `cargo build --release`。各 crate 版本号独立前进，兼容判据是 `onlyne version` 的 `protocol:1`
+- pi + 插件：`pi install npm:pi-onlyne`（拉 npm latest，含 relay 守卫与 activity panel；1.0.0 起讲 protocol 1）；找代码认仓库 `plugins/onlyne-agent-pi`，装包认 `pi-onlyne`
+- 会话后端 `herdr`/`orca`/`zellij` 之一与已配置的 pi model/provider：`ONLYNE_BACKEND` 留空即按 herdr→orca→zellij 探测，探不到 `onlyne-client run` 退 5，`onlyne-client doctor` 只读打印本机判定
+- 拓扑纪律：server/tui 跑在**本 worktree 的可见前台 tab**（关 tab 即停环），不进任何 agent 后台；client 只有 `onlyne-client run`（前台常驻，`start`/`stop` 自 1.0.1 取消），且必须从本 worktree 的 tab 起（client 起 tab 的 worktree 决定会话 spawn 定向）
 
 ## 起飞
 
@@ -38,10 +38,11 @@ onlyne server generate --root . --template aris/<role> --role <role> --force
 # 2. 起 server：本 worktree 可见 tab 前台
 orca terminal create --worktree path:$PWD --title onlyne-server --command "onlyne-server run --root ."
 
-# 3. 起五角色 client（守护态，pid/socket 在各自 ws 运行面）
+# 3. 起五角色 client（各占本 worktree 一个可见 tab，前台常驻；关 tab 即停该 role）
 for r in scout model bench writer critic; do
-  onlyne client start --workspace .onlyne/ws/aris/$r
+  orca terminal create --worktree path:$PWD --title "onlyne-client-$r" --command "onlyne-client run --workspace .onlyne/ws/aris/$r"
 done
+onlyne-client doctor    # 只读：起前看本机后端探测（herdr→orca→zellij）
 
 # 4. 观测位：可见 tab 跑 tui（力导布局）
 orca terminal create --worktree path:$PWD --title onlyne-tui --command "onlyne-tui --spacing 2 --server-root ."
