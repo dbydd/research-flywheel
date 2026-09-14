@@ -28,7 +28,7 @@
 - `onlyne sessions --server-root .` 无 busy 且 pool 有 queued = 飞轮 idle。
 - server 常驻 = Orca 可见 tab `onlyne-v1-server`（前台 `onlyne-server run --root .`，Ctrl-C 停环）。
 - 五个 role client 各占一个可见 tab：`onlyne-client run --workspace .onlyne/ws/aris/<role>`。`run` 是 client 唯一的启动动词（`start`/`stop` 自 1.0.1 取消），client 也不写 pid 文件，`status` 以 ws 适配 socket 能否应答 `hello` 判定在不在跑。
-- server 没跑时提示用户在可见 tab 执行 `onlyne-server run --root .`（二进制路径见 AGENTS.md 维护节）；该进程由用户前台持有，禁止 nohup 托管。
+- server 没跑时提示用户在可见 tab 执行 `onlyne-server run --root .`（五件二进制的装法见 AGENTS.md 维护节：crates.io latest 或 `<onlyne 仓>` 源码构建）；该进程由用户前台持有，禁止 nohup 托管。
 - 把「server 起了」当成「环在跑」是错误报告。无入站任务时飞轮什么都不会发生。
 
 ## 工作模型提醒
