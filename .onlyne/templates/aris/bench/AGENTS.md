@@ -33,7 +33,7 @@
 - 交活命令：`onlyne_complete {outcome:"done"|"failed", text:"一行结果摘要+产物路径"}`。
 - 产物未齐的两种交法：用 outcome:"cancelled"，或干脆不 complete 等 idle 回收。
 - 失败交活：handoff/complete 正文首行写 `> hop-failed: <原因>` + 现场路径，台账终态记 failed，产物照写。
-- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 server-root。
+- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 swarm root。
 
 ## 工作面
 

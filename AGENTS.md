@@ -8,9 +8,9 @@
 
 ## 研究问题（ARIS 复刻）
 
-本主题用 onlyne 五角色飞轮复刻 ARIS（https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep）的全自动科研环，环的形态是：文献→idea 发现→实验→跨模型评审循环→论文写作→同行评审 rebuttal。
+本主题用 onlyne 六角色飞轮复刻 ARIS（https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep）的全自动科研环，环的形态是：文献→idea 发现→实验→跨模型评审循环→论文写作→同行评审 rebuttal。
 
-ARIS 是一套 Markdown-only skills 的自主 ML 研究系统。本飞轮把它的 workflow 映射成 scout/model/bench/writer/critic 五跳：`/research-pipeline` 全链装进飞轮宏观流本身，`/research-wiki` 的持久记忆装进 hindsight bank（跨会话的长期记忆库）。证据锚点见 `research/aris-workflow-summary.md`。
+ARIS 是一套 Markdown-only skills 的自主 ML 研究系统。本飞轮把它的 workflow 映射成 scout/analyzer/model/bench/writer/critic 六跳：`/research-pipeline` 全链装进飞轮宏观流本身，`/research-wiki` 的持久记忆装进 hindsight bank（跨会话的长期记忆库）。证据锚点见 `research/aris-workflow-summary.md`。
 
 「什么算进步」分主次两条度量：
 
@@ -88,6 +88,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 默认结构（`idea.json`/`derivation.md`/`lean/`/`measured/`/`verdict.md`）保持不变。ARIS 映射产物按以下落点：
 
+- `analysis.md`：analyzer 出的问题层分析（成因/机制/难点/选型考察点四节；难点=现有方法何处失效+结构性原因，只提问不解答；model 的输入约束）。
 - `spec.md`：model 出的方法实现 spec 与评测器 spec（model 不写 `experiment/` 代码，bench 按此落地跑批）。
 - `measured/summary.md`：bench 汇总值与 delta（delta = 相对基线的差值），每个 objective 一个实测值，每个 constraint 一个 pass/fail。
 - `revisions.md`：writer 按 critic verdict 编号 finding 修订的记录。
@@ -156,28 +157,33 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 
 | role | 职责 | 上游 | 下游 | entry | model |
 |---|---|---|---|---|---|
-| scout | 前沿检索与 idea 入池 + 取 queued 派工（ARIS `/idea-discovery`：research-lit→idea-creator→novelty-check） | critic, model/bench（失败回传）, writer（补检索） | model | ★ | axonhub/supercheap/low |
+| scout | 前沿检索与 idea 入池 + 取 queued 派工（ARIS `/idea-discovery`：research-lit→idea-creator→novelty-check） | critic, analyzer/model/bench（失败回传）, writer（补检索） | analyzer | ★ | axonhub/supercheap/low |
+| analyzer | 问题层分析：成因/机制/难点/选型考察点，出 `runs/<run-id>/analysis.md`（难点=论文 intro 意义的固有难点：现有方法何处失效+结构性原因；只提出问题，应对与贡献归 model；ARIS novelty-check 深化位） | scout, model（补分析回请） | model, scout（失败回传/补检索） | | axonhub/generic-researcher-powerful/high |
+| model | 推导 + Lean 形式化 + 出 spec（ARIS `/experiment-bridge` 前半：plan→spec；消费 analysis.md，逐难点给应对并确立贡献主张；不写 `experiment/` 代码） | analyzer, critic（revise-理论） | bench, writer, analyzer（补分析回请）, scout（失败回传/补检索） | | axonhub/generic-researcher-powerful/max |
 | model | 推导 + Lean 形式化 + 出 spec（ARIS `/experiment-bridge` 前半：plan→spec；不写 `experiment/` 代码） | scout, critic（revise-理论） | bench, writer, scout（失败回传/补检索） | | axonhub/generic-researcher-powerful/max |
-| bench | 跑批与测量，按 model spec 落地并落 `measured/`（ARIS `/experiment-bridge` 后半：deploy→collect） | model | writer, scout（失败回传） | | axonhub/supercheap/minimal |
+| bench | 跑批与测量，按 model spec 落地并落 `measured/`（ARIS `/experiment-bridge` 后半：deploy→collect） | model | writer, scout（失败回传） | | axonhub/supercheap/low |
 | writer | 成稿（ARIS `/paper-writing`：plan→figure→write→compile；初稿与修订稿） | model, bench, critic（revise-文字） | critic, scout（补检索） | | axonhub/supercheap/high |
 | critic | 审稿 verdict + 归档 + 提下一条 idea（ARIS `/auto-review-loop` 4 轮评审 + cross-model jury + `/rebuttal` 语义：revise 循环或 accept/reject 终局） | writer | writer（revise-文字）/ model（revise-理论）/ scout（accept/reject 开新轮） | | axonhub/generic-researcher-powerful/high |
 
-四条边各自含义：
+六条边各自含义：
 
 - critic→model 是 revise-理论：推导或 spec 有缺陷，重推。
 - critic→writer 是 revise-文字：文字、claim、结构修订，不动推导。
 - writer→scout 是补检索：稿件缺证据，要文献。
 - model→scout 是失败回传与补检索：Lean 失败带现场路径；证据缺口写清要什么来源。
+- model→analyzer 是补分析回请：analysis.md 的难点或机制段立不准、撑不起推导时退回补析，写清缺哪一节；analyzer→model 正常下派，构成一小环。
+- analyzer→scout 是失败回传与补检索：证据不足以判别机制时列「无法判别」段，写清缺什么证据、要什么来源。
 
 supervisor 不在工作环里：没有任何 role 的上游或下游是 root。supervisor 不注册 [[client]]，admin 面代发除外，签名用持边角色。
 
 supervisor 只做工作区维护，条目为：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。supervisor 不参与工作流转。
 
-接力闭环在五个 role 之间：
+接力闭环在六个 role 之间：
 
-- 主环 scout→model→bench→writer→critic→scout（accept/reject 开新轮）。
+- 主环 scout→analyzer→model→bench→writer→critic→scout（accept/reject 开新轮）。
 - 修订环 critic→writer（revise-文字）/ critic→model（revise-理论）。
-- 回传边 model→scout、bench→scout、writer→scout。
+- 补析环 model→analyzer（回请补析）→model（重下派）。
+- 回传边 analyzer→scout、model→scout、bench→scout、writer→scout。
 
 三档模型语义：
 
@@ -195,26 +201,27 @@ scout
 
 接力规则按角色表的 `上游` / `下游` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
 
-1. scout：从 pool 取 queued idea，固化 `runs/<run-id>/idea.json`（status 改 running），派给 model；同时承担检索与新 idea 入池。
+1. scout：从 pool 取 queued idea，固化 `runs/<run-id>/idea.json`（status 改 running），派给 analyzer；同时承担检索与新 idea 入池。
 2. 每个 role：完成后按自己的 `下游` 列 `onlyne handoff` 接力任务书，然后 `onlyne_complete` 交活退出。角色零上行边，回执走 origin 自动通道。
 3. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 4. critic 闭环：revise-文字则 handoff writer 修订接力；revise-理论（推导或 spec 有缺陷）则 handoff model 重推接力；accept/reject 则归档（keep 留 papers/ 并把 idea 状态改 keep，failed 记 verdict.md 并改 failed），从 open questions 或失败结论提取下一条 idea 入池，再 handoff scout 开新轮。
-5. 回传 scout 的任务共三种：
+5. 回传 scout 的任务共四种：
+   - analyzer 的失败回传与补检索（机制证据不足，列「无法判别」段 + 要什么来源）。
    - model 的失败回传（Lean 失败，接力正文首行 `> hop-failed` + 现场路径）与补检索（证据缺口，写清缺哪段文献、要什么来源）。
    - bench 的失败回传（跑不动，接力正文首行 `> hop-failed` + 现场路径 + 失败命令与日志路径）。
    - writer 的补检索（稿件哪一节缺什么证据、要什么来源）。
-   scout 处理完后走正常派工跳（取 queued 派给 model）。
+   scout 处理完后走正常派工跳（取 queued 派给 analyzer）。
 
-环路在五个 role 之间自转：主环 scout→model→bench→writer→critic→scout（新轮）；修订环 critic→writer（文字）/ critic→model（理论）；回传边 model→scout、bench→scout、writer→scout。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
+环路在六个 role 之间自转：主环 scout→analyzer→model→bench→writer→critic→scout（新轮）；修订环 critic→writer（文字）/ critic→model（理论）；补析环 model→analyzer→model；回传边 analyzer→scout、model→scout、bench→scout、writer→scout。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
 
 ## 冷启动与第一发
 
 装配完成的瞬间，工作区处于这些事实下：
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
-- v1 运行时未起：`onlyne-server status` 无 socket，`onlyne-client status --workspace .onlyne/ws/aris/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne-server run --root .`，五个 role client 各占一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（client 侧只有 `run`，`start`/`stop` 自 1.0.1 取消）。
+- v1 运行时未起：`onlyne-server status` 无 socket，`onlyne-client status --workspace .onlyne/ws/aris/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne-server run --root .`，六个 role client 各占一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（client 侧只有 `run`，`start`/`stop` 自 1.0.1 取消）。
 - `tasks` 表 0 行，`runs/` 空，`papers/` 空，`pool/ideas.md` 只有种子或空。
-- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server run` 与五个 `onlyne-client run` 属于通电，第一发属于开跑。
+- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server run` 与六个 `onlyne-client run` 属于通电，第一发属于开跑。
 
 启动动作二选一：
 
@@ -224,7 +231,7 @@ scout
 
 supervisor 只负责把第一发投进 `★` role，不参与后续流转；环成形后自转。
 
-本主题的起始 role 是投第一发时 `--to` 的那个名字（见上表 entry 列，★=scout）。第一发落地后环自转：起始 role 取 queued 固化 idea.json 派 model，后续每轮的推进靠接力任务，启动只需要一发，supervisor 不参与流转。
+本主题的起始 role 是投第一发时 `--to` 的那个名字（见上表 entry 列，★=scout）。第一发落地后环自转：起始 role 取 queued 固化 idea.json 派 analyzer，后续每轮的推进靠接力任务，启动只需要一发，supervisor 不参与流转。
 
 ## 维护与配置（supervisor 用；版本口径 = 追 latest，条款以 `<onlyne 仓>` main 源码复核）
 
@@ -232,7 +239,7 @@ supervisor 只负责把第一发投进 `★` role，不参与后续流转；环�
 - 生效路径：spec 改→reload；模板改→该 role generate --force。无 sync/overlay/bootstrap 概念。
 - 装役：五件 `onlyne` / `onlyne-server` / `onlyne-client` / `onlyne-gateway` / `onlyne-tui` 装 crates.io latest，插件 `pi install npm:pi-onlyne`（同为 latest）。onlyne 发版频繁，内容基本全是 bug fix，本机长期跑 main 源码构建。策略口径：本树文档与脚本一律不钉版本、不写 tag 名，只设 `protocol=1` 下限。排查工具行为以 `<onlyne 仓>`（本机 onlyne checkout，main）源码与当期 `--help` 为准，role 会话只读。
 - server/tui 常驻 = 在 **ARIS worktree 的可见前台 tab** 里跑（`orca terminal create --worktree path:<本树> --command "onlyne-server run --root ."`，tui 同款），关 tab 即停环；禁入任何 agent 后台。client 起 tab 的 worktree 决定会话 spawn 定向（错配案：hub 起 client 继承它方 ORCA_WORKTREE_ID → 会话 cd 进错检出即死）。
-- 五角色 client = 各一个可见前台 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
+- 六角色 client = 各一个可见前台 tab 跑 `onlyne-client run --workspace .onlyne/ws/aris/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
 - 崩溃残留处理：`onlyne faults --open-only` 看核心检测（intent exhausted 落此），`onlyne repair inspect|retry|close|fail|ack --task <id>` 处置；投递层之外的残影走下面的恢复纪律。
 - 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。语义按源码校准：`close` 记 cancelled、`fail` 记 failed，两者都经 `retire_task_resource` 向属主 client 发 `Command::Cancel`（`<onlyne 仓>/crates/onlyne-server/src/faults.rs:336-368`），pane 一并回收。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
 - `onlyne-client` 不写 pid 文件（pid 真相在 server 侧 client_registry）。停某个 client 用 `ps` 按 args+cwd 精确匹配该 ws 的 `onlyne-client run` 进程再定点发信号，禁止 pkill 按名杀。

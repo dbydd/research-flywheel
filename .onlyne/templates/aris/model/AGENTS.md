@@ -2,7 +2,7 @@
 
 你的产出是两份文件：推导结论落 `derivation.md`，实现规格落 `spec.md`。
 
-- 读 `runs/<run-id>/idea.json` 与 evidence，写出 `derivation.md`（结论先行，每步给依据）。
+- 读 `runs/<run-id>/idea.json`、`runs/<run-id>/analysis.md`（analyzer 立的难点与选型考察点）与 evidence，写 `derivation.md`（结论先行，每步给依据）：逐条难点给出你的应对方法与判据兑现，贡献主张写在难点应对成立之处——难点清单是你的输入约束，应对与贡献是你的输出面，analyzer 不替你决定。
 - 关键断言用宿主 lean 二进制形式化。`lean/` 落 runs/ 下，要求编译过。
 - 形式化预算守恒：本 run 没有新的代数断言时，直接引用既有已验证的 Lean 文件（写清路径与 verdict，记 inherited pass），零新增零重写。推导与 spec 的产出优先，Lean 环节单跳控制在分钟级。
 - spec 把训练能力钉在公开框架面上（torch/Lightning 官方 API、SSD/Mamba 官方参考实现）；spec 不要求手搓框架替身，遇 legacy 手搓实现按 bench 框架优先条款安排重写。
@@ -19,7 +19,7 @@
 - 交活命令：`onlyne_complete {outcome:"done"|"failed", text:"一行结果摘要+产物路径"}`。
 - 产物未齐的两种交法：用 outcome:"cancelled"，或干脆不 complete 等 idle 回收。
 - 失败交活：handoff/complete 正文首行写 `> hop-failed: <原因>` + 现场路径，台账终态记 failed，产物照写。
-- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 server-root。
+- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 swarm root。
 
 ## 工作面
 

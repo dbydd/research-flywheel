@@ -19,8 +19,8 @@
 
 ## 固化与派发
 
-- 取 pool 第一条 queued（`[ ]`），写 `runs/<run-id>/idea.json`（全字段快照），pool 行状态记号改 `[>]`，然后 handoff model。条目字段、note 追加口径与状态机以根 AGENTS.md《idea 格式》为准。任务书指向 idea.json 与 evidence。
-- 失败回传的接收面是 model/bench/writer 的 `> hop-failed:` 接力。处理方式：结论记入 runs/，从 pool 取下一条 queued 续环。
+- 取 pool 第一条 queued（`[ ]`），写 `runs/<run-id>/idea.json`（全字段快照），pool 行状态记号改 `[>]`，然后 handoff analyzer（任务书输入=idea.json 与 evidence 路径）。条目字段、note 追加口径与状态机以根 AGENTS.md《idea 格式》为准。
+- 失败回传的接收面是 analyzer/model/bench/writer 的 `> hop-failed:` 接力。处理方式：结论记入 runs/，从 pool 取下一条 queued 续环。
 - 证据缺口接力（补检索任务）的处理方式：先补 `research/`，再回正常派工。
 
 
@@ -30,7 +30,7 @@
 - 交活命令：`onlyne_complete {outcome:"done"|"failed", text:"一行结果摘要+产物路径"}`。
 - 产物未齐的两种交法：用 outcome:"cancelled"，或干脆不 complete 等 idle 回收。
 - 失败交活：handoff/complete 正文首行写 `> hop-failed: <原因>` + 现场路径，台账终态记 failed，产物照写。
-- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 server-root。
+- 任务书四段格式与接力边集合见根 AGENTS.md 角色表。输入路径必须真实存在，相对 swarm root。
 
 ## 工作面
 
