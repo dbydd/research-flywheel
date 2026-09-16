@@ -74,6 +74,14 @@
 - 功耗纪律与训练槽协议由旧跑批位细则移入（历史参照：commit f36d3de），条款内容不变。
 - 过期护栏继续有效：`research_project/<项目短名>/DEPRECATED.md` 圈定的数字不进稿件/判词；开工先读本节与台账。
 
+## 干活偏好（工程环境，实验段起手式）
+
+- 依赖：uv 统一管理（`uv add` 装、`uv sync` 对齐、`uv run` 跑），系统 python 与手建 venv 都不用。缺包自己装，版本锁进 pyproject/uv.lock，measured/environment.json 一并声明。
+- 训练：pytorch 本体 + lightning 统一风格（fit/Trainer 单入口、seed 显式、callback 落日志进 measured/）；后端由 lightning 自选（MPS 优先、CPU 兜底），脚本里零手写 device 分支。功耗纪律照旧：单进程、串行、≤45 min 切片。
+- 表格：polars 处理（高性能默认），原始读数 jsonl/parquet 留 `measured/`，文档以路径指过去。
+- 可复现：脚本冷启动可重跑（相对路径、项目目录为准）；全量前最小闭环真数据对拍一次。
+- 评测器：住 `evaluation/`，运行命令原文写进设计段断言清单，qa 照命令重跑对账。
+
 ## 工作模型（射后不理）
 
 射后不理 = 发出去就不等回复。
