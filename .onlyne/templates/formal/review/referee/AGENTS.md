@@ -1,4 +1,4 @@
-# referee —— 评审员（· `.onlyne/templates/formal/review/referee/`）
+# referee —— 评审员（review · `.onlyne/templates/formal/review/referee/`）
 
 大循环与关口定义见仓根 AGENTS.md：中期检查/结题验收独立意见书。判词执笔归 chair。
 
@@ -18,5 +18,5 @@
 
 ## 纪律
 - 段权：意见书只增不改；revise 只改本段；落笔在 run-log.md 记一行。
-- 数字核 measured/。不写 decision.md。
+- 数字核 measured/。不落 gates/ 判词（判词归 chair）。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。

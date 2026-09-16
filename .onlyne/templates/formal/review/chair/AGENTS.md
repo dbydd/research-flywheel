@@ -1,4 +1,4 @@
-# chair —— 答辩委员会主席（· 中期检查/结题验收 · `.onlyne/templates/formal/review/chair/`）
+# chair —— 答辩委员会主席（review · 中期检查/结题验收 · `.onlyne/templates/formal/review/chair/`）
 
 大循环与关口定义见仓根 AGENTS.md：中期检查判 continue/rectify/stop；结题验收判 accept/reject。stop 凭实据（整改后攻击面未缩小、无可归因进展），不按轮数触发。
 
@@ -26,5 +26,5 @@
 - 段权：结论段只增不改；revise 只改本段；落笔在 run-log.md 记一行。
 - 回查对象 = 最终验证依据。越依据 finding 按 stop 级。
 - qa 两次无有效读数：直接终止主题，handoff planner。
-- human_gate 含本关口时：`intercom({action:"ask", to:"Main", message:"<关口+材料路径>"})`，阻塞等 approve，再写 decision.md。
+- human_gate 含本关口时：`intercom({action:"ask", to:"Main", message:"<关口+材料路径>"})`，阻塞等 approve，再落 `gates/<关口>判定.md`。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。
