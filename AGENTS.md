@@ -10,7 +10,7 @@
 
 ## 大循环（formal-research）
 
-模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ 执行（含中期）→ 验收（中期检查/结题验收）→ 新开题。域按序接力：initiation（pi、librarian、examiner）→ theory（speculator、theorist）→ experiment（runner）→ writing（scribe）→ review（chair、referee、qa）→ archive（planner）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
+模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ 执行（含中期）→ 验收（中期检查/结题验收）→ 新开题。域按序接力：initiation（pi、examiner）→ theory（speculator、theorist）→ experiment（runner）→ writing（scribe）→ review（chair、referee、qa）→ archive（planner）。librarian 独立为公共资源层（common/），跨全部阶段常驻：任何 role 任何时点可点检索单。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
@@ -84,7 +84,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，文件名为 `<run-id>.md`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
-- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用、vendor 的 `.onlyne/agent/onlyne-agent-pi`、运行态。`<phase>` 阶段层：initiation={pi,librarian,examiner}、theory={speculator,theorist}、experiment=runner、writing=scribe、review={chair,referee,qa}、archive=planner。
+- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用、vendor 的 `.onlyne/agent/onlyne-agent-pi`、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian}（公共资源层）、theory={speculator,theorist}、experiment=runner、writing=scribe、review={chair,referee,qa}、archive=planner。
 - 改 role 上下文的做法：改 `.onlyne/templates/formal/<phase>/<role>/`，再跑 `onlyne-server generate --root . --template formal/<phase>/<role> --role <role> --force`。
 - 模板 settings 的 packages 须写 agent_package 的字面绝对路径，generate 才触发 vendor 重写；写 `{{agent_package}}` 渲出形态缺 `../` 前缀，pi 不加载。
 - `.onlyne/`：v1 集群面。跟踪的模板真相是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
@@ -218,7 +218,7 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | role | 职责 | 上游 | 下游 | relay | entry | model |
 |---|---|---|---|---|---|---|
 | pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise） | examiner（申报/回应）, librarian（委托检索） | examiner | ★ | axonhub/generic-researcher-powerful/max |
-| librarian | 检索与 novelty | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
+| librarian | 公共检索资源（常驻所有阶段外侧） | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
 | examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行 | pi（申报/回应）, theorist, speculator, librarian | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/max |
 | speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
 | theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian | speculator（带陈述出假设）, examiner（复研）, librarian | speculator | | axonhub/generic-researcher-powerful/max |
@@ -229,7 +229,7 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
 | planner | registry.json 唯一维护者；新题发起 | examiner（fail）, chair（accept/reject/stop）, librarian | pi, librarian | pi | | axonhub/generic-researcher-powerful/medium |
 
-theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，其余=1。职责列「旧 bench / 旧 writer」为历史细则指向。
+theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2（公共位接单并发），其余=1。职责列「旧 bench / 旧 writer」为历史细则指向。
 
 边义逐条：
 

@@ -23,7 +23,7 @@ template_root = ".onlyne/templates"
 # 冷启动第一发：onlyne send --server-root . --from planner --to pi --file payload/first.md
 # 域分组仅中文注释，无 domain 字段。intent 大数方案（0=首次失败即 exhausted，弃用）；runner 单开 running_ms 承接旧 bench 功耗细则。
 
-# ---- 申报 ----
+# ---- 申报（pi；librarian 为公共资源层，跨阶段常驻，恰排本段）----
 
 [[client]]
 role = "pi"
@@ -47,9 +47,9 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "librarian"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 librarian（文献官，检索与 novelty）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 librarian（公共检索资源，跨全部阶段常驻，回件面向所有委托方）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
-max_sessions = 1
+max_sessions = 2
 relay_required = ["pi"]
 reuse = true
 allowed_senders = ["pi", "theorist", "examiner", "chair", "scribe", "planner", "speculator"]

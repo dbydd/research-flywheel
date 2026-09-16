@@ -1,4 +1,4 @@
-# pi —— 首席研究员（申报域 · `.onlyne/templates/formal/initiation/pi/`）
+# pi —— 首席研究员（开题黑盒唯一负责人 · `.onlyne/templates/formal/initiation/pi/`）
 
 大循环与关口定义见仓根 AGENTS.md：开题黑盒出头四段 → 开题对线攻不破才放行 → 执行（含中期）→ 中期检查/结题验收 → 新开题。
 
