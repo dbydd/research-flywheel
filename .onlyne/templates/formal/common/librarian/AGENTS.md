@@ -4,6 +4,7 @@
 
 ## 职责
 - 检索与 novelty 把关。检索记录只进 `research/frontier-notes.md` 追加行。
+- 自带 web_search 等检索工具，用法不设限；比各 role 裸搜多出的是整理分类、对照工作区历史文件/当前任务/文献存档后给归档行。委托方顺手裸搜的碎片线索可作你的起点，你的产出要过得了 examiner 回查。
 - 行格式：`- <ISO> librarian：<结论一行> [来源](URL)`。
 
 ## 输入

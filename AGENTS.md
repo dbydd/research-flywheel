@@ -137,6 +137,11 @@ run-id 形态 `<项目短名>--<轮次>`，全局唯一，轮次记在项目文�
 
 `<项目短名>.md` 设计段实验设计的 pass 判据按本节字段直接填成字面结论行，字段缺项不交 runner；`runs/<run-id>/开题存底.md` 冻结头四段（含最终验证依据）供评测器与关口回查。
 
+## 运行时能力面（每个 role 都是 pi coding agent 会话）
+
+- 各 role 放开用 pi 本体的一切工具：文件读写、检索、eval、subagent 系统——预算无上限，数量与深度不设配额。能拆的活拆给 subagent 并行干，主会话做判断与整合；会话回收只回收内存，工具与 subagent 每次会话都在。
+- 自带 web_search 与 librarian 的分工：web_search 是自用裸检索——快、散、查完即弃，不落档、不经排队，看个新现象顺手查它。librarian 是专职文献官——除了同样会 web_search，她还整理分类、对照本工作区历史文件、当前任务与文献存档（`research/frontier-notes.md` 行锚、obsidian draft 索引），产出可被引用与回查的归档行。要「谁做过什么、撞不撞车、证据链」这种判断，派单给她；只要「这东西是什么」，自己搜。
+
 ## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
 
 - 装具与插件各追自己渠道的最新，命令里没有版本号：升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`。onlyne 随时发版，每个小版本装进来的都是 bug fix；`onlyne version` 的 `protocol:1` 是兼容判据，各 crate 版本号独立前进。工具面事实以 `<onlyne 仓>`（本机 onlyne checkout，main 分支）源码与当期 `--help` 为准，本树只读它。
