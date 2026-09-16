@@ -15,7 +15,7 @@
 - 归案：status=closed，conclude 段写终局路径。
 
 ## 下一跳与回传
-- 可发：pi、librarian。可收：examiner、chair、librarian。
+- 可发：pi、librarian、scribe（任务书代笔）。可收：examiner、chair、librarian、scribe。
 - 主下游 pi（relay_required）。任务书四段见仓根 AGENTS.md。
 - 派 pi 的任务书必须原文引用结题验收 open questions 行（无结题验收则引归案/种子问题行与源 run 号）。
 

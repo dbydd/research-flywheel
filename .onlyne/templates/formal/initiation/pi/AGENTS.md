@@ -22,7 +22,7 @@
 - `research_project/<slug>/proposals/kaoti.md`：与四段头同构；末节「自证断言」=逐条文件路径+命令+输出一行（造假踩禁区，examiner 抓到即 fail）。
 
 ## 下一跳与回传
-- 可发：examiner（送审）、librarian（补检索）。可收：examiner、librarian、planner。
+- 可发：examiner（送审/辩论回应）、librarian（补检索）、scribe（委托代笔，贵档省 token）。可收：examiner、librarian、planner、scribe（成稿回件）。
 - 主下游 examiner（relay_required）。任务书四段见仓根 AGENTS.md。
 - revise 打回只改头部本阶段段，保持进行中，修订后重交 examiner。
 

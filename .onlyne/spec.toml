@@ -33,8 +33,8 @@ admin = false
 max_sessions = 1
 relay_required = ["examiner"]
 reuse = true
-allowed_senders = ["librarian", "planner", "examiner"]
-allowed_targets = ["examiner", "librarian"]
+allowed_senders = ["librarian", "planner", "examiner", "scribe"]
+allowed_targets = ["examiner", "librarian", "scribe"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -73,8 +73,8 @@ admin = false
 max_sessions = 1
 relay_required = ["theorist"]
 reuse = true
-allowed_senders = ["pi", "librarian", "theorist", "speculator"]
-allowed_targets = ["theorist", "pi", "planner", "librarian"]
+allowed_senders = ["pi", "librarian", "theorist", "speculator", "scribe"]
+allowed_targets = ["theorist", "pi", "planner", "librarian", "scribe"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -94,8 +94,8 @@ admin = false
 max_sessions = 1
 relay_required = ["speculator"]
 reuse = true
-allowed_senders = ["examiner", "chair", "librarian", "speculator"]
-allowed_targets = ["speculator", "examiner", "librarian"]
+allowed_senders = ["examiner", "chair", "librarian", "speculator", "scribe"]
+allowed_targets = ["speculator", "examiner", "librarian", "scribe"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -113,7 +113,7 @@ admin = false
 max_sessions = 1
 relay_required = ["runner"]
 reuse = true
-allowed_senders = ["theorist", "runner", "chair", "librarian"]
+allowed_senders = ["theorist", "runner", "chair", "librarian", "scribe"]
 allowed_targets = ["theorist", "runner", "scribe", "examiner", "librarian"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
@@ -146,13 +146,13 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "scribe"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 scribe（成稿，继承旧 writer 细则）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 scribe（公共代笔位：各角色可点单成文，为贵档模型省 token）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
-max_sessions = 1
+max_sessions = 2
 relay_required = ["chair"]
 reuse = true
-allowed_senders = ["speculator", "chair", "librarian"]
-allowed_targets = ["chair", "librarian", "qa"]
+allowed_senders = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian"]
+allowed_targets = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian", "qa"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -231,8 +231,8 @@ admin = false
 max_sessions = 1
 relay_required = ["pi"]
 reuse = true
-allowed_senders = ["examiner", "chair", "librarian"]
-allowed_targets = ["pi", "librarian"]
+allowed_senders = ["examiner", "chair", "librarian", "scribe"]
+allowed_targets = ["pi", "librarian", "scribe"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000

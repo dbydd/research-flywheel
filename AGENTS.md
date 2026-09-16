@@ -10,7 +10,7 @@
 
 ## 大循环（formal-research）
 
-模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ 执行（含中期）→ 验收（中期检查/结题验收）→ 新开题。域按序接力：initiation（pi、examiner）→ theory（speculator、theorist）→ experiment（runner）→ writing（scribe）→ review（chair、referee、qa）→ archive（planner）。librarian 独立为公共资源层（common/），跨全部阶段常驻：任何 role 任何时点可点检索单。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
+模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ 执行（含中期）→ 验收（中期检查/结题验收）→ 新开题。域按序接力：initiation（pi、examiner）→ theory（speculator、theorist）→ experiment（runner）→ review（chair、referee、qa）→ archive（planner）。common 层跨全部阶段常驻：librarian（检索）与 scribe（代笔）为公共资源，任何 role 任何时点可点单；referee 不用代笔（意见书独立性条款）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
@@ -84,7 +84,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，文件名为 `<run-id>.md`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
-- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用、vendor 的 `.onlyne/agent/onlyne-agent-pi`、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian}（公共资源层）、theory={speculator,theorist}、experiment=runner、writing=scribe、review={chair,referee,qa}、archive=planner。
+- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用、vendor 的 `.onlyne/agent/onlyne-agent-pi`、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
 - 改 role 上下文的做法：改 `.onlyne/templates/formal/<phase>/<role>/`，再跑 `onlyne-server generate --root . --template formal/<phase>/<role> --role <role> --force`。
 - 模板 settings 的 packages 须写 agent_package 的字面绝对路径，generate 才触发 vendor 重写；写 `{{agent_package}}` 渲出形态缺 `../` 前缀，pi 不加载。
 - `.onlyne/`：v1 集群面。跟踪的模板真相是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
@@ -217,19 +217,19 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 
 | role | 职责 | 上游 | 下游 | relay | entry | model |
 |---|---|---|---|---|---|---|
-| pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise） | examiner（申报/回应）, librarian（委托检索） | examiner | ★ | axonhub/generic-researcher-powerful/max |
+| pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise）, scribe（成稿回件） | examiner（申报/回应）, librarian（委托检索）, scribe（委托代笔） | examiner | ★ | axonhub/generic-researcher-powerful/max |
 | librarian | 公共检索资源（常驻所有阶段外侧） | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
-| examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行 | pi（申报/回应）, theorist, speculator, librarian | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/max |
+| examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行；可点单请示人工 | pi（申报/回应）, theorist, speculator, librarian, scribe | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian, scribe | theorist | | axonhub/generic-researcher-powerful/max |
 | speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
-| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian | speculator（带陈述出假设）, examiner（复研）, librarian | speculator | | axonhub/generic-researcher-powerful/max |
+| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔） | speculator | | axonhub/generic-researcher-powerful/max |
 | runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工） | qa（交核验）, speculator（失败回传） | qa | | axonhub/supercheap/low |
 | qa | 泄漏/确定/预算三约束核验 + 有效读数把关 | runner, scribe, chair（复核委托） | runner（返工）, chair（送审包） | chair | | axonhub/supercheap/medium |
-| scribe | 旧 writer 细则 | speculator, chair, librarian | chair, librarian, qa（成稿入合规核） | chair | | axonhub/supercheap/high |
+| scribe | 公共代笔位：跨阶段成文（申报书/papers/文稿），为贵档角色省 token | pi, examiner, theorist, speculator, planner, chair, librarian | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | axonhub/supercheap/high |
 | chair | 中期检查/结题验收关口主，合议文稿执笔 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
-| planner | registry.json 唯一维护者；新题发起 | examiner（fail）, chair（accept/reject/stop）, librarian | pi, librarian | pi | | axonhub/generic-researcher-powerful/medium |
+| planner | registry.json 唯一维护者；新题发起 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | axonhub/generic-researcher-powerful/medium |
 
-theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2（公共位接单并发），其余=1。职责列「旧 bench / 旧 writer」为历史细则指向。
+theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。职责列「旧 bench / 旧 writer」为历史细则指向。
 
 边义逐条：
 
@@ -240,12 +240,14 @@ theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git
 - speculator→scribe 是假设段/设计段供成稿。speculator→examiner 是对线僵局上报。
 - runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）。
 - qa→chair 是中期检查/结题验收送审包，包落 `research_project/<slug>/packs/<关口>.md`；chair→qa 是复核委托。
-- scribe→qa 是验收包文稿入合规核（经 qa 入 packs/ 再上 chair）；scribe→chair 是开题申报文稿直发（亦可）。relay 仍为 chair。
+- scribe 是公共代笔位：委托边=pi/examiner/theorist/speculator/planner/chair（→scribe），成稿回件回到委托方；验收包文稿必经 qa 入 packs/ 再上 chair。referee 不用代笔（意见书独立成文）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。chair→speculator / chair→theorist 是 rectify 整改令：整改经 theory 组，chair 无直令 runner 边。
 - chair→planner 是终局归案；planner→pi 是新题发起，任务书必引结题验收 open questions 行。
 - librarian 回件面 = 全部委托方（pi、examiner、theorist、speculator、scribe、chair、planner）。
 
 supervisor 不在工作环里：没有任何 role 的上游或下游是 root。supervisor 不注册 [[client]]，admin 面代发除外，签名用持边角色。
+
+例外边（唯一人工请示通道）：examiner 在特定开题任务上可经 pi-intercom 向 `Main` 发请示（题目价值存疑、资源取舍超出判据时），supervisor 向人开 ask 提请批复，批结果回 examiner 后代落 gates/。阻塞等批；此边只服务开题裁量，日常攻防不触发。
 
 supervisor 只做工作区维护，条目为：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。supervisor 不参与工作流转。
 
