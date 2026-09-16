@@ -1,64 +1,62 @@
 # research_project/ — 研究项目文件区
 
-一项目一文件、四段生长制。`planner` 是 `registry.json` 唯一写主。替代旧 `pool/`（v0.3.2 起废止，git 参照 4d3601b）。
+一项目一文件，随阶段自由生长。全部人读文档，无中心账本：项目状态就写在各自文件头部，planner 翻目录知全局（把 agent 当人用，人能读懂的都能读懂）。替代旧 `pool/` 与 `registry.json`（v0.4 起废止，git 参照 15c9049）。
 
 ## 目录布局
 
 ```
 research_project/
-  README.md                        # 本文件
-  registry.json                    # 项目×轮次全局账（planner 专写）
-  <slug>.md                        # 研究项目文件（生长制正文，结构见下）
-  <slug>/
-    proposals/{kaoti,zhongqi,jieti}.md   # 开题/中期/结题申报书
-    packs/<关口>.md                        # qa 送审包（中期检查/结题验收）
-    gates/<关口>.decision.md               # 关口判词（chair 执笔）
-    gates/<关口>.referee-<1|2|3>.md        # 独立意见书（席位号由 chair 分发点名）
+  README.md                     # 本文件
+  立项规划.md                    # planner 的大课题笔记（自由格式，新题水源+血缘注记）
+  <项目短名>.md                  # 研究项目文件（中文名，如「注意力低秩近似.md」）
+  <项目短名>/
+    proposals/开题申报.md  中期报告.md  结题报告.md
+    packs/中期送审包.md  结题送审包.md          # qa 备齐
+    gates/开题判定.md  中期判定.md  结题判定.md   # chair/examiner 判词
+    gates/中期判定-评审甲.md  -评审乙.md  -评审丙.md  # referee 独立意见书
+    gates/对线记录.md                            # examiner⇄pi 攻防（追加式）
+    data/                                       # 大数据档外用区（见下）
 ```
 
-run-id 全局唯一：`<slug>--<轮次>`，账记 registry.json。过程件（lean/、measured/、run-log.md、header-snapshot.md）落 `runs/<run-id>/`。
+过程件（lean/、measured/、run-log.md、开题存底.md）落 `runs/<项目短名>--<轮次>/`，run-id 全局唯一，轮次从 1 递增、记在项目文件头。
 
-## registry.json 形状
+## 文档制两条原则
 
-```json
-{"projects":[{"slug":"attn-lowrank","status":"open","stage":"theory","human_gate":false,"rounds":2,"updated":"2026-09-16T12:00:00Z"}]}
+1. **不追求格式**。头四段与正文各段是生长指引，不是模板牢笼：假设、待做实验、步骤依赖（「本实验以某某为前提」）等注记，各角色按情况自由加，写清指得到就行。下列参考格式只在判据相关的部位收紧（见两硬门）。
+2. **人读文档进 md，数据档进外用区**。measured/ 原始读数、环境采样、大表等以文件存在 `runs/…/measured/` 或 `<项目>/data/`，项目文件里用路径指过去；文档里不留机器格式。
+
+## 项目文件结构（生长指引）
+
+```markdown
+# <项目短名>
+状态：进行中-理论段 ｜ 大课题：效率注意力（立项规划.md#某节） ｜ 轮次：2 ｜ budget：… ｜ human_gate：无
+
+## 问题背景        （pi：成因/机制/现有方法何处失效，只提问不解答）
+## 前沿进展        （pi 成文，librarian 供行锚；摘要+指 research/frontier-notes.md）
+## 目的            （pi：observable 句）
+## 最终验证依据     （pi：一句可判真伪的命题——指标+阈值+数据切分。全项目唯一硬判据）
+## 假设与理论论据   （speculator 主笔，theorist 补形式化小节；假设/竞品/论据/边界随意长）
+## 实验设计与结果   （speculator 写设计，runner 逐次追结果节，qa 核）
+## 结论            （chair：判词指针+逐条回查最终验证依据）
 ```
 
-`status ∈ open|closed|archived`；`stage ∈ initiation|theory|experiment|writing|review|done`；种子为 `{"projects":[]}`。
+## 两硬门（全库仅有的格式约束）
 
-## 项目文件 `<slug>.md` 结构
+1. 「最终验证依据」必须一句可判真伪——写不出就不立项。
+2. 一切结论数字带来源路径（指 measured/ 或 data/）——对不上即数据事故，禁区条款。
 
-头部四段（initiation 组定稿后闭笔）：
+参考格式（可增删，缺件不构成退回理由，构成 examiner 攻击面）：假设带预测可观测量与竞品；设计带基线切分与 pass 判据；结果带种子声明与无效读数点名。
 
-1. **问题背景** — pi（难点调研并入 pi）：成因/机制/现有方法何处失效，只提问不解答。
-2. **前沿进展—同方向可借鉴设计** — pi 成文，librarian 供行锚：正文摘要 + 调查附件（指 `research/frontier-notes.md` 行号）。
-3. **目的** — pi：observable 三成分句「在 <数据/环境> 上，用 <指标> 度量，达到 <数值或行为断言>」。
-4. **最终验证依据** — pi：指标+阈值+数据切分写成一句可判真伪的命题。该命题成立即项目完成。
+## 拆题三层与审批位
 
-元数据行（头部之后）：`budget:`、`human_gate:`、`status:`、`conclude:` 段。
-
-正文三段，段权=只增不改，revise 打回只许改本阶段段，落笔即在对应 `runs/<run-id>/run-log.md` 记一行：
-
-- **假设段假设与理论论据** — speculator 主笔，theorist 补形式化小节（Lean 文件路径+陈述↔论据对照表）。
-- **设计段实验设计与结果** — speculator 写设计，runner 填结果节，qa 核验。
-- **结论段结论** — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
-
-## 段内 schema（合格线，缺项即打回）
-
-**假设（五字段）**：陈述句｜预测可观测量(指标+方向+阈值)｜作用范围(体系+数据)｜至少一个竞品假设｜区分性预测(各自预言什么不同读数)。缺预测可观测量=不合格。
-
-**理论论据（四件套）**：机制因果链(每箭头一句)｜文献锚点(frontier-notes 行号)｜≥1 独立推论(可另测，非换皮重述)｜已知边界与反例。
-
-**实验设计（六件套）**：因子矩阵｜对照与baseline(配置+种子+切分，缺切分=无效基线)｜测量协议(evaluation/ 命令原文)｜pass 判据(每 objective 一行 epsilon)｜资源预算与 45min 切片计划｜区分性表(哪两组读数分开 H 与竞品假设)。
-
-**结果（只增五位）**：原始读数表(每数字后缀 measured/ 路径)｜终态断言对表(assertions.json)｜环境行(wall-time/峰值内存/therm)｜有效读数判定(无效格子点名+原因)｜delta vs baseline。
+- **大课题**（planner 出）：方向级，记立项规划.md，自动过，人事后可推翻（推翻=改文件+撤派）。
+- **研究项目**（pi 在大课题下拆）：一文件一命题；这一层的拆法要审——每个项目文件独立走开题对线，审的对象就是它的最终验证依据。
+- **假设/建模条目**（speculator⇄theorist 闭环内产出）：免审不设额外门，对线机制自持，轮数不设限。
 
 ## 关口
 
-- 开题审查（敌意对线）：examiner 持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记 `debate.md`；弹药耗尽 `pass`（开工令→theorist），化解不了的实心攻击或致命实锤 `fail`（planner 归案）。攻击必带锚，无锚无效；轮数不设限。
-- 中期检查：qa 备齐送审包 `packs/zhongqi.md`，chair+referee×3 合议 `continue|rectify|stop`；stop 凭实据（整改后攻击面未缩小、无可归因进展），不按轮数触发。
-- 结题验收：qa 备齐送审包 `packs/jieti.md`（含设计段全部结果节+约束核验+断言对表），chair+referee×3 依结论段判 `accept|reject`；accept→planner 记档开新题。
+- 开题审查（敌意对线）：examiner 四类攻击（前提崩塌/已被做过/不可测/自相矛盾）必带锚；弹药耗尽 pass（开工令→theorist），化解不了的实心攻击或致命实锤 fail（归案 planner）；轮数不设限。特定任务价值存疑走 examiner→Main 请示边。
+- 中期检查：qa 备齐 `packs/中期送审包.md`，chair+评审甲/乙/丙合议 continue/rectify/stop；stop 凭实据不凭轮数。
+- 结题验收：qa 备齐 `packs/结题送审包.md`，chair+三评审依结论段判 accept/reject；accept→planner 记立项规划开新题。
 
-## pi 交件自查（硬门）
-
-前沿段每条可借鉴设计有行锚；目的句三成分齐；最终验证依据一句可判真伪；写不出 observable 目的的选题不提交。
+判词落 `gates/<关口>判定.md`（判词+依据+签字+时刻），意见书 `gates/<关口>判定-评审<甲|乙|丙>.md`，提交前评审彼此不通。

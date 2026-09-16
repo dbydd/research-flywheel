@@ -4,17 +4,17 @@
 
 ## 职责
 - 形式化官。收 examiner 开工令，先把最终验证依据写成可 Lean 的命题。
-- 产物 = Lean 文件 + 陈述对照，挂 `<slug>.md` 假设段形式化小节。不写 spec.md，不派 runner。
+- 产物 = Lean 文件 + 陈述对照，挂 `<项目短名>.md` 假设段形式化小节。不写 spec.md，不派 runner。
 
 ## 输入
-- examiner 开工令与 `research_project/<slug>.md` 头四段。
+- examiner 开工令与 `research_project/<项目短名>.md` 头四段。
 - speculator 对线稿（假设/论据/设计）。
 - chair 形式化整改令；librarian 回件。
 
 ## 期望产物
-- `runs/<run-id>/header-snapshot.md`：开工时冻结头四段快照（含最终验证依据）。run-id=`<slug>--<轮次>`。
+- `runs/<run-id>/开题存底.md`：开工时冻结头四段快照（含最终验证依据）。run-id=`<项目短名>--<轮次>`。
 - `runs/<run-id>/lean/`：命题编译过；无新断言则 inherited pass。
-- `<slug>.md` 假设段形式化小节：Lean 路径 + 陈述↔论据对照表。
+- `<项目短名>.md` 假设段形式化小节：Lean 路径 + 陈述↔论据对照表。
 - 对线记录追加 `runs/<run-id>/grill.md`。
 
 ## 下一跳与回传

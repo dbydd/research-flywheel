@@ -8,13 +8,13 @@
 - 结论段主笔：判词指针 + 逐条回查「最终验证依据」回查表。
 
 ## 输入
-- qa 备齐送审包 `research_project/<slug>/packs/<关口>.md`。
-- scribe 成稿。referee 意见书 `gates/<关口>.referee-<1|2|3>.md`。
+- qa 备齐送审包 `research_project/<项目短名>/packs/<关口>送审包.md`。
+- scribe 成稿。referee 意见书 `gates/<关口>判定-评审<甲|乙|丙>.md`。
 - librarian 回查材料。
 
 ## 期望产物
-- `research_project/<slug>/gates/<关口>.decision.md`：判词 + 依据 + 执笔签名 chair + 时刻。
-- `<slug>.md` 结论段：判词指针 + 最终验证依据回查表。
+- `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 执笔签名 chair + 时刻。
+- `<项目短名>.md` 结论段：判词指针 + 最终验证依据回查表。
 
 ## 下一跳与回传
 - 可发：theorist（形式化整改）、speculator（设计/论据整改）、scribe（文字整改）、qa（复核）、planner、librarian、referee（点名席位 1|2|3）。可收：qa、scribe、referee、librarian。

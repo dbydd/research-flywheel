@@ -4,16 +4,16 @@
 
 ## 职责
 - 核验三约束：数据泄漏、确定性（种子固定）、时间预算。数值只认 measured/。
-- 核结果五位。packs/ 首节 = 断言对表。
+- 核结果完整性（数字来源路径、种子、轮次）。送审包首节 = 断言对表。
 
 ## 输入
-- runner：`measured/` + `assertions.json` + `<slug>.md` 设计段结果节。
+- runner：`measured/` + `assertions.json` + `<项目短名>.md` 设计段结果节。
 - scribe 成稿溯源清单。chair 复核委托。
-- 接单先对 `runs/<run-id>/header-snapshot.md` 的最终验证依据。
+- 接单先对 `runs/<run-id>/开题存底.md` 的最终验证依据。
 
 ## 期望产物
-- `research_project/<slug>/packs/<关口>.md`：首节「断言对表结果」（expect / 重跑值 / pass|fail），随后三约束、valid 率、TBD、无效格子、结果五位核验。
-- 结果五位口径：原始读数表｜终态断言对表｜环境行｜有效读数判定｜delta vs baseline。
+- `research_project/<项目短名>/packs/<关口>送审包.md`：首节「断言对表结果」（expect / 重跑值 / pass|fail），随后三约束、有效读数率、无效格子点名、数字溯源抽查。
+- 抽查口径：每个引用数字能顺路径在 measured/ 找到原值；种子与切分声明在场。
 
 ## 下一跳与回传
 - 可发：runner（返工）、chair（送审包）。可收：runner、scribe、chair。

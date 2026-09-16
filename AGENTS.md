@@ -14,11 +14,11 @@
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
-- 开题审查=敌意对线：examiner（powerful/max，职责让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<slug>/debate.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头部四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
-- 中期检查：qa 备齐送审包 `research_project/<slug>/packs/zhongqi.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。stop 判据是实据：整改后攻击面未缩小、measured/ 无可归因进展。rectify 轮数不设限。
-- 结题验收：qa 备齐送审包 `research_project/<slug>/packs/jieti.md`（含设计段全部结果节 + 约束核验 + 断言对表），chair + referee×3 依结论段判 `accept` / `reject`。accept → planner 记档开新题。
+- 开题审查=敌意对线：examiner（powerful/max，职责让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<项目短名>/对线记录.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头部四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
+- 中期检查：qa 备齐送审包 `research_project/<项目短名>/packs/中期送审包.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。stop 判据是实据：整改后攻击面未缩小、measured/ 无可归因进展。rectify 轮数不设限。
+- 结题验收：qa 备齐送审包 `research_project/<项目短名>/packs/结题送审包.md`（含设计段全部结果节 + 约束核验 + 断言对表），chair + referee×3 依结论段判 `accept` / `reject`。accept → planner 记档开新题。
 
-判词落 `research_project/<slug>/gates/<关口>.decision.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<slug>/gates/<关口>.referee-<1|2|3>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
+判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
 
 关口防护四条（项目级范围锁/止损线已废止，防护由关口规则承担）：
 
@@ -29,10 +29,10 @@
 
 「什么算进步」分主次两条度量：
 
-- 主度量：端到端跑通轮数。`research_project/<slug>.md` 头定稿 → 假设段（假设/论据/形式化）→ 设计段（设计/结果 + `measured/`）→ `papers/<run-id>/main.pdf` → `gates/jieti.decision.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
+- 主度量：端到端跑通轮数。`research_project/<项目短名>.md` 头定稿 → 假设段（假设/论据/形式化）→ 设计段（设计/结果 + `measured/`）→ `papers/<run-id>/main.pdf` → `gates/结题判定.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
 - 次度量：关口 revise/rectify 收敛情况，按台账如实计数，不设健康上限。
 
-算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<slug>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
+算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<项目短名>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
 
 禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = 设计段实验设计段 + 断言清单。
 
@@ -49,7 +49,7 @@
 7. 结尾回指问题：用本正文词汇表重述一遍结论，一两句，零新术语。
 8. 发送前自检：扫一遍正文，任何词的解释出现在使用位置之后即重排或删词。
 
-本树全部人读产物（`research_project/<slug>.md`、proposals/、packs/、gates/、header-snapshot.md、measured/summary.md、papers/、verdict.md、revisions.md）按上列八条组织。vault 落库细则见下节写作规范。
+本树全部人读产物（`research_project/<项目短名>.md`、proposals/、packs/、gates/、开题存底.md、measured/summary.md、papers/、verdict.md、revisions.md）按上列八条组织。vault 落库细则见下节写作规范。
 
 ## 当前工作模式：training live · 功耗约束（用户 2026-09-09 12:2x 解禁）
 
@@ -78,9 +78,8 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## 目录
 
-- `research_project/registry.json`：项目×轮次全局账，`planner` 是唯一写主。
-- `research_project/<slug>.md`：研究项目文件（一项目一文件，头四段生长制）。附件目录 `research_project/<slug>/{proposals,packs,gates}/`。细则见 `research_project/README.md`。旧 `pool/` 废止。
-- `runs/<run-id>/`：一轮过程件，含 `header-snapshot.md`、`lean/`、`measured/`、`verdict.md`、`run-log.md`。
+- `research_project/<项目短名>.md`：研究项目文件（一项目一文件，头四段生长制）。附件目录 `research_project/<项目短名>/{proposals,packs,gates}/`。细则见 `research_project/README.md`。旧 `pool/` 废止。
+- `runs/<run-id>/`：一轮过程件，含 `开题存底.md`、`lean/`、`measured/`、`verdict.md`、`run-log.md`。
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，文件名为 `<run-id>.md`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
@@ -98,7 +97,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 - role session 的 cwd 在 `.onlyne/ws/formal/<phase>/<role>/`，root 即 `../../../../../`。读写知识文件用这个锚点；发现文件不存在先 `pwd` 确认站位。
 - 工作面口径：草稿、中间件、探针、staged 代码先落在自己 ws 的 `work/`（私有，不入 git）；定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。
-- 追加式台账直写 root：`research_project/<slug>.md`、frontier-notes.md、run-log.md、measured/ 流件；`research_project/registry.json` 例外，只由 planner 写。
+- 追加式台账直写 root：`research_project/<项目短名>.md`、frontier-notes.md、run-log.md、measured/ 流件。无中心账本：项目状态写各自文件头状态行，各关口落判词的角色顺手改该行，终局 conclude 段归 planner。
 - peer 实例的 `../../<peer>/work/`（同一 `.onlyne/ws/formal/<phase>/` 下的兄弟 ws；跨阶段用 `../../../<phase>/<peer>/work/`）可只读翻看；交接与审稿判据是任务书与 root 发布物。
 - vault 软链在 root `obsidian/` 下，worker 侧用 `../../../../../obsidian/...` 访问，解析目标是同一 vault。
 
@@ -118,16 +117,16 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## runs/<run-id>/ 布局
 
-run-id 形态 `<slug>--<轮次>`，全局唯一，账记 `research_project/registry.json` 的 `rounds`。过程件落点：
+run-id 形态 `<项目短名>--<轮次>`，全局唯一，轮次记在项目文件头。过程件落点：
 
-- `header-snapshot.md`：开工时 `research_project/<slug>.md` 头四段冻结快照（含最终验证依据）。`idea.json` 废止。
-- `lean/`：theorist 形式化产物（编译过的 Lean 文件 + 陈述↔论据对照表），指针挂 `<slug>.md` 假设段形式化段。
+- `开题存底.md`：开工时 `research_project/<项目短名>.md` 头四段冻结快照（含最终验证依据）。`idea.json` 废止。
+- `lean/`：theorist 形式化产物（编译过的 Lean 文件 + 陈述↔论据对照表），指针挂 `<项目短名>.md` 假设段形式化段。
 - `measured/summary.md`：runner 汇总值与 delta（delta = 相对基线的差值），每个 objective 一个实测值，每个 constraint 一个 pass/fail。
 - `revisions.md`：scribe 按关口判词编号 finding 修订的记录。
 - `run-log.md`：role 自己的台账（追加式）；每段落笔记一行。`root-log.md` 文件名归 supervisor 专用，role 不自开同名台账。
-- `verdict.md`：chair 一行 verdict（continue / rectify / stop / accept / reject）+ 编号 finding。关口判词正本落 `research_project/<slug>/gates/`，run 内这份是本轮实测判语。
+- `verdict.md`：chair 一行 verdict（continue / rectify / stop / accept / reject）+ 编号 finding。关口判词正本落 `research_project/<项目短名>/gates/`，run 内这份是本轮实测判语。
 - `papers/<run-id>/`：scribe 成稿目录，位置在 `papers/` 下（`runs/` 下没有这一层），含 `main.tex`（NeurIPS 2024 风格，模板见 `papers/_template/neurips2024/`）+ `refs.bib` + `figs/`，编译出 `main.pdf`。结论先行，每个数字标注来源文件路径，open questions 单节。
-- 问题层分析并入 `<slug>.md` 头部「问题背景」（pi 主笔，只提问不解答）。`spec.md` 独立文书废止。
+- 问题层分析并入 `<项目短名>.md` 头部「问题背景」（pi 主笔，只提问不解答）。`spec.md` 独立文书废止。
 
 ## 评测契约
 
@@ -136,7 +135,7 @@ run-id 形态 `<slug>--<轮次>`，全局唯一，账记 `research_project/regis
 - 基线切分：主度量评测面切一份 held-out（比例写进契约）。lean/measured 迭代只在训练面跑；verdict 用冻结候选在 held-out 跑一次定生死，失败禁回炉再优化（防对评测面调参）。理念源：NVlabs/SoL-Pi 双 split 纪律，见 research/frontier-notes.md。
 - pass_rule：`all`（本主题默认全过才 accept；探索性任务可在种子里写 `any` 并说明理由）。
 
-`<slug>.md` 设计段实验设计的 pass 判据按本节字段直接填成字面结论行，字段缺项不交 runner；`runs/<run-id>/header-snapshot.md` 冻结头四段（含最终验证依据）供评测器与关口回查。
+`<项目短名>.md` 设计段实验设计的 pass 判据按本节字段直接填成字面结论行，字段缺项不交 runner；`runs/<run-id>/开题存底.md` 冻结头四段（含最终验证依据）供评测器与关口回查。
 
 ## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
 
@@ -166,18 +165,18 @@ run-id 形态 `<slug>--<轮次>`，全局唯一，账记 `research_project/regis
 
 ## 研究项目文件（research_project/）
 
-旧 `pool/` 废止。一项目一文件、四段生长制。完整 schema、段权、关口文件命名见 `research_project/README.md`。本节只给摘要。
+旧 `pool/` 与 `registry.json` 废止（v0.4 全盘 md 化）。一项目一文件、生长制、全人读文档。完整口径见 `research_project/README.md`。本节只给摘要。
 
 ```
-research_project/registry.json                         # 项目×轮次全局账，planner 专写
-research_project/<slug>.md                             # 研究项目文件（头四段 + 假设段/设计段/结论段）
-research_project/<slug>/proposals/{kaoti,zhongqi,jieti}.md
-research_project/<slug>/packs/<关口>.md                  # qa 送审包
-research_project/<slug>/gates/<关口>.decision.md         # 关口判词
-research_project/<slug>/gates/<关口>.referee-<1|2|3>.md  # 独立意见书
+research_project/立项规划.md                            # planner 大课题笔记（自由格式）
+research_project/<项目短名>.md                             # 研究项目文件（头四段 + 假设段/设计段/结论段）
+research_project/<项目短名>/proposals/{开题申报,中期报告,结题报告}.md
+research_project/<项目短名>/packs/<关口>送审包.md                  # qa 送审包
+research_project/<项目短名>/gates/<关口>判定.md         # 关口判词
+research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md  # 独立意见书
 ```
 
-run-id = `<slug>--<轮次>`。registry 形状 `{"projects":[{"slug","status","stage","human_gate","rounds","updated"}]}`，`status ∈ open|closed|archived`，`stage ∈ initiation|theory|experiment|writing|review|done`。种子 `{"projects":[]}`。
+run-id = `<项目短名>--<轮次>`。项目头部状态行自由书写（例：`状态：进行中-理论段 ｜ 轮次：2 ｜ budget：… ｜ human_gate：无`），不设枚举表。
 
 头部四段（initiation 组定稿后闭笔；pi 主笔，librarian 供行锚）：
 
@@ -194,7 +193,7 @@ run-id = `<slug>--<轮次>`。registry 形状 `{"projects":[{"slug","status","st
 - 设计段实验设计与结果 — speculator 写设计，runner 填结果节，qa 核验。
 - 结论段结论 — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
 
-开题对线中 revise 保持进行中（pi 手里），修后回环继续攻防；fail 只凭化解不了的实心攻击或致命实锤，与轮数无关。新项目才新开 `<slug>.md`。
+开题对线中 revise 保持进行中（pi 手里），修后回环继续攻防；fail 只凭化解不了的实心攻击或致命实锤，与轮数无关。新项目才新开 `<项目短名>.md`。
 
 `conclude` 段（ab7d5ae 形态）：在途写 `—`。终态由 chair 在判词落盘时必填成分段：
 
@@ -227,19 +226,19 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | scribe | 公共代笔位：跨阶段成文（申报书/papers/文稿），为贵档角色省 token | pi, examiner, theorist, speculator, planner, chair, librarian | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | axonhub/supercheap/high |
 | chair | 中期检查/结题验收关口主，合议文稿执笔 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
-| planner | registry.json 唯一维护者；新题发起 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | axonhub/generic-researcher-powerful/medium |
+| planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | axonhub/generic-researcher-powerful/medium |
 
 theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。职责列「旧 bench / 旧 writer」为历史细则指向。
 
 边义逐条：
 
-- pi⇄examiner 是开题对线：pi 头四段齐才出手；examiner 逐轮发实心攻击（四类弹药，必带锚），pi 修文或驳锚，同记 debate.md。弹药耗尽=pass；化解不了的实心攻击或致命实锤=fail；轮数不设限。
+- pi⇄examiner 是开题对线：pi 头四段齐才出手；examiner 逐轮发实心攻击（四类弹药，必带锚），pi 修文或驳锚，同记 对线记录.md。弹药耗尽=pass；化解不了的实心攻击或致命实锤=fail；轮数不设限。
 - examiner→theorist 是开题审查 pass 开工令（先形式化头部四段命题）。theorist→speculator 是带陈述出假设与方案。examiner→planner 是 fail 归案。
 - speculator⇄theorist 是对线环（grill）：假设/论据与形式化互校，自由往返；任一方认定分歧超出本职权限（根前提动摇、可行性存疑）→ 联名上报 examiner 复研，不设轮数门槛。
 - speculator→runner 是按设计段实验设计派跑批；runner→speculator 是失败回传与设计疑问。
 - speculator→scribe 是假设段/设计段供成稿。speculator→examiner 是对线僵局上报。
 - runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）。
-- qa→chair 是中期检查/结题验收送审包，包落 `research_project/<slug>/packs/<关口>.md`；chair→qa 是复核委托。
+- qa→chair 是中期检查/结题验收送审包，包落 `research_project/<项目短名>/packs/<关口>送审包.md`；chair→qa 是复核委托。
 - scribe 是公共代笔位：委托边=pi/examiner/theorist/speculator/planner/chair（→scribe），成稿回件回到委托方；验收包文稿必经 qa 入 packs/ 再上 chair。referee 不用代笔（意见书独立成文）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。chair→speculator / chair→theorist 是 rectify 整改令：整改经 theory 组，chair 无直令 runner 边。
 - chair→planner 是终局归案；planner→pi 是新题发起，任务书必引结题验收 open questions 行。
@@ -263,8 +262,8 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 
 接力规则按角色表的 `上游` / `下游` / `relay` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
 
-1. planner：从 registry 取一条待开题项目，handoff pi 立题（任务书引上一轮结题验收 open questions 行）；pi 黑盒作业（与 librarian 内部自由分工），头四段+自证断言出手交 examiner；开题对线逐轮 debate.md，弹药耗尽 examiner 落 pass 开工令。
-2. 关口判定：examiner 判开题审查，qa 备中期检查/结题验收包，chair 合议落 gates/ 判词。判词驱动 registry 的 status/stage，planner 据此改账。
+1. planner：翻项目文件与立项规划.md 定向，委托 librarian 摸同行切法，出立项任务书 handoff pi（新题引上一轮结题验收 open questions 或大课题节）；pi 黑盒作业（与 librarian 内部自由分工），头四段+自证断言出手交 examiner；开题对线逐轮 对线记录.md，弹药耗尽 examiner 落 pass 开工令。
+2. 关口判定：examiner 判开题审查，qa 备中期检查/结题验收包，chair 合议落 gates/ 判词。判词驱动项目头状态行，落判词者顺手改，planner 终局写 conclude。
 3. 每个 role：完成后按自己的 `下游` 列 `onlyne handoff` 接力任务书，然后 `onlyne_complete` 交活退出。角色零上行边，回执走 origin 自动通道。
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 5. 委托检索的接收面是 librarian：各 role 的补检索任务写清缺哪段文献、要什么来源；librarian 补完 `research/` 后回委托方。
@@ -277,7 +276,7 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 
 - `stage=design`，分支 `theme/formal-research`；本行记号在稿件转正后由 supervisor 改 `stage=live`。
 - v1 运行时未起：`onlyne-server status` 无 socket，`onlyne-client status --workspace .onlyne/ws/formal/<phase>/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne-server run --root .`，十一个 role client 各占一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/formal/<phase>/<role>`（client 侧只有 `run`，`start`/`stop` 自 1.0.1 取消）。
-- `tasks` 表 0 行，`runs/` 空，`papers/` 空，`research_project/registry.json` 为 `{"projects":[]}`。
+- `tasks` 表 0 行，`runs/` 空，`papers/` 空，`research_project/` 只有 README.md。
 - 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server run` 与十一个 `onlyne-client run` 属于通电，第一发属于开跑。
 
 启动动作二选一：
@@ -305,7 +304,7 @@ supervisor 只负责把第一发投进 `★` role，不参与后续流转；环�
 
 ## 纪律
 
-- `research_project/registry.json` 唯一写主是 planner；其他 role 读账不写账，需改账走 handoff planner。
+- 项目头状态行：关口判词落盘者改自己关口对应的一次；终局 conclude 段与立项规划.md 只归 planner。
 - worker 交付当场盘验：交活前对任务书点名的每个产物路径实盘一遍（存在、非空、可读、行数对得上），数值产物另落 `measured/self_checks.json`；接收方对不上即拒收。产物写入后交付前必须盘上自验一次。
 - 上报与载荷纪律（覆盖全角色）：`onlyne_complete`/`onlyne handoff` 的 text 一行放全（结论+路径清单）；大表、长报告、数字明细一律落盘指路径，禁在单条会话消息里携带 10KB 以上载荷（路由掐流教训）。
 - 改 `experiment/`、`evaluation/` 前读 runs/ 里上一轮记录；改动在任务产物里写明。

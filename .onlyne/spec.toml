@@ -226,7 +226,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "planner"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 planner（立项簿记，registry.json 唯一维护者与新题发起）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 planner（立项策划位：全局翻项目文件头掌握盘面，大课题策划、委托检索前沿与同行做法、派题与归案）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["pi"]
