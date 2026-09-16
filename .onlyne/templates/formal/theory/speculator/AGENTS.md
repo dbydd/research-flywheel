@@ -7,7 +7,7 @@
 - 对线 theorist；可委托 librarian；供 scribe 叙事；可行性质询 examiner。
 
 ## 输入
-- theorist 形式化陈述与 Lean 对照、`开题存底.md`。
+- theorist 形式化陈述与 Lean 对照、项目文件头部四段。
 - runner 可执行性意见。
 - chair 设计/论据整改令；librarian 回件。
 
@@ -22,6 +22,6 @@
 - 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 theorist 联名上报 examiner 复研，不设轮数门槛。
 
 ## 纪律
-- 段权：假设段与设计段设计只增不改；revise 只改本阶段段；落笔在 `runs/<run-id>/run-log.md` 记一行。
+- 段权：假设段与设计段设计只增不改；revise 只改本阶段段；落笔在 `research_project/<项目短名>/run-log.md` 记一行。
 - 不写 experiment/ 代码，不碰他人段（段权纪律），不直令 qa。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。

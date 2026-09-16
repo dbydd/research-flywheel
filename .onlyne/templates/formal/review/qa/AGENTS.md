@@ -9,7 +9,7 @@
 ## 输入
 - runner：`measured/` + `assertions.json` + `<项目短名>.md` 设计段结果节。
 - scribe 成稿溯源清单。chair 复核委托。
-- 接单先对 `runs/<run-id>/开题存底.md` 的最终验证依据。
+- 接单先对项目文件头部四段原文（「最终验证依据」在内；只增不改+git 历史承担冻结）。
 
 ## 期望产物
 - `research_project/<项目短名>/packs/<关口>送审包.md`：首节「断言对表结果」（expect / 重跑值 / pass|fail），随后三约束、有效读数率、无效格子点名、数字溯源抽查。

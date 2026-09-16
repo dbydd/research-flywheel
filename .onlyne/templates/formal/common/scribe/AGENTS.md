@@ -10,12 +10,13 @@
 - 委托任务书：pi/examiner/theorist/speculator/planner/chair 点单（骨架+材料路径+成文要求）。
 - speculator 叙事骨架（假设段/设计段）。
 - runner `measured/summary.md`。缺 summary 即 `cancelled`，不写无数据稿。
-- chair 文字整改；librarian 补证。run-id=`<项目短名>--<轮次>`。
+- chair 文字整改；librarian 补证。
 
 ## 期望产物
-- `papers/<run-id>/main.tex`（NeurIPS 2024 模板 `papers/_template/neurips2024/`）+ `refs.bib` + `figs/`，编译 `main.pdf`。
+- `papers/<项目短名>/main.tex`（NeurIPS 2024 模板 `papers/_template/neurips2024/`）+ `refs.bib` + `figs/`，编译 `main.pdf`。
 - `research_project/<项目短名>/proposals/{开题申报,中期报告,结题报告}.md`（受 pi 委托时含开题稿）。
-- 数据图 matplotlib 从 measured/ 读数重绘，脚本+成图落 `papers/<run-id>/figs/`。
+- 数据图 matplotlib 从 measured/ 读数重绘，脚本+成图落 `papers/<项目短名>/figs/`。
+- 修订记录追加 `research_project/<项目短名>/revisions.md`（按判词编号 finding）。
 
 ## 下一跳与回传
 - 可发：qa（验收包入 packs/）、chair（申报稿直送）、librarian、各委托方（成稿回件）。可收：pi、examiner、theorist、speculator、planner、chair、librarian。
