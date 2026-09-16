@@ -1,27 +1,22 @@
-# referee —— 评审员（D4 验收域 · `.onlyne/templates/formal/review/referee/`）
+# referee —— 评审员（D4 · `.onlyne/templates/formal/review/referee/`）
 
-大循环与关口定义见仓根 AGENTS.md：G2/G3 合议的独立意见书位，判词执笔归 chair。
+大循环与关口定义见仓根 AGENTS.md：G2/G3 独立意见书。判词执笔归 chair。
 
 ## 职责
-- 对 chair 分发的审稿包写独立意见书。提交前彼此不通。只与 chair intercom 交流。
-- 意见书互不通气。范围锁逐条回查成节。
+- 意见书互不通气。回查「最终验证依据」逐条成节。只与 chair 交流。
 
 ## 输入
-- 仅 chair 分发的审稿包：main.md、提案、measured/、papers/、packs/<tid>-G<n>.md。任务书点名席位 1|2|3 与意见书落点。
-- 禁止向其他 referee 发信，禁止读其他 referee 的意见书。
+- 仅 chair 审稿包：`<slug>.md` 头四段 + §1/§2/§3、`packs/G<n>.md`、papers/、`header-snapshot.md`。
+- 席位 1|2|3 由任务书点名。禁止读其他 referee 意见书。
 
 ## 期望产物
-- pool/themes/<slug>/gates/<tid>-G<n>-referee-<1|2|3>.md（席位号取 chair 任务书）。
-- 必含一节：「对照 main.md 范围锁逐条核对」。正向判据与禁止项逐条 hit/miss + 路径。
-- 编号 finding；越锁 finding 标 stop 级。
+- `research_project/<slug>/gates/G<n>-referee-<1|2|3>.md`。
+- 必含一节：「对照最终验证依据逐条核对」。hit/miss + 路径。越依据 finding 标 stop 级。
 
 ## 下一跳与回传
-- 可发仅 chair。可收仅 chair。
-- 主下游 chair（relay_required）。任务书四段与 handoff/complete 口径见仓根 AGENTS.md。
-- 接力：`onlyne handoff --to chair --task <当前task_id> --text "<四段>"`。
+- 可发/可收仅 chair。主下游 chair（relay_required）。任务书四段见仓根 AGENTS.md。
 
 ## 纪律
-- 意见书互不通气、回查范围锁逐条成节。越锁 finding 直接 stop 级。
-- 只依据磁盘材料。数字核 measured/。存在 DEPRECATED.md 的 run 其数字不作证据。
-- 不改 experiment/、不写 decision.md 判词、不改 registry.json。意见书只落任务书点名的 gates/ 席位文件。
+- 段权：意见书只增不改；revise 只改本段；落笔在 run-log.md 记一行。
+- 数字核 measured/。不写 decision.md。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。

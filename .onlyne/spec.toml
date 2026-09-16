@@ -28,7 +28,7 @@ template_root = ".onlyne/templates"
 [[client]]
 role = "pi"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 pi（首席研究员，开题报告六要素作者）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 pi（首席研究员，研究项目文件头四段作者）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["examiner"]
@@ -52,8 +52,8 @@ admin = false
 max_sessions = 1
 relay_required = ["pi"]
 reuse = true
-allowed_senders = ["pi", "theorist", "examiner", "chair", "scribe", "planner"]
-allowed_targets = ["pi", "theorist", "examiner", "chair", "scribe", "planner"]
+allowed_senders = ["pi", "theorist", "examiner", "chair", "scribe", "planner", "speculator"]
+allowed_targets = ["pi", "theorist", "examiner", "chair", "scribe", "planner", "speculator"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -73,7 +73,7 @@ admin = false
 max_sessions = 1
 relay_required = ["theorist"]
 reuse = true
-allowed_senders = ["pi", "librarian", "theorist"]
+allowed_senders = ["pi", "librarian", "theorist", "speculator"]
 allowed_targets = ["theorist", "pi", "planner", "librarian"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
@@ -89,13 +89,32 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "theorist"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 theorist（理论：推导+Lean+spec，不写 experiment/ 代码）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 theorist（形式化官：推导+Lean+陈述对照，不写 experiment/ 代码）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+admin = false
+max_sessions = 1
+relay_required = ["speculator"]
+reuse = true
+allowed_senders = ["examiner", "chair", "librarian", "speculator"]
+allowed_targets = ["speculator", "examiner", "librarian"]
+session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+[client.timeout]
+ready_ms = 30000
+running_ms = 120000
+idle_ms = 60000
+[client.intent]
+attempts = 100000
+backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+
+[[client]]
+role = "speculator"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+prose = """你是 formal-research 的 speculator（理论方案官：假设与理论论据主笔、实验设计主笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["runner"]
 reuse = true
-allowed_senders = ["examiner", "chair", "librarian", "runner"]
-allowed_targets = ["runner", "scribe", "librarian", "examiner"]
+allowed_senders = ["theorist", "runner", "chair", "librarian"]
+allowed_targets = ["theorist", "runner", "scribe", "examiner", "librarian"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -113,8 +132,8 @@ admin = false
 max_sessions = 2
 relay_required = ["qa"]
 reuse = true
-allowed_senders = ["theorist", "qa"]
-allowed_targets = ["qa", "theorist", "scribe"]
+allowed_senders = ["speculator", "qa"]
+allowed_targets = ["qa", "speculator"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -132,7 +151,7 @@ admin = false
 max_sessions = 1
 relay_required = ["chair"]
 reuse = true
-allowed_senders = ["theorist", "runner", "chair", "librarian"]
+allowed_senders = ["speculator", "chair", "librarian"]
 allowed_targets = ["chair", "librarian", "qa"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
@@ -173,7 +192,7 @@ max_sessions = 1
 relay_required = ["planner"]
 reuse = true
 allowed_senders = ["qa", "scribe", "referee", "librarian"]
-allowed_targets = ["theorist", "scribe", "qa", "planner", "librarian", "referee"]
+allowed_targets = ["theorist", "speculator", "scribe", "qa", "planner", "librarian", "referee"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
