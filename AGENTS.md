@@ -4,7 +4,7 @@
 
 这份文件放在 server-root（本仓根目录）。pi 沿父目录自动拼上下文，树内每个 session 都读到同一份约定。
 
-两个词先说清：workspace = role，指该角色的「记忆 + 设定 + 历史文件」；session = 该 role 手头的一件工作，做一跳就结束。
+本体论先说清：运行时 + 工作区（数据、记录、上下文文件）才是 agent 的本体；workspace = role，指该角色的「记忆 + 设定 + 历史文件」；session = 该 role 手头的一件工作，做一跳就回收，来消息拉新 session。一切值得写入持久状态的信息应写尽写，不落文件的等于没发生。
 
 一切信息落文件。每个结论都能回溯到 runs/、papers/ 或台账行（`onlyne ledger --server-root .`）。
 
@@ -18,7 +18,7 @@
 - 中期检查：qa 备齐送审包 `research_project/<项目短名>/packs/中期送审包.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。stop 判据是实据：整改后攻击面未缩小、measured/ 无可归因进展。rectify 轮数不设限。
 - 结题验收：qa 备齐送审包 `research_project/<项目短名>/packs/结题送审包.md`（含设计段全部结果节 + 约束核验 + 断言对表），chair + referee×3 依结论段判 `accept` / `reject`。accept → planner 记档开新题。
 
-判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
+判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管，planner 产出照例不待批——这就是全自动飞轮的意义。`human_gate` 条款：用户对特定主线开放请示时通知 supervisor/planner，项目文件头以 `human_gate:` 点名哪些关口可请求；被点名关口的主责角色经 pi-intercom 发 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve，supervisor 向人开 ask 批复后代落 gates/ 判词。人不在场=有事，阻塞即正确状态，不设降级兜底。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
 
 关口防护四条（项目级范围锁/止损线已废止，防护由关口规则承担）：
 
@@ -152,16 +152,15 @@ run-id 形态 `<项目短名>--<轮次>`，全局唯一，轮次记在项目文�
 - 调度参数承接：per-role `[client.timeout]{ready_ms,running_ms,idle_ms}`（默认 30000/120000/60000，runner running_ms=3600000 承接旧 busy_secs）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
 - `relay_required`（任务主下游，单值）与角色表 `relay` 列同源；ACL 终表双边互认，边成立需两端都列。
 
-## 任务书四段（handoff/send 的 text）
+## 任务书三段（handoff/send 的 text）
 
 ```text
 目标：<一句话，做完算什么>
-输入：<必须读的文件路径，runs/ 与 research/ 为准>
+输入：<必须读的文件路径，runs/ 与 research/ 与项目目录为准>
 期望产物：<写到哪里的什么文件，格式要求>
-下一跳建议：<完成后该 handoff 谁、干什么；没有就写无>
 ```
 
-输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。
+输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。不设「下一跳建议」段——下游由角色表的边决定，写进任务书反而带偏。任务书发出前由发信方全文追加进所涉项目的 `research_project/<项目名>/dispatch.md`（一节一封：发信角色+时刻+正文），消息里放正文或路径；一切 relay 任务书同此存档，examiner 与评审回查可翻。
 
 ## 研究项目文件（research_project/）
 
@@ -170,6 +169,7 @@ run-id 形态 `<项目短名>--<轮次>`，全局唯一，轮次记在项目文�
 ```
 research_project/立项规划.md                            # planner 大课题笔记（自由格式）
 research_project/<项目短名>.md                             # 研究项目文件（头四段 + 假设段/设计段/结论段）
+research_project/<项目短名>/dispatch.md                        # 任务书存档（每轮追加，一节一封）
 research_project/<项目短名>/proposals/{开题申报,中期报告,结题报告}.md
 research_project/<项目短名>/packs/<关口>送审包.md                  # qa 送审包
 research_project/<项目短名>/gates/<关口>判定.md         # 关口判词
@@ -306,7 +306,7 @@ supervisor 只负责把第一发投进 `★` role，不参与后续流转；环�
 
 - 项目头状态行：关口判词落盘者改自己关口对应的一次；终局 conclude 段与立项规划.md 只归 planner。
 - worker 交付当场盘验：交活前对任务书点名的每个产物路径实盘一遍（存在、非空、可读、行数对得上），数值产物另落 `measured/self_checks.json`；接收方对不上即拒收。产物写入后交付前必须盘上自验一次。
-- 上报与载荷纪律（覆盖全角色）：`onlyne_complete`/`onlyne handoff` 的 text 一行放全（结论+路径清单）；大表、长报告、数字明细一律落盘指路径，禁在单条会话消息里携带 10KB 以上载荷（路由掐流教训）。
+- 过程必落文件（覆盖全角色）：决策、攻防、核验、账目先写文件再上报；`onlyne_complete`/`onlyne handoff` 的 text 放结论+路径清单，消息体量不设限（pi 与 provider 已配无限重试，旧「10KB 禁令」系路由掐流时期的误报，废止）。角色间本就互翻文件，指针即通达。
 - 改 `experiment/`、`evaluation/` 前读 runs/ 里上一轮记录；改动在任务产物里写明。
 - 数值只从 measured/ 引，报告只写跑出来的东西。
 - 存在 `runs/<run-id>/DEPRECATED.md` 的 run，其废弃范围内数字一律不作证据，只可按该文件口径引用为已废弃 baseline。

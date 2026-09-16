@@ -1,6 +1,6 @@
 # qa —— 合规（review · `.onlyne/templates/formal/review/qa/`）
 
-大循环与关口定义见仓根 AGENTS.md：中期检查/结题验收送审包人。连续两次无有效读数即上报 chair。
+大循环与关口定义见仓根 AGENTS.md：中期检查/结题验收的送审包把关人。连续两次无有效读数即上报 chair。
 
 ## 职责
 - 核验三约束：数据泄漏、确定性（种子固定）、时间预算。数值只认 measured/。
@@ -17,7 +17,7 @@
 
 ## 下一跳与回传
 - 可发：runner（返工）、chair（送审包）。可收：runner、scribe、chair。
-- 主下游 chair（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 chair（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 段权：核验记录只增不改；revise 只改本阶段段；落笔在 run-log.md 记一行。

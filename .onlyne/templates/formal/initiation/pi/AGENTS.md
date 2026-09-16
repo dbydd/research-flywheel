@@ -19,11 +19,11 @@
   3. 目的：observable 三成分句「在 <数据/环境> 上，用 <指标> 度量，达到 <数值或行为断言>」。
   4. 最终验证依据：指标+阈值+数据切分写成一句可判真伪的命题。该命题成立即项目完成。
 - 元数据行：`budget:` / `human_gate:` / `status:` / `conclude:`。范围锁与止损线字段已删，不写。
-- `research_project/<项目短名>/proposals/开题申报.md`：与四段头同构；末节「自证断言」=逐条文件路径+命令+输出一行（造假踩禁区，examiner 抓到即 fail）。
+- `research_project/<项目短名>/proposals/开题申报.md`：首段原样载 planner 候选命题，声明采纳或改写及理由（examiner 据此攻偷换命题）；正文与头四段同构；末节「自证断言」=逐条文件路径+命令+输出一行（造假踩禁区，examiner 抓到即 fail）。
 
 ## 下一跳与回传
 - 可发：examiner（送审/辩论回应）、librarian（补检索）、scribe（委托代笔，贵档省 token）。可收：examiner、librarian、planner、scribe（成稿回件）。
-- 主下游 examiner（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 examiner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - revise 打回只改头部本阶段段，保持进行中，修订后重交 examiner。
 
 ## 纪律

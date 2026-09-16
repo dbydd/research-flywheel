@@ -10,11 +10,12 @@ research_project/
   立项规划.md                    # planner 的大课题笔记（自由格式，新题水源+血缘注记）
   <项目短名>.md                  # 研究项目文件（中文名，如「注意力低秩近似.md」）
   <项目短名>/
+    dispatch.md                                    # 任务书存档（一节一封：发信角色+时刻+正文）
+    对线记录.md                                    # examiner⇄pi 攻防（追加式，轮次编号）
     proposals/开题申报.md  中期报告.md  结题报告.md
     packs/中期送审包.md  结题送审包.md          # qa 备齐
     gates/开题判定.md  中期判定.md  结题判定.md   # chair/examiner 判词
     gates/中期判定-评审甲.md  -评审乙.md  -评审丙.md  # referee 独立意见书
-    gates/对线记录.md                            # examiner⇄pi 攻防（追加式）
     data/                                       # 大数据档外用区（见下）
 ```
 

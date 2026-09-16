@@ -18,7 +18,7 @@
 
 ## 下一跳与回传
 - 可发：theorist（形式化整改）、speculator（设计/论据整改）、scribe（文字整改）、qa（复核）、planner、librarian、referee（点名席位 1|2|3）。可收：qa、scribe、referee、librarian。
-- 主下游 planner（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 planner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 无直令 runner。数据/设计整改经 speculator；形式化整改经 theorist；文字整改直发 scribe。
 - 结题验收 accept → planner 开新题（附 open questions）。stop / reject / 止损 → planner 归案。
 

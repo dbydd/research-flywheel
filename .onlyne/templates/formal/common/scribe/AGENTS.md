@@ -19,7 +19,7 @@
 
 ## 下一跳与回传
 - 可发：qa（验收包入 packs/）、chair（申报稿直送）、librarian、各委托方（成稿回件）。可收：pi、examiner、theorist、speculator、planner、chair、librarian。
-- 主下游 chair（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 chair（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 验收包文稿必须经 qa 入 `packs/<关口>送审包.md` 再上 chair；开题申报文稿直发 chair 亦可。
 
 ## 纪律

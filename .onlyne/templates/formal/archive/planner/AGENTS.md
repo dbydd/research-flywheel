@@ -14,12 +14,12 @@
 
 ## 期望产物
 - `research_project/立项规划.md`：大课题笔记（追加式）。
-- 立项任务书 handoff pi：引大课题节、建议命题与预算量级。
+- 立项任务书（五件）：①大课题节指路径；②候选命题一句（明示供参照，pi 可改写、改写须能在对线里说圆）；③预算量级（机时/数据在不在盘上）；④同源项目账（相近命题哪些项目开过、怎么结的，给指路径）；⑤期望产物=头部四段+自证断言，不加码。发前全文追加进 `research_project/<项目名>/dispatch.md` 存档，再 handoff pi。默认不待批直发；用户对该主线开放请示时按 human_gate 走。
 - 项目文件 conclude 段与状态行更新（归档/终局时）。
 
 ## 下一跳与回传
 - 可发：pi（派题）、librarian（调研委托）、scribe（任务书代笔）。可收：examiner、chair、librarian、scribe。
-- 主下游 pi（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 pi（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 只写立项规划.md 与项目文件的 conclude/状态行；不碰正文论证段（那是各阶段的段权）。

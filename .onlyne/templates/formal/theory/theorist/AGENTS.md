@@ -19,7 +19,7 @@
 
 ## 下一跳与回传
 - 可发：speculator（交形式化陈述）、examiner（复研/僵局）、librarian、scribe（委托代笔）。可收：examiner、speculator、chair、librarian、scribe。
-- 主下游 speculator（relay_required）。任务书四段见仓根 AGENTS.md。
+- 主下游 speculator（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 speculator 联名上报 examiner。Lean 失败/前提动摇：handoff examiner，账照落 runs/。
 
 ## 纪律

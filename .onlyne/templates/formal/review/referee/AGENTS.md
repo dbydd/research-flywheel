@@ -14,7 +14,7 @@
 - 必含一节：「对照最终验证依据逐条核对」。hit/miss + 路径。越依据 finding 标 stop 级。
 
 ## 下一跳与回传
-- 可发/可收仅 chair。主下游 chair（relay_required）。任务书四段见仓根 AGENTS.md。
+- 可发/可收仅 chair。主下游 chair（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 段权：意见书只增不改；revise 只改本段；落笔在 run-log.md 记一行。
