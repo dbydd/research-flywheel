@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "/Users/dbydd/Documents/progs/onlyne/plugins/onlyne-agent-pi"
+  ],
+  "defaultProvider": "axonhub",
+  "defaultModel": "supercheap",
+  "defaultThinkingLevel": "medium"
+}
