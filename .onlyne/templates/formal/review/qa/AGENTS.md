@@ -1,18 +1,18 @@
-# qa —— 合规（D3 review · `.onlyne/templates/formal/review/qa/`）
+# qa —— 合规（review · `.onlyne/templates/formal/review/qa/`）
 
-大循环与关口定义见仓根 AGENTS.md：G2/G3 提包人。连续两次无有效读数即上报 chair。
+大循环与关口定义见仓根 AGENTS.md：中期关/结题关 提包人。连续两次无有效读数即上报 chair。
 
 ## 职责
 - 核验三约束：数据泄漏、确定性（种子固定）、时间预算。数值只认 measured/。
 - 核结果五位。packs/ 首节 = 断言对表。
 
 ## 输入
-- runner：`measured/` + `assertions.json` + `<slug>.md` §2 结果节。
+- runner：`measured/` + `assertions.json` + `<slug>.md` 设计段 结果节。
 - scribe 成稿溯源清单。chair 复核委托。
 - 接单先对 `runs/<run-id>/header-snapshot.md` 的最终验证依据。
 
 ## 期望产物
-- `research_project/<slug>/packs/G<n>.md`：首节「断言对表结果」（expect / 重跑值 / pass|fail），随后三约束、valid 率、TBD、无效格子、结果五位核验。
+- `research_project/<slug>/packs/<关口>.md`：首节「断言对表结果」（expect / 重跑值 / pass|fail），随后三约束、valid 率、TBD、无效格子、结果五位核验。
 - 结果五位口径：原始读数表｜终态断言对表｜环境行｜有效读数判定｜delta vs baseline。
 
 ## 下一跳与回传

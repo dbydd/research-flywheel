@@ -14,27 +14,27 @@
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
-- G1 开题批准：examiner 判词三值 `pass`（开工令 → theorist 先形式化 §0 命题 → speculator 带陈述出假设与方案）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。G1 打回满 3 次改判 fail。
-- G2 中期验收：qa 提包 `research_project/<slug>/packs/G2.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。rectify 连续满 3 轮转 stop。
-- G3 末期验收：qa 提包 `research_project/<slug>/packs/G3.md`（含 §2 全部结果节 + 约束核验 + 断言对表），chair + referee×3 依 §3 判 `accept` / `reject`。accept → planner 记档开新题。
+- 开题关（立项批准）：examiner 判词三值 `pass`（开工令 → theorist 先形式化 头部四段 命题 → speculator 带陈述出假设与方案）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。开题关 打回满 3 次改判 fail。
+- 中期关（中期验收）：qa 提包 `research_project/<slug>/packs/zhongqi.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。rectify 连续满 3 轮转 stop。
+- 结题关（末期验收）：qa 提包 `research_project/<slug>/packs/jieti.md`（含 设计段 全部结果节 + 约束核验 + 断言对表），chair + referee×3 依 结论段 判 `accept` / `reject`。accept → planner 记档开新题。
 
-判词落 `research_project/<slug>/gates/G<n>.decision.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<slug>/gates/G<n>-referee-<1|2|3>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
+判词落 `research_project/<slug>/gates/<关口>.decision.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<slug>/gates/<关口>.referee-<1|2|3>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
 
 关口防护四条（项目级范围锁/止损线已废止，防护由关口规则承担）：
 
 - referee 意见书逐条回查「最终验证依据」；越依据 finding 直接 stop 级。
 - qa 三约束（泄漏 / 确定性 / 预算）原样保留在提包。
-- G2 判 rectify 连续 ≤3 轮，满则 stop。
+- 中期关 判 rectify 连续 ≤3 轮，满则 stop。
 - qa 连续 2 包无有效读数（valid 率 <0.5 或全部 objective=TBD）→ chair 必停 + planner 归案。
 
 「什么算进步」分主次两条度量：
 
-- 主度量：端到端跑通轮数。`research_project/<slug>.md` 头定稿 → §1（假设/论据/形式化）→ §2（设计/结果 + `measured/`）→ `papers/<run-id>/main.pdf` → `gates/G3.decision.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
+- 主度量：端到端跑通轮数。`research_project/<slug>.md` 头定稿 → 假设段（假设/论据/形式化）→ 设计段（设计/结果 + `measured/`）→ `papers/<run-id>/main.pdf` → `gates/jieti.decision.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
 - 次度量：关口 revise 收敛率。rectify 在 3 轮内收敛算健康。
 
 算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<slug>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
 
-禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = §2 实验设计段 + 断言清单。
+禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = 设计段 实验设计段 + 断言清单。
 
 ### 解释文规范
 
@@ -60,7 +60,7 @@
 - 功耗纪律细则：长跑批切时间片，单片 ≤45 min，片间让机散热；片进度写 `measured/run.log` 可续跑。
 - 功耗纪律细则：每批在 `measured/environment.json` 记 wall-time、峰值内存与观察到的热/降频迹象，`pmset -g therm` 采样一行即可。
 - 调度冲突时宁可晚出数，不许并发轰功率。
-- 训练槽协议（spec §15「取得训练槽」的执行定义）：发起任何训练/拟合命令前 `mkdir runs/.train-slot` 原子抢占（原子 = 抢占动作一步完成，两个进程只会有一个成功）。
+- 训练槽协议（训练槽协议的执行定义）：发起任何训练/拟合命令前 `mkdir runs/.train-slot` 原子抢占（原子 = 抢占动作一步完成，两个进程只会有一个成功）。
 - 训练槽协议：抢占成功即 `echo "<task_id> <pid> <ISO>" > runs/.train-slot/holder`。
 - 训练槽协议：槽已存在则读 holder——pid 活着就等待，5-10 min 轮询一次，等待期间先干不需槽的活；pid 死了 `rm -r` 接管，并在 run-log 记一次接管。
 - 训练槽协议：交活/退出前 `rm -r runs/.train-slot` 释放。
@@ -118,10 +118,10 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## runs/<run-id>/ 布局
 
-run-id 形态 `<slug>--r<round>`，全局唯一，账记 `research_project/registry.json` 的 `rounds`。过程件落点：
+run-id 形态 `<slug>--<轮次>`，全局唯一，账记 `research_project/registry.json` 的 `rounds`。过程件落点：
 
 - `header-snapshot.md`：开工时 `research_project/<slug>.md` 头四段冻结快照（含最终验证依据）。`idea.json` 废止。
-- `lean/`：theorist 形式化产物（编译过的 Lean 文件 + 陈述↔论据对照表），指针挂 `<slug>.md` §1 形式化段。
+- `lean/`：theorist 形式化产物（编译过的 Lean 文件 + 陈述↔论据对照表），指针挂 `<slug>.md` 假设段 形式化段。
 - `measured/summary.md`：runner 汇总值与 delta（delta = 相对基线的差值），每个 objective 一个实测值，每个 constraint 一个 pass/fail。
 - `revisions.md`：scribe 按关口判词编号 finding 修订的记录。
 - `run-log.md`：role 自己的台账（追加式）；每段落笔记一行。`root-log.md` 文件名归 supervisor 专用，role 不自开同名台账。
@@ -136,7 +136,7 @@ run-id 形态 `<slug>--r<round>`，全局唯一，账记 `research_project/regis
 - 基线切分：主度量评测面切一份 held-out（比例写进契约）。lean/measured 迭代只在训练面跑；verdict 用冻结候选在 held-out 跑一次定生死，失败禁回炉再优化（防对评测面调参）。理念源：NVlabs/SoL-Pi 双 split 纪律，见 research/frontier-notes.md。
 - pass_rule：`all`（本主题默认全过才 accept；探索性任务可在种子里写 `any` 并说明理由）。
 
-`<slug>.md` §2 实验设计的 pass 判据按本节字段直接填成字面结论行，字段缺项不交 runner；`runs/<run-id>/header-snapshot.md` 冻结头四段（含最终验证依据）供评测器与关口回查。
+`<slug>.md` 设计段 实验设计的 pass 判据按本节字段直接填成字面结论行，字段缺项不交 runner；`runs/<run-id>/header-snapshot.md` 冻结头四段（含最终验证依据）供评测器与关口回查。
 
 ## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
 
@@ -170,14 +170,14 @@ run-id 形态 `<slug>--r<round>`，全局唯一，账记 `research_project/regis
 
 ```
 research_project/registry.json                         # 项目×轮次全局账，planner 专写
-research_project/<slug>.md                             # 研究项目文件（头四段 + §1/§2/§3）
+research_project/<slug>.md                             # 研究项目文件（头四段 + 假设段/设计段/结论段）
 research_project/<slug>/proposals/{kaoti,zhongqi,jieti}.md
-research_project/<slug>/packs/G<n>.md                  # qa 提包
-research_project/<slug>/gates/G<n>.decision.md         # 关口判词
-research_project/<slug>/gates/G<n>-referee-<1|2|3>.md  # 独立意见书
+research_project/<slug>/packs/<关口>.md                  # qa 提包
+research_project/<slug>/gates/<关口>.decision.md         # 关口判词
+research_project/<slug>/gates/<关口>.referee-<1|2|3>.md  # 独立意见书
 ```
 
-run-id = `<slug>--r<round>`。registry 形状 `{"projects":[{"slug","status","stage","human_gate","rounds","updated"}]}`，`status ∈ open|closed|archived`，`stage ∈ initiation|theory|experiment|writing|review|done`。种子 `{"projects":[]}`。
+run-id = `<slug>--<轮次>`。registry 形状 `{"projects":[{"slug","status","stage","human_gate","rounds","updated"}]}`，`status ∈ open|closed|archived`，`stage ∈ initiation|theory|experiment|writing|review|done`。种子 `{"projects":[]}`。
 
 头部四段（initiation 组定稿后闭笔；pi 主笔，librarian 供行锚）：
 
@@ -190,11 +190,11 @@ run-id = `<slug>--r<round>`。registry 形状 `{"projects":[{"slug","status","st
 
 正文三段，段权=只增不改，revise 打回只许改本阶段段，落笔即在 `runs/<run-id>/run-log.md` 记一行：
 
-- §1 假设与理论论据 — speculator 主笔，theorist 补形式化小节。
-- §2 实验设计与结果 — speculator 写设计，runner 填结果节，qa 核验。
-- §3 结论 — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
+- 假设段 假设与理论论据 — speculator 主笔，theorist 补形式化小节。
+- 设计段 实验设计与结果 — speculator 写设计，runner 填结果节，qa 核验。
+- 结论段 结论 — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
 
-G1 revise 打回保持进行中（pi 手里），修订后重交 examiner；打回满 3 次改 fail。新项目才新开 `<slug>.md`。
+开题关 revise 打回保持进行中（pi 手里），修订后重交 examiner；打回满 3 次改 fail。新项目才新开 `<slug>.md`。
 
 `conclude` 段（ab7d5ae 形态）：在途写 `—`。终态由 chair 在判词落盘时必填成分段：
 
@@ -219,13 +219,13 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 |---|---|---|---|---|---|---|
 | pi | 研究项目文件头四段作者 | librarian, planner, examiner（revise 打回） | examiner（申报）, librarian（委托检索） | examiner | ★ | axonhub/generic-researcher-powerful/max |
 | librarian | 检索与 novelty | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
-| examiner | G1 关口主 | pi, theorist, speculator, librarian | theorist（pass 开工令）, pi（revise 打回）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/high |
-| speculator | 假设/方案/§1主笔/§2设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
-| theorist | 形式化（Lean/推导，挂 §1 形式化段+附件） | examiner, speculator, chair, librarian | speculator（带陈述出假设）, examiner（复研）, librarian | speculator | | axonhub/generic-researcher-powerful/max |
+| examiner | 开题关 关口主 | pi, theorist, speculator, librarian | theorist（pass 开工令）, pi（revise 打回）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/high |
+| speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
+| theorist | 形式化（Lean/推导，挂 假设段 形式化段+附件） | examiner, speculator, chair, librarian | speculator（带陈述出假设）, examiner（复研）, librarian | speculator | | axonhub/generic-researcher-powerful/max |
 | runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工） | qa（送包）, speculator（失败回传） | qa | | axonhub/supercheap/low |
 | qa | 泄漏/确定/预算三约束核验 + 有效读数把关 | runner, scribe, chair（复核委托） | runner（返工）, chair（提包） | chair | | axonhub/supercheap/medium |
 | scribe | 旧 writer 细则 | speculator, chair, librarian | chair, librarian, qa（成稿入合规核） | chair | | axonhub/supercheap/high |
-| chair | G2/G3 关口主，合议文稿执笔 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
+| chair | 中期关/结题关 关口主，合议文稿执笔 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
 | planner | registry.json 唯一维护者；新题发起 | examiner（fail）, chair（accept/reject/stop）, librarian | pi, librarian | pi | | axonhub/generic-researcher-powerful/medium |
 
@@ -233,16 +233,16 @@ theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git
 
 边义逐条：
 
-- pi→examiner 是开题申报：头四段齐才出手。examiner→pi 是 G1 revise 打回（任务保持进行中，打回满 3 改 fail）。
-- examiner→theorist 是 G1 pass 开工令（先形式化 §0 命题）。theorist→speculator 是带陈述出假设与方案。examiner→planner 是 fail 归案。
-- speculator⇄theorist 是对线环（grill）：假设/论据与形式化互校，自由往返；同题对线满 4 轮无一致 → 联名上报 examiner 复研（可改判 G1 revise 或 fail）。
-- speculator→runner 是按 §2 实验设计派跑批；runner→speculator 是失败回传与设计疑问。
-- speculator→scribe 是 §1/§2 供成稿。speculator→examiner 是对线僵局上报。
+- pi→examiner 是开题申报：头四段齐才出手。examiner→pi 是 开题关 revise 打回（任务保持进行中，打回满 3 改 fail）。
+- examiner→theorist 是 开题关 pass 开工令（先形式化 头部四段 命题）。theorist→speculator 是带陈述出假设与方案。examiner→planner 是 fail 归案。
+- speculator⇄theorist 是对线环（grill）：假设/论据与形式化互校，自由往返；同题对线满 4 轮无一致 → 联名上报 examiner 复研（可改判 开题关 revise 或 fail）。
+- speculator→runner 是按 设计段 实验设计派跑批；runner→speculator 是失败回传与设计疑问。
+- speculator→scribe 是 假设段/设计段 供成稿。speculator→examiner 是对线僵局上报。
 - runner→qa 是送包核验；qa→runner 是返工（三约束 fail 或无有效读数）。
-- qa→chair 是 G2/G3 提包，包文落 `research_project/<slug>/packs/G<n>.md`；chair→qa 是复核委托。
+- qa→chair 是 中期关/结题关 提包，包文落 `research_project/<slug>/packs/<关口>.md`；chair→qa 是复核委托。
 - scribe→qa 是验收包文稿入合规核（经 qa 入 packs/ 再上 chair）；scribe→chair 是开题申报文稿直发（亦可）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。chair→speculator / chair→theorist 是 rectify 整改令：整改经 theory 组，chair 无直令 runner 边。
-- chair→planner 是终局归案；planner→pi 是新题发起，任务书必引 G3 open questions 行。
+- chair→planner 是终局归案；planner→pi 是新题发起，任务书必引 结题关 open questions 行。
 - librarian 回件面 = 全部委托方（pi、examiner、theorist、speculator、scribe、chair、planner）。
 
 supervisor 不在工作环里：没有任何 role 的上游或下游是 root。supervisor 不注册 [[client]]，admin 面代发除外，签名用持边角色。
@@ -261,13 +261,13 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 
 接力规则按角色表的 `上游` / `下游` / `relay` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
 
-1. planner：从 registry 取一条待开题项目，handoff pi 立题（任务书引上一轮 G3 open questions 行）；pi 写 `research_project/<slug>.md` 头四段，过交件自查后 handoff examiner。
-2. 关口判定：examiner 判 G1，qa 备 G2/G3 包，chair 合议落 gates/ 判词。判词驱动 registry 的 status/stage，planner 据此改账。
+1. planner：从 registry 取一条待开题项目，handoff pi 立题（任务书引上一轮 结题关 open questions 行）；pi 写 `research_project/<slug>.md` 头四段，过交件自查后 handoff examiner。
+2. 关口判定：examiner 判 开题关，qa 备 中期关/结题关 包，chair 合议落 gates/ 判词。判词驱动 registry 的 status/stage，planner 据此改账。
 3. 每个 role：完成后按自己的 `下游` 列 `onlyne handoff` 接力任务书，然后 `onlyne_complete` 交活退出。角色零上行边，回执走 origin 自动通道。
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 5. 委托检索的接收面是 librarian：各 role 的补检索任务写清缺哪段文献、要什么来源；librarian 补完 `research/` 后回委托方。
 
-环路自转：主环 pi→examiner→theorist→speculator→runner→qa→chair→planner→pi；对线环 speculator⇄theorist（grill）；执行环 speculator⇄runner（§2 设计与失败回传）、speculator→scribe→qa→chair（验收包成稿过合规核再送审）；整改环 chair→speculator/theorist；复研环 theory 组⇄examiner；合议环 chair⇄referee；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
+环路自转：主环 pi→examiner→theorist→speculator→runner→qa→chair→planner→pi；对线环 speculator⇄theorist（grill）；执行环 speculator⇄runner（设计段 设计与失败回传）、speculator→scribe→qa→chair（验收包成稿过合规核再送审）；整改环 chair→speculator/theorist；复研环 theory 组⇄examiner；合议环 chair⇄referee；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
 
 ## 冷启动与第一发
 

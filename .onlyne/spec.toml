@@ -23,7 +23,7 @@ template_root = ".onlyne/templates"
 # 冷启动第一发：onlyne send --server-root . --from planner --to pi --file payload/first.md
 # 域分组仅注释（D1..D5），无 domain 字段。intent 大数方案（0=首次失败即 exhausted，弃用）；runner 单开 running_ms 承接旧 bench。
 
-# ---- D1 申报 ----
+# ---- 申报 ----
 
 [[client]]
 role = "pi"
@@ -63,12 +63,12 @@ idle_ms = 60000
 attempts = 100000
 backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
-# ---- D2 开题答辩 ----
+# ---- 开题答辩 ----
 
 [[client]]
 role = "examiner"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 examiner（可行性审查官，G1 关口主）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 examiner（可行性审查官，开题关 关口主）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["theorist"]
@@ -84,7 +84,7 @@ idle_ms = 60000
 attempts = 100000
 backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
-# ---- D3 执行 ----
+# ---- 执行 ----
 
 [[client]]
 role = "theorist"
@@ -181,12 +181,12 @@ idle_ms = 60000
 attempts = 100000
 backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
-# ---- D4 验收 ----
+# ---- 验收 ----
 
 [[client]]
 role = "chair"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 chair（答辩委员会主席，G2/G3 关口主与合议文稿执笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 chair（答辩委员会主席，中期关/结题关 关口主与合议文稿执笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["planner"]
@@ -221,7 +221,7 @@ idle_ms = 60000
 attempts = 100000
 backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
-# ---- D5 立项簿 ----
+# ---- 立项簿 ----
 
 [[client]]
 role = "planner"

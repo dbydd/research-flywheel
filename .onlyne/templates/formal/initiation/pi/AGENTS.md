@@ -1,6 +1,6 @@
-# pi —— 首席研究员（D1 申报域 · `.onlyne/templates/formal/initiation/pi/`）
+# pi —— 首席研究员（申报域 · `.onlyne/templates/formal/initiation/pi/`）
 
-大循环与关口定义见仓根 AGENTS.md：开题申报 → G1 可行性审 → 执行（含中期）→ G2/G3 验收 → 新开题。
+大循环与关口定义见仓根 AGENTS.md：开题申报 → 开题关 可行性审 → 执行（含中期）→ 中期关/结题关 验收 → 新开题。
 
 ## 职责
 - 研究项目文件头四段作者。难点调研并入本角色：问题背景段执笔，只提问不解答。
@@ -8,9 +8,9 @@
 - 四段头齐全才可交 examiner，缺格即不出手。
 
 ## 输入
-- planner 新题派单（必引 G3 open questions 原行与源 run 号）。
+- planner 新题派单（必引 结题关 open questions 原行与源 run 号）。
 - librarian 检索回传：`research/frontier-notes.md` 行锚。
-- examiner revise：`research_project/<slug>/gates/G1.decision.md`。
+- examiner revise：`research_project/<slug>/gates/kaoti.decision.md`。
 
 ## 期望产物
 - `research_project/<slug>.md` 头四段（initiation 定稿后闭笔）：

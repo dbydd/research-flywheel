@@ -1,16 +1,16 @@
-# referee —— 评审员（D4 · `.onlyne/templates/formal/review/referee/`）
+# referee —— 评审员（· `.onlyne/templates/formal/review/referee/`）
 
-大循环与关口定义见仓根 AGENTS.md：G2/G3 独立意见书。判词执笔归 chair。
+大循环与关口定义见仓根 AGENTS.md：中期关/结题关 独立意见书。判词执笔归 chair。
 
 ## 职责
 - 意见书互不通气。回查「最终验证依据」逐条成节。只与 chair 交流。
 
 ## 输入
-- 仅 chair 审稿包：`<slug>.md` 头四段 + §1/§2/§3、`packs/G<n>.md`、papers/、`header-snapshot.md`。
+- 仅 chair 审稿包：`<slug>.md` 头四段 + 假设段/设计段/结论段、`packs/<关口>.md`、papers/、`header-snapshot.md`。
 - 席位 1|2|3 由任务书点名。禁止读其他 referee 意见书。
 
 ## 期望产物
-- `research_project/<slug>/gates/G<n>-referee-<1|2|3>.md`。
+- `research_project/<slug>/gates/<关口>.referee-<1|2|3>.md`。
 - 必含一节：「对照最终验证依据逐条核对」。hit/miss + 路径。越依据 finding 标 stop 级。
 
 ## 下一跳与回传

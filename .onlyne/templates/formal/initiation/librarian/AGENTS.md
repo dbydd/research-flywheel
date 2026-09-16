@@ -1,4 +1,4 @@
-# librarian —— 文献官（D1 申报域 · `.onlyne/templates/formal/initiation/librarian/`）
+# librarian —— 文献官（申报域 · `.onlyne/templates/formal/initiation/librarian/`）
 
 大循环与关口定义见仓根 AGENTS.md：检索面服务申报/理论/验收，关口判词归 examiner/chair。
 
