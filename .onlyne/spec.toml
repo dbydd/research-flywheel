@@ -146,12 +146,12 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "scribe"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 scribe（公共代笔位：各角色可点单成文，为贵档模型省 token）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 scribe（公共代笔位：各角色可点单成文，为贵档模型省 token；结题材料凭 qa 放门判词动笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 2
 relay_required = ["chair"]
 reuse = true
-allowed_senders = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian"]
+allowed_senders = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian", "qa"]
 allowed_targets = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian", "qa"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
@@ -165,13 +165,13 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "qa"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 qa（合规：泄漏/确定/预算三约束核验、有效读数把关、环上次生写法把关）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 qa（中期判词独任：continue/rectify/stop 环上随时出，达标放门准 scribe 出环成稿；三约束核验、有效读数把关、环上次生写法把关）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["chair"]
 reuse = true
 allowed_senders = ["runner", "scribe", "chair", "speculator", "theorist"]
-allowed_targets = ["runner", "chair", "speculator", "theorist"]
+allowed_targets = ["runner", "chair", "speculator", "theorist", "scribe"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -186,7 +186,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "chair"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 chair（答辩委员会主席，中期检查/结题验收关口主与合议文稿执笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 chair（结题验收关口主与合议文稿执笔；中期归 qa 独任，你接 stop 转呈与结题包）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["planner"]

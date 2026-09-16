@@ -12,10 +12,10 @@ research_project/
   <项目短名>/
     dispatch.md                                    # 任务书存档（一节一封：发信角色+时刻+正文）
     对线记录.md                                    # examiner⇄pi 攻防（追加式，轮次编号）
-    proposals/开题申报.md  中期报告.md  结题报告.md
-    packs/中期送审包.md  结题送审包.md          # qa 备齐
-    gates/开题判定.md  中期判定.md  结题判定.md   # chair/examiner 判词
-    gates/中期判定-评审甲.md  -评审乙.md  -评审丙.md  # referee 独立意见书
+    proposals/开题申报.md  结题报告.md           # 中期报告废止=qa 判词即中期
+    packs/结题送审包.md                      # qa 备齐给 chair 合议
+    gates/开题判定.md  中期判定.md  结题判定.md   # examiner/qa/chair 判词（中期=qa 独任追加式，含放门判词）
+    gates/结题判定-评审甲.md  -评审乙.md  -评审丙.md  # referee 独立意见书
     data/                                       # 大数据档外用区（见下）
 ```
 
@@ -57,7 +57,7 @@ research_project/
 ## 关口
 
 - 开题审查（敌意对线）：examiner 四类攻击（前提崩塌/已被做过/不可测/自相矛盾）必带锚；弹药耗尽 pass（开工令→theorist），化解不了的实心攻击或致命实锤 fail（归案 planner）；轮数不设限。特定任务价值存疑走 examiner→Main 请示边。
-- 中期检查：qa 备齐 `packs/中期送审包.md`，chair+评审甲/乙/丙合议 continue/rectify/stop；stop 凭实据不凭轮数。
-- 结题验收：qa 备齐 `packs/结题送审包.md`，chair+三评审依结论段判 accept/reject；accept→planner 记立项规划开新题。
+- 中期检查=qa 独任环上判词：continue/rectify（整改单直令 runner/speculator/theorist/scribe）/stop（经 chair 归案）落 gates/中期判定.md 追加式；设计段全 pass+三约束过→放门判词准 scribe 出环成稿。不组局不合议。
+- 结题验收：qa 备齐 `packs/结题送审包.md`（含中期判词索引），chair+评审甲/乙/丙依结论段判 accept/reject；accept→planner 记立项规划开新题。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
 
 判词落 `gates/<关口>判定.md`（判词+依据+签字+时刻），意见书 `gates/<关口>判定-评审<甲|乙|丙>.md`，提交前评审彼此不通。
