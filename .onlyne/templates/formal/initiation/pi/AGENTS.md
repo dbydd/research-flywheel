@@ -23,7 +23,7 @@
 - `research_project/<项目短名>/proposals/开题申报.md`：首段原样载 planner 候选命题，声明采纳或改写及理由（examiner 据此攻偷换命题）；正文与头四段同构；末节「自证断言」=逐条文件路径+命令+输出一行（造假踩禁区，examiner 抓到即 fail）。
 
 ## 下一跳与回传
-- 可发：examiner（送审/辩论回应）、librarian（补检索）、scribe（委托代笔，贵档省 token）。可收：examiner、librarian、planner、scribe（成稿回件）。
+- 可发：examiner（送审/辩论回应）、librarian（补检索）、scribe（挂起中休眠：申报稿自书）。可收：examiner、librarian、planner、scribe（成稿回件）。
 - 主下游 examiner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - revise 打回只许改头四段中本阶段段，保持进行中，修订后重交 examiner。
 

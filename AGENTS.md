@@ -17,13 +17,13 @@
 
 ## 大循环（formal-research）
 
-模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ **理论⇄实验⇄中期持续环**（speculator/theorist/runner 反复迭代；qa 环上常驻，随时出中期判词，达标时放门出环）→ 成稿（scribe，凭放门判词动笔）→ 结题验收（chair+referee×3 审稿）→ 新开题。域按序接力：initiation（pi、examiner）→ theory（speculator、theorist）→ experiment（runner）→ review（qa、chair、referee）→ archive（planner）。common 层跨全部阶段常驻：librarian（检索）与 scribe（代笔）为公共资源，任何 role 任何时点可点单；referee 不用代笔（意见书独立性条款）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
+模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ **理论⇄实验⇄中期持续环**（speculator/theorist/runner 反复迭代；qa 环上常驻，随时出中期判词，达标时放门出环）→ 结题验收（chair+referee×3 审稿；成稿环节挂起中——papers/ 与代笔待写作单独调教）→ 新开题。域按序接力：initiation（pi、examiner）→ theory（speculator、theorist）→ experiment（runner）→ review（qa、chair、referee）→ archive（planner）。common 层跨全部阶段常驻：librarian（检索）与 scribe（代笔，**挂起中**：写作单独调教后启用，期间文稿各方自书），任何 role 任何时点可点单；referee 不用代笔（意见书独立性条款）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
 - 开题审查=敌意对线：examiner（powerful/max，职责是让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<项目短名>/对线记录.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
-- 中期检查=环上常驻判词（qa 独任）：理论⇄实验持续环里，qa 随时以判词形式出中期判断 `continue`（继续转环）/ `rectify`（整改单直令 runner/speculator/theorist/scribe，绕 chair 无需合议）/ `stop`（经 chair 归案 planner），落 `research_project/<项目短名>/gates/中期判定.md`（追加式，判词+依据+签字+时刻）。判词原料=它逐条攒的把关记录+三约束+断言对表+有效读数率。设计段目标全部有实测支撑且三约束 pass 时，qa 在同一文件追加**放门判词**：见放门前 scribe 才许动笔结题材料，无放门=还在环里。
-- 结题验收：qa 备齐送审包 `research_project/<项目短名>/packs/结题送审包.md`（设计段全部结果节 + 约束核验 + 断言对表 + 中期判词索引），chair + referee×3 依结论段判 `accept` / `reject`。accept → planner 记档开新题。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
+- 中期检查=环上常驻判词（qa 独任）：理论⇄实验持续环里，qa 随时以判词形式出中期判断 `continue`（继续转环）/ `rectify`（整改单直令 runner/speculator/theorist/scribe，绕 chair 无需合议）/ `stop`（经 chair 归案 planner），落 `research_project/<项目短名>/gates/中期判定.md`（追加式，判词+依据+签字+时刻）。判词原料=它逐条攒的把关记录+三约束+断言对表+有效读数率。设计段目标全部有实测支撑且三约束 pass 时，qa 在同一文件追加**放门判词（ready-to-draft）**：通知 chair 启动结题程序；成稿环节（papers/ 与代笔）挂起中，写作单独调教；无放门=还在环里。
+- 结题验收（规程五步）：① qa 放门后备齐送审包 `packs/结题送审包.md` 六节料：断言对表全量 / 三约束核验（命令+输出）/ 有效读数台账（无效点名）/ 中期判词索引 / measured 关键数字摘要（路径指过去）/ open questions 草节（speculator 供稿）。② chair 程序核验（六节齐+抽一条断言当场重跑）→ 约稿 referee×3：任务书只含包路径+席位号，零倾向语句。③ referee 独立意见书（提交前互不通气，唯一接口 chair）：三节必含——对照「最终验证依据」逐条核对（hit/miss+路径）、四类攻击点列举（前提崩塌/已被做过/不可测/自相矛盾）、建议档位 `accept / minor revise / reject`+理由。④ chair 合议裁决（无记名投票，合议+说理）：读齐三份意见书+磁盘复核，判 `accept / minor revise / reject`；判词与多数意见书建议相悖时，判词必须写理由。minor revise=只动文字与结构、数据断言原样，整改单直发作者（scribe 挂起期=speculator）。reject→planner 归案（死因+负证据+open questions 全留）。⑤ 判词落 `gates/结题判定.md`（判词+依据引意见书与包节号+chair 签+时刻），accept → chair 补结论段（判词指针+回查表）→ handoff planner 填 conclude+新题任务书。human_gate 条款可列结题验收为请示位（列了才请示 Main，缺省未列=全自动，与仓根 human_gate 条款同构）。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
 
 判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管，planner 产出照例不待批。全自动飞轮的意义在此。`human_gate` 条款：用户对特定主线开放请示时通知 supervisor/planner，项目文件头以 `human_gate:` 点名哪些关口可请求；被点名关口的主责角色经 pi-intercom 发 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve，supervisor 向人开 ask 批复后代落 gates/ 判词。人不在场=人有事，阻塞即正确状态，不设降级兜底。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
 
@@ -242,7 +242,7 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe, qa（把关/整改单） | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔）, qa（次生写法点单） | speculator | | axonhub/generic-researcher-powerful/max |
 | runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工/probe/整改派单） | qa（交核验）, speculator（失败回传） | qa | | axonhub/supercheap/low |
 | qa | 中期独任判词（环上常驻）+ 成稿放门 + 三约束/有效读数核验 + 次生写法把关 | runner, scribe, chair（复核委托/stop 转呈）, speculator/theorist（点单） | runner（返工/probe/整改）, chair（结题包/stop 转呈）, speculator/theorist（把关/整改）, scribe（放门/整改） | chair | | axonhub/supercheap/medium |
-| scribe | 公共代笔位：跨阶段成文（申报书/papers/文稿），凭 qa 放门动笔结题材料 | pi, examiner, theorist, speculator, planner, chair, librarian, qa（放门/整改） | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | axonhub/supercheap/high |
+| scribe | 【挂起】公共代笔位（写作需结合 skill/tool 单独调教，调教前 papers/ 与代笔休眠，文稿由各方自书） | pi, examiner, theorist, speculator, planner, chair, librarian, qa（放门/整改） | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | axonhub/supercheap/high |
 | chair | 结题验收关口主，合议文稿执笔；stop 转呈与归案交接 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
 | planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | axonhub/generic-researcher-powerful/medium |
@@ -259,7 +259,7 @@ theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git
 - runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）或 probe 派单（次生写法缺的证据小成本可补，当场跑）。
 - speculator/theorist→qa 是次生写法点单：理论⇄实验环内往项目文件写次生理论/假设/实验内容前，先送 qa 把关（目标偏移主发生地）。qa 三判：结论口气无 measured/ 支撑→退单作者（标注为假设的纯假设免检，生长制照常）；缺证据且 probe 预算内可补（小数据、少步骤、不动用新资源）→qa 直发 runner 当场跑，跑出数才入账，知会作者；新增断言/改阈值类偏移动作→退单并在 run-log.md 记一行，供 chair 验收合议参考。把关判定逐条落项目 run-log.md，无独立文书。
 - qa→chair 是结题送审包与 stop 转呈，包落 `research_project/<项目短名>/packs/结题送审包.md`；chair→qa 是复核委托。中期判词不经 chair：qa 独任落 gates/中期判定.md。
-- scribe 是公共代笔位：委托边=pi/examiner/theorist/speculator/planner/chair（→scribe），成稿回件回到委托方；qa→scribe 是放门通知与中期文字整改单——**scribe 见 qa 放门判词才动笔结题材料**；验收包文稿必经 qa 入 packs/ 再上 chair。referee 不用代笔（意见书独立成文）。relay 仍为 chair。
+- scribe 是公共代笔位【挂起中，写作单独调教；下列边休眠，文稿各方自书】：委托边=pi/examiner/theorist/speculator/planner/chair（→scribe），成稿回件回到委托方；qa→scribe 是放门通知与中期文字整改单；验收包文稿必经 qa 入 packs/ 再上 chair。referee 不用代笔（意见书独立成文）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。结题整改 chair→speculator / chair→theorist 是整改令：涉推导经 theory 组，chair 无直令 runner 边；中期整改由 qa 直令，不走此线。
 - chair→planner 是终局归案；planner→pi 是新题发起，任务书必引结题验收 open questions 行。
 - librarian 回件面 = 全部委托方（pi、examiner、theorist、speculator、scribe、chair、planner）。
@@ -288,7 +288,7 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 5. 委托检索的接收面是 librarian：各 role 的补检索任务写清缺哪段文献、要什么来源；librarian 补完 `research/` 后回委托方。
 
-环路自转：主环 pi→examiner→theorist⇄speculator⇄runner⇄qa（理论⇄实验⇄中期持续环）→qa 放门→scribe 成稿→chair（+referee×3）→planner→pi；对线环 speculator⇄theorist；执行环 speculator⇄runner（设计段设计与失败回传）；把关与 probe 环 speculator/theorist→qa⇄runner（次生写法点单、probe 派单）；中期整改环 qa→runner/speculator/theorist/scribe（直令）；结题整改环 chair→speculator/theorist/scribe；复研环 theory 组⇄examiner；合议环 chair⇄referee；验收包线 scribe→qa→chair；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
+环路自转：主环 pi→examiner→theorist⇄speculator⇄runner⇄qa（理论⇄实验⇄中期持续环）→qa 放门→chair（+referee×3 结题合议；成稿挂起期直接验收，文稿各方自书）→planner→pi；对线环 speculator⇄theorist；执行环 speculator⇄runner（设计段设计与失败回传）；把关与 probe 环 speculator/theorist→qa⇄runner（次生写法点单、probe 派单）；中期整改环 qa→runner/speculator/theorist/scribe（直令）；结题整改环 chair→speculator/theorist/scribe；验收包线 scribe→qa→chair（三处 scribe 段挂起期休眠，文字整改发 speculator、包由 qa 自书）；复研环 theory 组⇄examiner；合议环 chair⇄referee；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
 
 ## 冷启动与第一发
 

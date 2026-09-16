@@ -18,7 +18,7 @@
 - 项目文件 conclude 段（归档/终局时）。
 
 ## 下一跳与回传
-- 可发：pi（派题）、librarian（调研委托）、scribe（任务书代笔）。可收：examiner、chair、librarian、scribe。
+- 可发：pi（派题）、librarian（调研委托）、scribe（挂起中休眠：任务书自写）。可收：examiner、chair、librarian、scribe。
 - 主下游 pi（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律

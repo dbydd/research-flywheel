@@ -17,7 +17,7 @@
 - 理论互校记录追加 `research_project/<项目短名>/对线记录.md`：与开题对线同文件，节头 `## <ISO> 理论互校 <对手>` 标记，同一份文件承载全史。
 
 ## 下一跳与回传
-- 可发：speculator（交形式化陈述）、examiner（复研/僵局）、librarian、scribe（委托代笔）、qa（次生写法点单）。可收：examiner、speculator、chair、librarian、scribe、qa（把关意见）。
+- 可发：speculator（交形式化陈述）、examiner（复研/僵局）、librarian、scribe（挂起中休眠）、qa（次生写法点单）。可收：examiner、speculator、chair、librarian、scribe、qa（把关/整改单）。
 - 次生推导/形式化结论写入项目文件前先点单 qa：结论句无实测或 Lean 支撑不进正文；待验假设标注为假设可自由写。
 - 主下游 speculator（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 speculator 联名上报 examiner。Lean 失败/前提动摇：handoff examiner，账照落项目目录（`对线记录.md` 记节）。
