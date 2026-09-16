@@ -80,6 +80,7 @@
 - 训练：pytorch 本体 + lightning 统一风格（fit/Trainer 单入口、seed 显式、callback 落日志进 measured/）；后端由 lightning 自选（MPS 优先、CPU 兜底），脚本里零手写 device 分支。功耗纪律照旧：单进程、串行、≤45 min 切片。
 - 表格：polars 处理（高性能默认），原始读数 jsonl/parquet 留 `measured/`，文档以路径指过去。
 - 可复现：脚本冷启动可重跑（相对路径、项目目录为准）；全量前最小闭环真数据对拍一次。
+- 训练指标落账：lightning logger 挂 CSVLogger（主账，metrics.csv + hparams.yaml 进 measured/，qa 与 polars 直读），或等价的自定义 jsonl Logger；TensorBoard 之类别当主账——event 文件二进制，回查重解析要加转换器，顶多开一份给人眼看曲线。
 - 评测器：住 `evaluation/`，运行命令原文写进设计段断言清单，qa 照命令重跑对账。
 
 ## 工作模型（射后不理）
