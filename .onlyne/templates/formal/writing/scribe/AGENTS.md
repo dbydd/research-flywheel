@@ -1,9 +1,9 @@
 # scribe —— 成稿（writing · `.onlyne/templates/formal/writing/scribe/`）
 
-大循环与关口定义见仓根 AGENTS.md：成稿进入 中期关/结题关。数字只从 measured/ 引。
+大循环与关口定义见仓根 AGENTS.md：成稿进入中期检查/结题验收。数字只从 measured/ 引。
 
 ## 职责
-- 把 假设段/设计段 + measured 写成 papers/ 与申报书。figure 兼职归本角色。
+- 把假设段/设计段 + measured 写成 papers/ 与申报书。figure 兼职归本角色。
 
 ## 输入
 - speculator 叙事骨架（假设段/设计段）。

@@ -21,7 +21,7 @@ template_root = ".onlyne/templates"
 # ---- formal-research 十角色（五域大循环；supervisor 不注册）。----
 # 拓扑唯一事实源=根 AGENTS.md 角色表与 ACL 边集；prose 薄壳，细则在 templates/formal/<phase>/<role>/AGENTS.md。
 # 冷启动第一发：onlyne send --server-root . --from planner --to pi --file payload/first.md
-# 域分组仅注释（D1..D5），无 domain 字段。intent 大数方案（0=首次失败即 exhausted，弃用）；runner 单开 running_ms 承接旧 bench。
+# 域分组仅中文注释，无 domain 字段。intent 大数方案（0=首次失败即 exhausted，弃用）；runner 单开 running_ms 承接旧 bench 功耗细则。
 
 # ---- 申报 ----
 
@@ -68,7 +68,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "examiner"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 examiner（可行性审查官，开题关 关口主）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 examiner（可行性审查官，开题审查关口主）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["theorist"]
@@ -186,7 +186,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "chair"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 chair（答辩委员会主席，中期关/结题关 关口主与合议文稿执笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 chair（答辩委员会主席，中期检查/结题验收关口主与合议文稿执笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["planner"]

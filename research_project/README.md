@@ -11,7 +11,7 @@ research_project/
   <slug>.md                        # 研究项目文件（生长制正文，结构见下）
   <slug>/
     proposals/{kaoti,zhongqi,jieti}.md   # 开题/中期/结题申报书
-    packs/<关口>.md                        # qa 提包（中期关/结题关 提包）
+    packs/<关口>.md                        # qa 送审包（中期检查/结题验收）
     gates/<关口>.decision.md               # 关口判词（chair 执笔）
     gates/<关口>.referee-<1|2|3>.md        # 独立意见书（席位号由 chair 分发点名）
 ```
@@ -39,9 +39,9 @@ run-id 全局唯一：`<slug>--<轮次>`，账记 registry.json。过程件（le
 
 正文三段，段权=只增不改，revise 打回只许改本阶段段，落笔即在对应 `runs/<run-id>/run-log.md` 记一行：
 
-- **假设段 假设与理论论据** — speculator 主笔，theorist 补形式化小节（Lean 文件路径+陈述↔论据对照表）。
-- **设计段 实验设计与结果** — speculator 写设计，runner 填结果节，qa 核验。
-- **结论段 结论** — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
+- **假设段假设与理论论据** — speculator 主笔，theorist 补形式化小节（Lean 文件路径+陈述↔论据对照表）。
+- **设计段实验设计与结果** — speculator 写设计，runner 填结果节，qa 核验。
+- **结论段结论** — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
 
 ## 段内 schema（合格线，缺项即打回）
 
@@ -55,9 +55,9 @@ run-id 全局唯一：`<slug>--<轮次>`，账记 registry.json。过程件（le
 
 ## 关口
 
-- 开题关（立项批准）：examiner 判词三值 `pass`（开工令→theorist）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。开题关 打回满 3 次改判 fail。
-- 中期关（中期验收）：qa 提包 `packs/zhongqi.md`，chair+referee×3 合议 `continue|rectify|stop`；rectify 连续满 3 轮转 stop。
-- 结题关（末期验收）：qa 提包 `packs/jieti.md`（含 设计段 全部结果节+约束核验+断言对表），chair+referee×3 依 结论段 判 `accept|reject`；accept→planner 记档开新题。
+- 开题审查（立项批准）：examiner 判词三值 `pass`（开工令→theorist）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。开题审查打回满 3 次改判 fail。
+- 中期检查：qa 备齐送审包 `packs/zhongqi.md`，chair+referee×3 合议 `continue|rectify|stop`；rectify 连续满 3 轮转 stop。
+- 结题验收：qa 备齐送审包 `packs/jieti.md`（含设计段全部结果节+约束核验+断言对表），chair+referee×3 依结论段判 `accept|reject`；accept→planner 记档开新题。
 
 ## pi 交件自查（硬门）
 

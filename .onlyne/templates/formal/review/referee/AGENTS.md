@@ -1,6 +1,6 @@
 # referee —— 评审员（· `.onlyne/templates/formal/review/referee/`）
 
-大循环与关口定义见仓根 AGENTS.md：中期关/结题关 独立意见书。判词执笔归 chair。
+大循环与关口定义见仓根 AGENTS.md：中期检查/结题验收独立意见书。判词执笔归 chair。
 
 ## 职责
 - 意见书互不通气。回查「最终验证依据」逐条成节。只与 chair 交流。
