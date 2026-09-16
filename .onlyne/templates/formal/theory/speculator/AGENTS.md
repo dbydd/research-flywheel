@@ -21,7 +21,7 @@
 ## 下一跳与回传
 - 可发：theorist（对线）、runner（设计定稿）、scribe（叙事骨架）、examiner（可行性质询/僵局）、librarian。可收：theorist、runner、chair、librarian。
 - 主下游 runner（relay_required）。任务书四段见仓根 AGENTS.md。
-- 同题对线满 4 轮无一致：与 theorist 联名上报 examiner。
+- 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 theorist 联名上报 examiner 复研，不设轮数门槛。
 
 ## 纪律
 - 段权：假设段与设计段设计只增不改；revise 只改本阶段段；落笔在 `runs/<run-id>/run-log.md` 记一行。

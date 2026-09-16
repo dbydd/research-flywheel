@@ -10,12 +10,12 @@
 
 ## 大循环（formal-research）
 
-模仿高校与工业界正式科研全流程组织本工作区。大循环：开题申报 → 可行性审 → 执行（含中期）→ 验收（中期/末期）→ 新开题。域按序接力：initiation（pi、librarian、examiner）→ theory（speculator、theorist）→ experiment（runner）→ writing（scribe）→ review（chair、referee、qa）→ archive（planner）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
+模仿高校与工业界正式科研全流程组织本工作区。大循环：开题黑盒（pi 负责，产出头四段）→ 开题对线（examiner 攻不破才放行）→ 执行（含中期）→ 验收（中期检查/结题验收）→ 新开题。域按序接力：initiation（pi、librarian、examiner）→ theory（speculator、theorist）→ experiment（runner）→ writing（scribe）→ review（chair、referee、qa）→ archive（planner）。域内允许内部循环；跨域边以角色表与 `.onlyne/spec.toml` 的 ACL 为准，两处同源。
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
-- 开题审查（立项批准）：examiner 判词三值 `pass`（开工令 → theorist 先形式化头部四段命题 → speculator 带陈述出假设与方案）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。开题审查打回满 3 次改判 fail。
-- 中期检查：qa 备齐送审包 `research_project/<slug>/packs/zhongqi.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。rectify 连续满 3 轮转 stop。
+- 开题审查=敌意对线：examiner（powerful/max，职责让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<slug>/debate.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头部四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
+- 中期检查：qa 备齐送审包 `research_project/<slug>/packs/zhongqi.md`，chair + referee×3 合议 `continue` / `rectify` / `stop`。stop 判据是实据：整改后攻击面未缩小、measured/ 无可归因进展。rectify 轮数不设限。
 - 结题验收：qa 备齐送审包 `research_project/<slug>/packs/jieti.md`（含设计段全部结果节 + 约束核验 + 断言对表），chair + referee×3 依结论段判 `accept` / `reject`。accept → planner 记档开新题。
 
 判词落 `research_project/<slug>/gates/<关口>.decision.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<slug>/gates/<关口>.referee-<1|2|3>.md`。三个关口默认全自动托管。`human_gate` 条款：项目文件元数据可列 `human_gate:`；被点名关口的主责角色先经 pi-intercom 消息 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve；supervisor 向人类提请批复后代落 gates/ 文件。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
@@ -24,13 +24,13 @@
 
 - referee 意见书逐条回查「最终验证依据」；越依据 finding 直接 stop 级。
 - qa 三约束（泄漏 / 确定性 / 预算）原样保留在送审包。
-- 中期检查判 rectify 连续 ≤3 轮，满则 stop。
+- 中期检查 stop 凭实据（攻击面未缩、无进展），不凭 rectify 计数。
 - qa 连续 2 包无有效读数（valid 率 <0.5 或全部 objective=TBD）→ chair 必停 + planner 归案。
 
 「什么算进步」分主次两条度量：
 
 - 主度量：端到端跑通轮数。`research_project/<slug>.md` 头定稿 → 假设段（假设/论据/形式化）→ 设计段（设计/结果 + `measured/`）→ `papers/<run-id>/main.pdf` → `gates/jieti.decision.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
-- 次度量：关口 revise 收敛率。rectify 在 3 轮内收敛算健康。
+- 次度量：关口 revise/rectify 收敛情况，按台账如实计数，不设健康上限。
 
 算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<slug>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
 
@@ -194,7 +194,7 @@ run-id = `<slug>--<轮次>`。registry 形状 `{"projects":[{"slug","status","st
 - 设计段实验设计与结果 — speculator 写设计，runner 填结果节，qa 核验。
 - 结论段结论 — review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
 
-开题审查 revise 打回保持进行中（pi 手里），修订后重交 examiner；打回满 3 次改 fail。新项目才新开 `<slug>.md`。
+开题对线中 revise 保持进行中（pi 手里），修后回环继续攻防；fail 只凭化解不了的实心攻击或致命实锤，与轮数无关。新项目才新开 `<slug>.md`。
 
 `conclude` 段（ab7d5ae 形态）：在途写 `—`。终态由 chair 在判词落盘时必填成分段：
 
@@ -217,9 +217,9 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 
 | role | 职责 | 上游 | 下游 | relay | entry | model |
 |---|---|---|---|---|---|---|
-| pi | 研究项目文件头四段作者 | librarian, planner, examiner（revise 打回） | examiner（申报）, librarian（委托检索） | examiner | ★ | axonhub/generic-researcher-powerful/max |
+| pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise） | examiner（申报/回应）, librarian（委托检索） | examiner | ★ | axonhub/generic-researcher-powerful/max |
 | librarian | 检索与 novelty | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
-| examiner | 开题审查关口主 | pi, theorist, speculator, librarian | theorist（pass 开工令）, pi（revise 打回）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/high |
+| examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行 | pi（申报/回应）, theorist, speculator, librarian | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian | theorist | | axonhub/generic-researcher-powerful/max |
 | speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
 | theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian | speculator（带陈述出假设）, examiner（复研）, librarian | speculator | | axonhub/generic-researcher-powerful/max |
 | runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工） | qa（交核验）, speculator（失败回传） | qa | | axonhub/supercheap/low |
@@ -233,12 +233,12 @@ theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git
 
 边义逐条：
 
-- pi→examiner 是开题申报：头四段齐才出手。examiner→pi 是开题审查 revise 打回（任务保持进行中，打回满 3 改 fail）。
+- pi⇄examiner 是开题对线：pi 头四段齐才出手；examiner 逐轮发实心攻击（四类弹药，必带锚），pi 修文或驳锚，同记 debate.md。弹药耗尽=pass；化解不了的实心攻击或致命实锤=fail；轮数不设限。
 - examiner→theorist 是开题审查 pass 开工令（先形式化头部四段命题）。theorist→speculator 是带陈述出假设与方案。examiner→planner 是 fail 归案。
-- speculator⇄theorist 是对线环（grill）：假设/论据与形式化互校，自由往返；同题对线满 4 轮无一致 → 联名上报 examiner 复研（可改判开题审查 revise 或 fail）。
+- speculator⇄theorist 是对线环（grill）：假设/论据与形式化互校，自由往返；任一方认定分歧超出本职权限（根前提动摇、可行性存疑）→ 联名上报 examiner 复研，不设轮数门槛。
 - speculator→runner 是按设计段实验设计派跑批；runner→speculator 是失败回传与设计疑问。
 - speculator→scribe 是假设段/设计段供成稿。speculator→examiner 是对线僵局上报。
-- runner→qa 是交核验核验；qa→runner 是返工（三约束 fail 或无有效读数）。
+- runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）。
 - qa→chair 是中期检查/结题验收送审包，包落 `research_project/<slug>/packs/<关口>.md`；chair→qa 是复核委托。
 - scribe→qa 是验收包文稿入合规核（经 qa 入 packs/ 再上 chair）；scribe→chair 是开题申报文稿直发（亦可）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。chair→speculator / chair→theorist 是 rectify 整改令：整改经 theory 组，chair 无直令 runner 边。
@@ -261,7 +261,7 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 
 接力规则按角色表的 `上游` / `下游` / `relay` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
 
-1. planner：从 registry 取一条待开题项目，handoff pi 立题（任务书引上一轮结题验收 open questions 行）；pi 写 `research_project/<slug>.md` 头四段，过交件自查后 handoff examiner。
+1. planner：从 registry 取一条待开题项目，handoff pi 立题（任务书引上一轮结题验收 open questions 行）；pi 黑盒作业（与 librarian 内部自由分工），头四段+自证断言出手交 examiner；开题对线逐轮 debate.md，弹药耗尽 examiner 落 pass 开工令。
 2. 关口判定：examiner 判开题审查，qa 备中期检查/结题验收包，chair 合议落 gates/ 判词。判词驱动 registry 的 status/stage，planner 据此改账。
 3. 每个 role：完成后按自己的 `下游` 列 `onlyne handoff` 接力任务书，然后 `onlyne_complete` 交活退出。角色零上行边，回执走 origin 自动通道。
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。

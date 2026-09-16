@@ -20,7 +20,7 @@
 ## 下一跳与回传
 - 可发：speculator（交形式化陈述）、examiner（复研/僵局）、librarian。可收：examiner、speculator、chair、librarian。
 - 主下游 speculator（relay_required）。任务书四段见仓根 AGENTS.md。
-- 同题对线满 4 轮无一致：与 speculator 联名上报 examiner。Lean 失败/前提动摇：handoff examiner，账照落 runs/。
+- 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 speculator 联名上报 examiner。Lean 失败/前提动摇：handoff examiner，账照落 runs/。
 
 ## 纪律
 - 段权：假设段形式化小节只增不改；revise 只改本段；落笔在 `runs/<run-id>/run-log.md` 记一行。

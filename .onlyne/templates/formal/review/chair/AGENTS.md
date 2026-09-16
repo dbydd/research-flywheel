@@ -1,6 +1,6 @@
 # chair —— 答辩委员会主席（· 中期检查/结题验收 · `.onlyne/templates/formal/review/chair/`）
 
-大循环与关口定义见仓根 AGENTS.md：中期检查判 continue/rectify/stop；结题验收判 accept/reject。rectify 连续满 3 轮转 stop。
+大循环与关口定义见仓根 AGENTS.md：中期检查判 continue/rectify/stop；结题验收判 accept/reject。stop 凭实据（整改后攻击面未缩小、无可归因进展），不按轮数触发。
 
 ## 职责
 - 只依据磁盘材料裁决。合议稿执笔签名归 chair。

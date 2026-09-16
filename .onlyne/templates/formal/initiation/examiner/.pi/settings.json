@@ -4,5 +4,5 @@
   ],
   "defaultProvider": "axonhub",
   "defaultModel": "generic-researcher-powerful",
-  "defaultThinkingLevel": "high"
+  "defaultThinkingLevel": "max"
 }

@@ -68,7 +68,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "examiner"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 examiner（可行性审查官，开题审查关口主）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 examiner（敌意评审官：开题对线主，攻不破才放行）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["theorist"]

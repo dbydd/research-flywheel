@@ -55,8 +55,8 @@ run-id 全局唯一：`<slug>--<轮次>`，账记 registry.json。过程件（le
 
 ## 关口
 
-- 开题审查（立项批准）：examiner 判词三值 `pass`（开工令→theorist）/ `revise`（打回 pi，任务保持进行中）/ `fail`（planner 归案）。开题审查打回满 3 次改判 fail。
-- 中期检查：qa 备齐送审包 `packs/zhongqi.md`，chair+referee×3 合议 `continue|rectify|stop`；rectify 连续满 3 轮转 stop。
+- 开题审查（敌意对线）：examiner 持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记 `debate.md`；弹药耗尽 `pass`（开工令→theorist），化解不了的实心攻击或致命实锤 `fail`（planner 归案）。攻击必带锚，无锚无效；轮数不设限。
+- 中期检查：qa 备齐送审包 `packs/zhongqi.md`，chair+referee×3 合议 `continue|rectify|stop`；stop 凭实据（整改后攻击面未缩小、无可归因进展），不按轮数触发。
 - 结题验收：qa 备齐送审包 `packs/jieti.md`（含设计段全部结果节+约束核验+断言对表），chair+referee×3 依结论段判 `accept|reject`；accept→planner 记档开新题。
 
 ## pi 交件自查（硬门）
