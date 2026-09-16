@@ -94,8 +94,8 @@ admin = false
 max_sessions = 1
 relay_required = ["speculator"]
 reuse = true
-allowed_senders = ["examiner", "chair", "librarian", "speculator", "scribe"]
-allowed_targets = ["speculator", "examiner", "librarian", "scribe"]
+allowed_senders = ["examiner", "chair", "librarian", "speculator", "scribe", "qa"]
+allowed_targets = ["speculator", "examiner", "librarian", "scribe", "qa"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -113,8 +113,8 @@ admin = false
 max_sessions = 1
 relay_required = ["runner"]
 reuse = true
-allowed_senders = ["theorist", "runner", "chair", "librarian", "scribe"]
-allowed_targets = ["theorist", "runner", "scribe", "examiner", "librarian"]
+allowed_senders = ["theorist", "runner", "chair", "librarian", "scribe", "qa"]
+allowed_targets = ["theorist", "runner", "scribe", "examiner", "librarian", "qa"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
@@ -165,13 +165,13 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "qa"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 qa（合规：泄漏/确定/预算三约束核验与有效读数把关）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 qa（合规：泄漏/确定/预算三约束核验、有效读数把关、环上次生写法把关）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
 relay_required = ["chair"]
 reuse = true
-allowed_senders = ["runner", "scribe", "chair"]
-allowed_targets = ["runner", "chair"]
+allowed_senders = ["runner", "scribe", "chair", "speculator", "theorist"]
+allowed_targets = ["runner", "chair", "speculator", "theorist"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000

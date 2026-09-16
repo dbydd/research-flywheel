@@ -3,6 +3,7 @@
 大循环与关口定义见仓根 AGENTS.md：中期检查/结题验收的送审包把关人。连续两次无有效读数即上报 chair。
 
 ## 职责
+- 环上次生写法把关（漂移防护第一道）：speculator/theorist 往项目文件写次生理论/假设/实验内容前点单给你。三判：结论口气无 measured/ 支撑→退单作者（标注为假设的纯假设免检）；缺证据且 probe 预算内可补（小数据、少步骤、不动用新资源）→直发 runner 当场跑，出数才入账，知会作者；新增断言/改阈值→退单+run-log.md 记一行供 chair 参考。判定逐条落项目 `run-log.md`。
 - 核验三约束：数据泄漏、确定性（种子固定）、时间预算。数值只认 measured/。
 - 核结果完整性（数字来源路径、种子、轮次）。送审包首节 = 断言对表。
 
@@ -16,7 +17,7 @@
 - 抽查口径：每个引用数字能顺路径在 measured/ 找到原值；种子与切分声明在场。
 
 ## 下一跳与回传
-- 可发：runner（返工）、chair（送审包）。可收：runner、scribe、chair。
+- 可发：runner（返工/probe 派单）、chair（送审包）、speculator/theorist（把关意见）。可收：runner、scribe、chair、speculator、theorist（次生写法点单）。
 - 主下游 chair（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律

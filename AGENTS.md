@@ -238,10 +238,10 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise）, scribe（成稿回件） | examiner（申报/回应）, librarian（委托检索）, scribe（委托代笔） | examiner | ★ | axonhub/generic-researcher-powerful/max |
 | librarian | 公共检索资源（常驻所有阶段外侧） | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | axonhub/supercheap/low |
 | examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行；可点单请示人工 | pi（申报/回应）, theorist, speculator, librarian, scribe | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian, scribe | theorist | | axonhub/generic-researcher-powerful/max |
-| speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian | runner | | axonhub/generic-researcher-powerful/max |
-| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔） | speculator | | axonhub/generic-researcher-powerful/max |
-| runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工） | qa（交核验）, speculator（失败回传） | qa | | axonhub/supercheap/low |
-| qa | 泄漏/确定/预算三约束核验 + 有效读数把关 | runner, scribe, chair（复核委托） | runner（返工）, chair（送审包） | chair | | axonhub/supercheap/medium |
+| speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian, qa（把关意见） | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian, qa（次生写法点单） | runner | | axonhub/generic-researcher-powerful/max |
+| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe, qa（把关意见） | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔）, qa（次生写法点单） | speculator | | axonhub/generic-researcher-powerful/max |
+| runner | running_ms=3600000，功耗纪律与训练槽继承旧 bench 细则 | speculator, qa（返工/probe 派单） | qa（交核验）, speculator（失败回传） | qa | | axonhub/supercheap/low |
+| qa | 泄漏/确定/预算三约束核验 + 有效读数把关 + 环上次生写法把关（漂移防护） | runner, scribe, chair（复核委托）, speculator/theorist（次生写法点单） | runner（返工/probe 派单）, chair（送审包）, speculator/theorist（把关意见） | chair | | axonhub/supercheap/medium |
 | scribe | 公共代笔位：跨阶段成文（申报书/papers/文稿），为贵档角色省 token | pi, examiner, theorist, speculator, planner, chair, librarian | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | axonhub/supercheap/high |
 | chair | 中期检查/结题验收关口主，合议文稿执笔 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | axonhub/generic-researcher-powerful/high |
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | axonhub/generic-researcher-powerful/high |
@@ -256,7 +256,8 @@ theory 域两员：speculator + theorist，历史名「旧 model 拆二」（git
 - speculator⇄theorist 对线环：假设/论据与形式化互校，自由往返；任一方认定分歧超出本职权限（根前提动摇、可行性存疑）→ 联名上报 examiner 复研，不设轮数门槛。examiner 复研三去向自择：续互校（发回双方）、打回 pi 改头四段（命题措辞的责任）、判死 handoff planner 归案；裁决追加进 `对线记录.md`（节头 `## <ISO> 复研`），无独立复研文书。
 - speculator→runner 是按设计段实验设计派跑批；runner→speculator 是失败回传与设计疑问。
 - speculator→scribe 是假设段/设计段供成稿。speculator→examiner 是对线僵局上报。
-- runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）。
+- runner→qa 是送核验；qa→runner 是返工（三约束 fail 或无有效读数）或 probe 派单（次生写法缺的证据小成本可补，当场跑）。
+- speculator/theorist→qa 是次生写法点单：理论⇄实验环内往项目文件写次生理论/假设/实验内容前，先送 qa 把关（目标偏移主发生地）。qa 三判：结论口气无 measured/ 支撑→退单作者（标注为假设的纯假设免检，生长制照常）；缺证据且 probe 预算内可补（小数据、少步骤、不动用新资源）→qa 直发 runner 当场跑，跑出数才入账，知会作者；新增断言/改阈值类偏移动作→退单并在 run-log.md 记一行，供 chair 验收合议参考。把关判定逐条落项目 run-log.md，无独立文书。
 - qa→chair 是中期检查/结题验收送审包，包落 `research_project/<项目短名>/packs/<关口>送审包.md`；chair→qa 是复核委托。
 - scribe 是公共代笔位：委托边=pi/examiner/theorist/speculator/planner/chair（→scribe），成稿回件回到委托方；验收包文稿必经 qa 入 packs/ 再上 chair。referee 不用代笔（意见书独立成文）。relay 仍为 chair。
 - chair→referee 是约稿；referee→chair 是独立意见书（逐条回查最终验证依据）。chair→speculator / chair→theorist 是 rectify 整改令：整改经 theory 组，chair 无直令 runner 边。
