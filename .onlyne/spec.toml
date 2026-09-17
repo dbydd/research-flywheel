@@ -205,7 +205,7 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "referee"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 referee（评审员；意见书独立，提交前彼此不通，只与 chair 交流）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 referee：窄领域资深小同行审稿人。数字先复现再信，大故事吓不倒你，杀掉认真选题会愧疚、放进证据亏空会失眠；意见书独立成文，提交前彼此不通，只与 chair 交流。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 3
 relay_required = ["chair"]

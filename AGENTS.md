@@ -209,12 +209,12 @@ research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md  # �
 正文三段，段权=只增不改，revise 打回只许改本阶段段，落笔即在 `<项目短名>/run-log.md` 记一行：
 
 - 假设段（假设与理论论据）— speculator 主笔，theorist 补形式化段。
-- 设计段（实验设计与结果）— speculator 写设计，runner 填结果节，qa 核验。
+- 设计段（实验设计与结果）— speculator 写设计，runner 填结果节，qa 核验并逐条落终审：断言清单每一行、假设段每一条子命题的最终结论（`pass / fail / 撤回` + 一句依据 + 时刻）由完成验证的 qa 当场追加，条条要有收口。
 - 结论段（结论）— review 组：chair 判词指针 + 逐条回查「最终验证依据」回查表。
 
 开题对线中 revise 保持进行中（pi 手里），修后回环继续攻防；fail 只凭化解不了的实心攻击或致命实锤，与轮数无关。新项目才新开 `<项目短名>.md`。
 
-`conclude` 段（ab7d5ae 形态）：在途写 `—`。终局由 planner 依 gates/ 判词与 papers/ 材料填齐，成分段：
+`conclude` 段（ab7d5ae 形态）分两层收口：子命题级终审在环内，断言清单与假设段每条子命题的最终结论由完成验证的 qa 当场落笔（见上「设计段」条，条条要有收口，放门前未收口的行=覆盖缺陷）；项目级归档在终局，planner 的 conclude 只做指针汇总与意义一句话，照 gates/ 判词与 papers/ 材料填写，不补写环内结论。在途写 `—`。成分段：
 
 ```markdown
 - conclude:
@@ -324,7 +324,7 @@ supervisor 只负责把第一发投进 `★` role。
 
 ## 纪律
 
-- 终局 conclude 段与立项规划.md 只归 planner；项目不设状态行（状态隐含在飞轮，全部真相 = 文件 + git + 台账）。
+- 项目级 conclude 段与立项规划.md 只归 planner；子命题级逐条终审归完成验证的 qa（谁验证谁落笔，环内当场）；项目不设状态行（状态隐含在飞轮，全部真相 = 文件 + git + 台账）。
 - worker 交付当场盘验：交活前对任务书点名的每个产物路径实盘一遍（存在、非空、可读、行数对得上），数值产物另落 `measured/self_checks.json`；接收方对不上即拒收。
 - 过程必落文件（覆盖全角色）：决策、攻防、核验、账目先写文件再上报；`onlyne_complete`/`onlyne handoff` 的 text 放结论+路径清单，消息体量不设限（pi 与 provider 已配无限重试，旧「10KB 禁令」系路由限流时期的误报，废止）。角色间本就互翻文件，指针即通达。
 - 改 `experiment/`、`evaluation/` 前先读项目目录 run-log.md 与 measured/ 里的上一手记录；改动在任务产物里写明。
