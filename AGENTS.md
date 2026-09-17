@@ -22,7 +22,7 @@
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
 - 开题审查=敌意对线：examiner（powerful/max，职责是让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<项目短名>/对线记录.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
-- 中期检查=环上常驻判词（qa 独任）：理论⇄实验持续环里，qa 随时以判词形式出中期判断 `continue`（继续转环）/ `rectify`（整改单直令 runner/speculator/theorist/scribe，绕 chair 无需合议）/ `stop`（经 chair 归案 planner），落 `research_project/<项目短名>/gates/中期判定.md`（追加式，判词+依据+签字+时刻）。判词原料=它逐条攒的把关记录+三约束+断言对表+有效读数率。设计段目标全部有实测支撑且三约束 pass 时，qa 在同一文件追加**放门判词（ready-to-draft）**：通知 chair 启动结题程序；成稿环节（papers/ 与代笔）挂起中，写作单独调教；无放门=还在环里。
+- 中期检查=环上常驻判词（qa 独任）：理论⇄实验持续环里，qa 随时以判词形式出中期判断 `continue`（继续转环）/ `rectify`（整改单直令 runner/speculator/theorist/scribe，绕 chair 无需合议）/ `stop`（经 chair 归案 planner），落 `research_project/<项目短名>/gates/中期判定.md`（追加式，判词+依据+签字+时刻）。判词原料：它逐条攒的把关记录+三约束+断言对表+有效读数率。设计段目标全部有实测支撑且三约束 pass 时，qa 在同一文件追加**放门判词（ready-to-draft）**：通知 chair 启动结题程序；成稿环节（papers/ 与代笔）挂起中，写作单独调教；无放门=还在环里。
 - 结题验收（规程五步）：① qa 放门后备齐送审包 `packs/结题送审包.md` 六节料：断言对表全量 / 三约束核验（命令+输出）/ 有效读数台账（无效点名）/ 中期判词索引 / measured 关键数字摘要（路径指过去）/ open questions 草节（speculator 供稿）。② chair 程序核验（六节齐+抽一条断言当场重跑）→ 约稿 referee×3：任务书只含包路径+席位号，零倾向语句。③ referee 独立意见书（提交前互不通气，唯一接口 chair）：三节必含——对照「最终验证依据」逐条核对（hit/miss+路径）、四类攻击点列举（前提崩塌/已被做过/不可测/自相矛盾）、建议档位 `accept / minor revise / reject`+理由。④ chair 合议裁决（无记名投票，合议+说理）：读齐三份意见书+磁盘复核，判 `accept / minor revise / reject`；判词与多数意见书建议相悖时，判词必须写理由。minor revise=只动文字与结构、数据断言原样，整改单直发作者（scribe 挂起期=speculator）。reject→planner 归案（死因+负证据+open questions 全留）。⑤ 判词落 `gates/结题判定.md`（判词+依据引意见书与包节号+chair 签+时刻），accept → chair 补结论段（判词指针+回查表）→ handoff planner 填 conclude+新题任务书。human_gate 条款可列结题验收为请示位（列了才请示 Main，缺省未列=全自动，与下文 human_gate 条款同构）。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
 
 判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管，planner 产出照例不待批。全自动飞轮的意义在此。`human_gate` 条款：用户对特定主线开放请示时通知 supervisor/planner，项目文件头以 `human_gate:` 点名哪些关口可请求；被点名关口的主责角色经 pi-intercom 发 supervisor 的 omp 会话（地址 `Main`），阻塞等 approve，supervisor 向人开 ask 批复后代落 gates/ 判词。人不在场=人有事，阻塞即正确状态，不设降级兜底。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
@@ -41,7 +41,7 @@
 
 算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<项目短名>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
 
-禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = 设计段实验设计段 + 断言清单。断言清单=动跑前落盘的断言行本体（字段见 experiment-design §①）；跑后 qa 把读数逐条对上形成的对照表称断言对表，是判词原料，两名一物两态。
+禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = 设计段实验设计段 + 断言清单。断言清单=动跑前落盘的断言行本体（字段见 experiment-design §①）；跑后 qa 把读数逐条对上形成的对照表称断言对表，是判词原料。两名一物，分跑前跑后两态。
 
 ### 解释文规范
 
@@ -223,7 +223,7 @@ research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md  # �
   - 落点: <papers/<项目短名>/main.pdf 与 gates/结题判定.md 路径>
 ```
 
-failed 形态改两子条：死因、负证据（各一句+路径）。conclude 空缺 = 归档未完成，planner 这条交活不算 done。
+failed 形态改用两子条：死因、负证据（各一句+路径）。conclude 空缺 = 归档未完成，planner 这条交活不算 done。
 
 ## 角色表（本主题拓扑的唯一事实源）
 
@@ -283,7 +283,7 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 接力规则按角色表的 `上游` / `下游` / `relay` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
 
 1. planner：翻项目文件与立项规划.md 定向，委托 librarian 摸同行切法，出立项任务书 handoff pi（新题引上一轮结题验收 open questions 或大课题节）；pi 黑盒作业（与 librarian 内部自由分工），头四段+自证断言出手交 examiner；开题对线逐轮记 `对线记录.md`，弹药耗尽 examiner 落 pass 开工令。
-2. 关口判定：examiner 判开题审查；中期检查与成稿放门=qa 独任判词（环上常驻，gates/中期判定.md 追加式）；结题验收=chair + referee×3 合议落 gates/结题判定.md。结题判词的 chair 顺手同步项目文件结论段，planner 终局写 conclude。
+2. 关口判定：examiner 判开题审查；中期检查与成稿放门=qa 独任判词（环上常驻，gates/中期判定.md 追加式）；结题验收=chair + referee×3 合议落 gates/结题判定.md。判 accept 时 chair 顺手补项目文件结论段（判词指针+逐条回查表），planner 终局写 conclude。
 3. 每个 role：完成后按自己的 `下游` 列 `onlyne handoff` 接力任务书，然后 `onlyne_complete` 交活退出。角色零上行边，回执走 origin 自动通道。
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 5. 委托检索的接收面是 librarian：各 role 的补检索任务写清缺哪段文献、要什么来源；librarian 补完 `research/` 后回委托方。

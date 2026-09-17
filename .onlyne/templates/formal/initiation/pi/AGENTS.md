@@ -12,7 +12,7 @@
 - subagent 无限用：你是开题黑盒本体，黑盒内部随便拆：文献粗筛、方案枚举、断言自查、长文分节都开 subagent 并行干，数量与深度不设限，token 预算无上限（仓根 AGENTS.md 运行时能力面）。派给 subagent 的活要把落盘路径写进指令：产物落文件才算完成，回收的 session 带不走内存。
 
 ## 输入
-- planner 新题派单（必引结题验收 open questions 原行，带回查项目的指路径）。
+- planner 新题派单（必引结题验收 open questions 原行，带回查项目时指路径）。
 - librarian 检索回传：`research/frontier-notes.md` 行锚。
 - examiner revise：`research_project/<项目短名>/gates/开题判定.md`。
 
@@ -22,7 +22,7 @@
   2. 前沿进展—同方向可借鉴设计：正文摘要 + 调查附件行锚（frontier-notes 行号）。
   3. 目的：observable 三成分句「在 <数据/环境> 上，用 <指标> 度量，达到 <数值或行为断言>」。
   4. 最终验证依据：指标+阈值+数据切分写成一句可判真伪的命题。该命题成立即项目完成。
-- 元数据行：`budget:` / `human_gate:` 两项。状态行、轮次、范围锁、止损线字段全部废止，不写。`conclude:` 段是终局段，你起草时留「—」占位，内容归 planner 结题后填。
+- 元数据行：`budget:` / `human_gate:` 两项。状态行、轮次、范围锁、止损线字段全部废止，不写。`conclude:` 段是终局段，你起草时留「—」占位，内容归 planner，结题后填。
 - `research_project/<项目短名>/proposals/开题申报.md`：首段原样载 planner 候选命题，声明采纳或改写及理由（examiner 据此攻偷换命题）；正文与头四段同构；末节「自证断言」=逐条文件路径+命令+输出一行（造假踩禁区，examiner 抓到即 fail）。
 
 ## 下一跳与回传

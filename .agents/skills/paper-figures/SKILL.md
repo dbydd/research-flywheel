@@ -116,7 +116,7 @@ cfg = {
 
 要画架构/流程/attention 机制图：
 - 先翻 ml-visuals 的 `figures/` 找同型模板（transformer、CNN、RNN、attention、训练流程），draw.io 打开改。署名保留 MIT 来源。
-- 本机已装桌面版（`/Applications/draw.io.app`，CLI `drawio`）。`.drawio` 本体是 XML，agent 直接写文本；要成图走无头导出：`drawio -x -f pdf|png -s 2 fig.drawio`（论文用 pdf 矢量）。文本源与导出图同目录留存；导出图属生成物，要改就改 XML 源重导，不手改导出件。
+- 本机已装桌面版（`/Applications/draw.io.app`，CLI `drawio`）。`.drawio` 本体是 XML，agent 直接写文本；要成图走无头导出（命令行直接渲染，不开图形窗口）：`drawio -x -f pdf|png -s 2 fig.drawio`（论文用 pdf 矢量）。文本源与导出图同目录留存；导出图属生成物，要改就改 XML 源重导，不手改导出件。
 - 模板不够用再手绘。导出 SVG/PDF，文字保持可选中（导出时勾 outline text 关闭）。
 - 结构性/关系图起手用文本源（mermaid 或 tikz），成图可重生、可 git diff；mermaid 源与 tikz 源存 `papers/<项目短名>/figs/`，成图同目录，一个图一份源，文本源永不为出图而删。
 
