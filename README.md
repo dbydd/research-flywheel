@@ -97,7 +97,7 @@ for p in initiation/pi initiation/examiner common/librarian common/scribe \
 done
 onlyne status --server-root .   # connected 11/11 即环点亮；观测可加 onlyne-tui 一个 tab
 
-# 4. 第一发：给 planner 注入研究方向任务书，环开始自转
+# 4. 第一发：研究方向写进 payload/first.md，注入 ★ entry role pi，环开始自转
 onlyne send --server-root . --from planner --to pi --file payload/first.md
 ```
 

@@ -37,11 +37,11 @@
    `for p in initiation/pi initiation/examiner common/librarian common/scribe theory/speculator theory/theorist experiment/runner review/qa review/referee review/chair archive/planner; do onlyne-server generate --root . --template formal/$p --role $(basename $p) --force; done`
    自检：`<ws>/.pi/settings.json` 的 packages 已变 `../.onlyne/agent/onlyne-agent-pi` 且 `.onlyne/agent/` 有货。
 7. 通电：`onlyne-server run --root .` 占一个**可见前台终端 tab**；随后 11 个 role 各开一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/formal/<phase>/<role>`。client 侧只有 `run`（前台常驻，后台化交给 tab；`start`/`stop` 自 1.0.1 取消）。server/client 都不进任何 agent 后台，关 tab 即停环。起前 `onlyne-client doctor` 看探测；起后 `onlyne status --server-root .` 到 connected 11/11 即环点亮。观测位可加一个 tab 跑 `onlyne-tui --spacing 2 --server-root .`。
-8. 第一发：写 `payload/first.md`（研究方向、约束、期望），`onlyne send --server-root . --from planner --to pi --file payload/first.md`（supervisor 不注册 [[client]]，admin 面签名借 planner→pi 这条持边）。此后环在 role 间自转；看账走 `onlyne ledger|sessions|faults --server-root .`。
+8. 第一发：把研究方向写进 `payload/first.md`（问题、约束、期望，格式见「任务书三段」），`onlyne send --server-root . --from planner --to pi --file payload/first.md`——注入 ★ entry role pi（admin 面签名借 planner→pi 这条持边；supervisor 不注册 [[client]]）。pi 出头四段后环自转；看账走 `onlyne ledger|sessions|faults --server-root .`。
 
 ## 验收自检
 
-最小闭环用例：向 planner 投一条自包含小任务 → session 起 → pi 内 `onlyne_complete` done → ledger 出现 task acked 与 completion 回 origin 两行 → `onlyne faults --open-only` 空。绿了再投研究方向的第一发。
+最小闭环用例：向 pi 投一条自包含小任务（`--from planner --to pi`，内容如「读 AGENTS.md 后回一句本环入口确认」）→ session 起 → pi 内 `onlyne_complete` done → ledger 出现 task acked 与 completion 回 origin 两行 → `onlyne faults --open-only` 空。绿了再投研究方向的第一发。
 
 ## 换机速查
 
