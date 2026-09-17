@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md：按设计段的实验设计落地实测，填结果节。
 
+## 开工技能加载
+开工先读 `.agents/skills/ml-runbook/SKILL.md`（静默失败清单、读数器规范、红旗表——environment.json 按它填）＋`.agents/skills/experiment-design/SKILL.md`（§③④⑤⑦ 可执行性意见与切分核对）；画 measured 图时读 `.agents/skills/paper-figures/SKILL.md`。功耗纪律与训练槽以仓根 AGENTS.md 为准，skill 只补操作细节。
+
 ## 职责
 - 唯一输入 = `<项目短名>.md` 设计段（实验设计）+ 断言清单。spec.md 已废止。
 - 起手式照仓根 AGENTS.md「干活偏好」节：uv 管环境、lightning 统一训练风格、polars 处理表格；写码前先看项目目录与 experiment/ 里既有脚本，沿用手感，自由加 subagent 并行。

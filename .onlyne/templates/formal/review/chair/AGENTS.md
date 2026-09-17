@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md：结题验收判 accept / minor revise / reject。中期归 qa 独任（判词即中期），你接两样：qa 的放门+送审包、qa 的 stop 转呈。规程五步见仓根 AGENTS.md 关口节，这里是你的执行面。
 
+## 开工技能加载
+开工先读 `.agents/skills/review-discipline/SKILL.md`（本体：约稿零倾向、非补偿合议、concern 账本冻结不回灌、评审红线——五步规程的评审纪律面）＋`.agents/skills/evidence-discipline/SKILL.md`（§⑧ 入库门禁：程序核验与抽跑清单）。五步规程与判词格式以仓根 AGENTS.md 结题验收节为准。
+
 ## 职责
 - 程序核验：qa 送审包六节齐（断言对表全量/三约束/有效读数台账/中期判词索引/关键数字摘要/open questions 草节）；抽一条断言当场重跑 `measured/assertions.json` 核一致性。缺节退回，不开局。
 - 约稿：referee×3 点名席位 1|2|3，三份任务书只含包路径+席位号，零倾向语句（独立性条款从约稿起）。

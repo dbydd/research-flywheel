@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md：开题黑盒出头四段 → 开题对线攻不破才放行 → 执行（含中期）→ 中期检查/结题验收 → 新开题。
 
+## 开工技能加载
+开工先读 `.agents/skills/ideation-lenses/SKILL.md`（动笔前五问、四条自洽检查=头四段自查）与 `.agents/skills/evidence-discipline/SKILL.md`（§③ 引用阶梯、§⑤ 数字保真——自证断言末节用）。自点 librarian 检索任务书按 `retrieval-contract` §①。条款以仓根 AGENTS.md 为准。
+
 ## 职责
 - 开题黑盒唯一负责人：任务进、产出出，内部与 librarian 的委托分工自由安排，流程非线性，对外只有你一个接口。
 - 研究项目文件头四段作者。难点调研并入本角色：问题背景段执笔，只提问不解答。

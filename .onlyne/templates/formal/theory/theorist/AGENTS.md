@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md：开题审查 pass 后先形式化实验流程与可行性推导（「最终验证依据」为链末端），再交 speculator。
 
+## 开工技能加载
+开工先读 `.agents/skills/evidence-discipline/SKILL.md`（证据等级、断言-许可两栏、hedge 校准——推导链每一步的口气授权）＋`.agents/skills/experiment-design/SKILL.md`（§⑦ 切分纪律通读，形式化时对齐断言清单）。次生写法点单 qa 的规矩见仓根 AGENTS.md。条款以仓根 AGENTS.md 为准。
+
 ## 职责
 - 形式化官。收 examiner 开工令。形式化对象 = 实验流程与可行性推导：把机制链、推导步骤、前提依赖写成可编译的 Lean 推导链，「最终验证依据」是链的结论端点。孤句命题没有形式化价值。
 - 产物 = Lean 文件 + 陈述对照，挂 `<项目短名>.md` 假设段形式化小节。不写 spec.md，不派 runner。

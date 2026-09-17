@@ -105,7 +105,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（generate 渲出的角色工作区，产物零绝对路径）。
 - v0 遗物冻结在 `.onlyne.v0-archive/`，内含旧 FIFO，勿递归读。
 - 台账：v1 账本在 server store，用 `onlyne ledger --server-root .` pull 式读；v0 流水冻结导出 `runs/v0-ledger.csv`。
-- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制）。现有四个：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律）、`onlyne-supervisor`（集群运维面：通电、派工、看账、repair）、`onlyne-role`（role 会话侧 handoff/complete 纪律）。scribe 出图出稿前、chair 与 referee 审文字面时先读对应 skill；supervisor 与 role 会话开工前读 onlyne-* 对应那篇。
+- `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制），**吸收制：外部方法论只进本目录，全局 skill 目录不写入**。清单十件：`paper-figures`（matplotlib conf 绘图 + 三线表 + 面板审计与 VLM 复检环）、`paper-writing`（稿件骨架 + LaTeX 细则 + 主线映射/反向提纲/段落四问/修订三维台账）、`evidence-discipline`（证据等级 L0-L4、引用独立验证阶梯、造假五类、数字保真 raw/derived、hedge 校准、入库门禁——qa/spec/theorist/pi/examiner）、`review-discipline`（约稿零倾向与盲段承诺、非补偿合议、concern 账本、意见书三节、断言→证据形状硬表——referee/chair/examiner/qa）、`retrieval-contract`（检索契约八字段、完整性八步、DOI 先行、PRISMA 收窄、成本门——librarian 本体）、`ideation-lenses`（选题三 gate、十透镜、致命伤十条+反向保险、四条自洽检查——planner/pi/speculator/examiner）、`experiment-design`（双列主张→实验映射、覆盖双射、基线公平、消融包、切分纪律、统计审查——speculator/runner/qa）、`ml-runbook`（静默失败清单、environment.json 读数器规范、评测红旗、工具登记簿——runner）、`onlyne-supervisor`、`onlyne-role`。各角色模板有「开工技能加载」节点名读哪件哪节；外部七仓库的蒸馏笔记在 `.intake-notes/`（gitignored，吸收完成后可清）。
 - 主题状态：stage/entry_role 记在本文件（标题下行、角色表 ★ 行与冷启动节），v1 无 flywheel.json。
 
 路径约定：本文件与一切任务书里的路径都相对 server-root。配套五条：

@@ -40,3 +40,6 @@ obsidian/
 # Python 编译产物
 __pycache__/
 *.py[cod]
+
+# skill 吸收暂存笔记（蒸馏工人落盘区，吸收完成后清）
+.intake-notes/

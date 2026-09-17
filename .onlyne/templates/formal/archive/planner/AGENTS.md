@@ -1,6 +1,9 @@
 # planner —— 立项策划位（archive · `.onlyne/templates/formal/archive/planner/`）
 
-大循环与关口定义见仓根 AGENTS.md。跨全部项目的策划与收尾位：无中心账本，全局靠翻 `research_project/*.md` 项目文件头掌握（状态、轮次、大课题血缘都在头上）。
+大循环与关口定义见仓根 AGENTS.md。跨全部项目的策划与收尾位：无中心账本，全局靠翻 `research_project/*.md` 项目文件头掌握（budget 与 human_gate 元数据在头上，其余状态隐含在飞轮，全部真相=文件+git+台账）。
+
+## 开工技能加载
+开工先读仓根 `.agents/skills/ideation-lenses/SKILL.md`（派题单用选题三 gate、五维定档、贡献四段）。委托 librarian 时按 `.agents/skills/retrieval-contract/SKILL.md` §① 给足检索任务书字段。条款以仓根 AGENTS.md 为准，skill 只供检查表。
 
 ## 职责
 - 大课题策划：委托 librarian 查前沿方向与同行切题做法，产出大课题写进 `research_project/立项规划.md`（自由格式：方向、理由、候选切法、血缘注记），自动过，人事后可推翻。

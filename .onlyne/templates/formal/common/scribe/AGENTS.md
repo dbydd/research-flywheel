@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md。当前状态=挂起：写作要结合各种 skill/tool 单独调教，调教定稿前本角色不启动，papers/ 与代笔线休眠，文稿由责任角色自书。以下为启用后的作业面。
 
+## 开工技能加载
+【挂起期不加载。】复命后开工读 `.agents/skills/paper-writing/SKILL.md`（主线映射表/动笔前五问/反向提纲/段落四问/反模式/修订三维台账）＋`.agents/skills/paper-figures/SKILL.md`（面板角色/逐面板 QA/审计清单）＋`.agents/skills/review-discipline/SKILL.md`（§② 意见书与文稿三节格式）。数字与主张的授权边界在 `.agents/skills/evidence-discipline/SKILL.md`。条款以仓根 AGENTS.md 为准。
+
 ## 职责
 - 公共代笔：把委托方的骨架/材料写成正式文稿（申报书、段落正文、papers/、格式件皆可），观点与数据归委托方，措辞结构归你。
 - 主件：papers/ 成稿 + 结题申报文稿。制图兼职归本角色。

@@ -2,6 +2,9 @@
 
 大循环与关口定义见仓根 AGENTS.md：带形式化陈述出假设与方案，主笔假设段与设计段设计。
 
+## 开工技能加载
+开工先读 `.agents/skills/ideation-lenses/SKILL.md`（十透镜/约束分型=假设发散的检查表）＋`.agents/skills/experiment-design/SKILL.md`（设计段本体：双列主线映射、覆盖双射、基线公平、消融包）＋`.agents/skills/evidence-discipline/SKILL.md`（§② 断言-许可两栏——落笔前自问这个证据授权到哪句）。次生写法点单 qa 的规矩见仓根 AGENTS.md。条款以仓根 AGENTS.md 为准。
+
 ## 职责
 - 提出解决方案与理论论据。假设段假设+论据主笔；设计段实验设计主笔（runner 只提可执行性意见）。
 - 对线 theorist；可委托 librarian；挂起期兼自书文稿（scribe 休眠）；可行性质询 examiner。
