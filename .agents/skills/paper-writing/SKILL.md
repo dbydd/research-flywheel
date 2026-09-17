@@ -39,7 +39,7 @@ description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字�
 ## 段落四问（逐段返工的最小单元）
 
 - 四问：①一段只承载一个信息 ②首句就说出本段要干什么 ③关键名词自足，新词先定义再复用 ④句与句之间必须有可指认的关系：因果 / 对比 / 推论 / 细化 / 举例，五类之外不算关系。
-- 四问任一不过即整段重写，不做句级打磨。「一段塞多信息」是中文稿件通病。
+- 四问任一未过即整段重写，不做句级打磨。「一段塞多信息」是中文稿件通病。
 
 ## Method 三件套（先设计后回填）
 
@@ -51,15 +51,15 @@ description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字�
 
 ## 反模式四条（命中即退单）
 
-- 禁「先摆朴素方案再改它」：不要先给一个 naive 解法再写我们的改进，**即使工作确实是增量式的也不要这样写**。理由：抹掉读者好奇心，让想法显得「理所当然」，把工作读成低分补丁。
-- 禁 Intro 只讲抽象洞察、藏起具体设计：把**步骤**写新而不是把**真洞察**写新、引入大量新词却不讲机制 = novelty illusion，审稿人读成浅/增量。
-- 禁 Related Work 堆引文 / 藏最强 baseline：先列直接竞品与近年 baseline，按技术主题分组不按年份；差异必须用技术语（机制、假设、失效模式）而非营销语。
-- 禁把技术缺陷写成范围限制，也禁把可修瑕疵当结论主题：Technical defect = 关键指标不及强 baseline，或带来不可接受的权衡；Scope limitation = 受当前任务边界约束、但在当前 SOTA 里仍有竞争力。结论只围绕后者；判词里「这是局限」与「这是缺陷」按此二分，不许互替。
+- 禁「先摆朴素方案再改它」：不要先给一个 naive 解法再写我们的改进，**工作确实是增量式的也不要这样写**。理由：抹掉读者好奇心，让想法显得「理所当然」，把工作读成低分补丁。
+- 禁 Intro 只讲抽象洞察、藏起具体设计：把**步骤**写成新的，**真洞察**没写成新的；引入大量新词，机制不讲 = novelty illusion，审稿人读成浅/增量。
+- 禁 Related Work 堆引文 / 藏最强 baseline：先列直接竞品与近年 baseline，按技术主题分组不按年份；差异必须用技术语（机制、假设、失效模式），营销语不算。
+- 禁把技术缺陷写成范围限制，也禁把可修瑕疵当结论主题：Technical defect = 关键指标不及强 baseline，或带来不可接受的权衡；Scope limitation = 受当前任务边界约束；边界内在当前 SOTA 里仍有竞争力。结论只围绕后者；判词里「这是局限」与「这是缺陷」按此二分，不许互替。
 
 ## 文字审计三件（referee 文字席与文稿合规核）
 
 - 七锚点血缘测试：抽出七句原文，只读这七句：①Abstract 动机句 ②Introduction 首个问题句 ③主 gap 句 ④Intro 末条贡献/路线图句 ⑤Methods 首个 rationale 句 ⑥Results 首条 headline finding ⑦Discussion 首条回答句。七句应自己构成一条连贯的 problem→solution→evidence→resolution 弧；弧断在哪个锚点就去改对应节的设计，**先别打磨语言**。锚点定位天然满足「攻击必锚到段+句+证据，无锚无效」。
-- 七类缺陷命名（finding 共享词表，便于合议聚类）：`background-stack`（背景罗列不收口到必要性）/ `gap-vague`（gap 存在但不可测）/ `method-recipe`（只列部件不讲设计需要）/ `metric-dump`（报数不解释它在测哪条承诺）/ `claim-leap`（解读超出证据）/ `discussion-repeat`（Discussion 复述 Results 不解动机）/ `latex-driven`（改版式不动论证）。
+- 七类缺陷命名（finding 共享词表，便于合议聚类）：`background-stack`（背景罗列不收口到必要性）/ `gap-vague`（gap 存在、不可测）/ `method-recipe`（只列部件不讲设计需要）/ `metric-dump`（报数不解释它在测哪条承诺）/ `claim-leap`（解读超出证据）/ `discussion-repeat`（Discussion 复述 Results 不解动机）/ `latex-driven`（改版式不动论证）。
 - 浅改比率审计：收文字整改单回件、结题修订回件时，对上一版与本版做归一化（tex/md）后逐段最相似比对，记 `near_identical_ratio`（保旧文太多）/ `addition_heavy`（以追加为主）两项进台账；两项同高 = 本轮无实质修订，退回。配套四条警告各记 Observed?/Evidence/Required Fix：段落顺序未变只做句级打磨、无证据库支撑的新主张、Results 仍是 metric-dump、排版工作挤掉了写作逻辑。
 
 ## 修订三维台账（替旧「稿件头部一行修订记录」）
@@ -70,7 +70,7 @@ description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字�
   - `work_status`（进度与可核验性）：`VERIFIED_DONE` / `REPORTED_DONE_UNVERIFIED` / `TODO_TEXT` / `TODO_ANALYSIS` / `TODO_EXPERIMENT` / `TODO_AUTHOR_CONFIRM` / `NOT_FEASIBLE` / `PROPOSED_DISAGREEMENT`。
   - `readiness`（整包）：`ready_to_submit` / `draft_with_placeholders` / `needs_author_input` / `blocked`。
 - 每行另带四个控制字段：`required_input` / `expected_output` / `verification_evidence` / `blocks_finalization`。
-- 完成红线：有可查验工件（稿面 diff、新文件、`measured/` 路径）才准 `VERIFIED_DONE`；责任角色只口头说「改完了」→ `REPORTED_DONE_UNVERIFIED`；说加了实验但没给工件 → 同样永远不给 `VERIFIED_DONE`。草稿回复存在不是手稿已改的证据。
+- 完成红线：有可查验工件（稿面 diff、新文件、`measured/` 路径）才准 `VERIFIED_DONE`；责任角色只口头说「改完了」→ `REPORTED_DONE_UNVERIFIED`；说加了实验、没给工件 → 同样永远不给 `VERIFIED_DONE`。草稿回复存在不是手稿已改的证据。
 - `ready_to_submit` 保守推导：零 `blocks_finalization`、零未解占位、所有已完成项皆 `VERIFIED_DONE` 三者齐才成立；任一行处于 `TODO_AUTHOR_CONFIRM` 或 `REPORTED_DONE_UNVERIFIED`，整包至多 `needs_author_input`。
 - 轴义分明：`action` 说回应策略，`work_status` 报进度与核验状态，两者不得互相代填。台账过宽放不下时改成逐条块状，字段一个不减，尤其不得丢掉 `work_status`、`expected_output`、`blocks_finalization`。
 - 稿件头部只放一行指向 `revisions.md` 对应行的锚，不再逐轮堆修订散文。

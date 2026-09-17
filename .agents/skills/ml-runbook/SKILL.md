@@ -40,7 +40,7 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 
 交件前逐条过。每条配一个当场可跑的探针，探针结论写进 `measured/self_checks.json`。
 
-| # | 静默失败（数字看着正常，读数其实无效） | 探针 |
+| # | 静默失败（数字看着正常，读数实际无效） | 探针 |
 |---|---|---|
 | 1 | LR schedule 没真被应用 | 每步打印实际 LR，首步值必须等于 hparams 声明值 |
 | 2 | 数据未 shuffle / 批内相关 | 连打两个 batch 的 label 直方图，批样本哈希对拍 |
@@ -97,7 +97,7 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 3. 落账：每片末写 `environment.<slice_id>.json`、追加 metrics（CSVLogger 主账）、`run-log.md` 一行（slice_id、起止、wall-time、下一步数、异常）。
 4. 续跑：下一片从上一片记录的 checkpoint hash 起，`measured/run.log` 的片进度是唯一续跑指针。
 5. 让机：片间留散热间隔，同刻训练/拟合进程 ≤1，调度冲突宁可晚出数。
-6. 失败三分类，`run-log.md` 记类别 + 失败命令 + 日志路径：`crash`（崩且可修）、`timeout`（超片预算，缩片）、`invalid_reading`（数字在但不可信，回 ② 探针重跑）。
+6. 失败三分类，`run-log.md` 记类别 + 失败命令 + 日志路径：`crash`（崩且可修）、`timeout`（超片预算，缩片）、`invalid_reading`（数字在、读数不可信，回 ② 探针重跑）。
 7. 冷启动可重跑：相对路径、以项目目录为准、无交互输入、无手建 venv；全量前先在真数据最小闭环对拍一次。
 8. 交活断言三类：文件存在、计数、关键字段在场；自跑自验后在 `run-log.md` 记一行。
 

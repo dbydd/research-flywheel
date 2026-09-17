@@ -64,7 +64,7 @@ flowchart TB
 - 三件：一张覆盖全部主贡献的核心消融表 + 若干模块级小消融 + 每个重要消融配一张定性可视化（曲线/样例/残差，出图口径见 `paper-figures`）。
 - 变体三型：`remove`（删掉）、`replace`（换成平凡实现）、`disable`（留代码关开关），一律对 `full` 报 delta，裸绝对值不算消融。
 - 模块耦合时补交互消融（至少成对 2×2），否则「增益归哪个模块」不可判。
-- 关键参数与模块同权：设计段点名的超参（α、秩 r、窗口 W 之类）每个必须有扫点或双值对照，缺一项即②的尺不过。
+- 关键参数与模块同权：设计段点名的超参（α、秩 r、窗口 W 之类）每个必须有扫点或双值对照，缺一项即过不了②的尺。
 - 实测效果与预期效果分栏：未跑完的消融只准留在设计段待做清单，不许以「预计」进结果节。
 - 移除后不掉点 = 该模块的贡献主张不成立，必须在结论里删掉或改口，不许改叙述保住它。
 
@@ -79,8 +79,8 @@ flowchart TB
 ## ⑥ 统计审查表（读数进结论前逐格过）
 
 - 触数据前定死检验与判据。事后换检验、换子集、换剔除方案凑显著 = p-hacking，该读数作废。
-- 多重比较：先定义比较族，再指定校正（Holm / BH-FDR / Tukey HSD），报告点名用了哪种；无族定义的批量比较按 P0 处理（P0=可能使中央主张失效，P1=主张或许站得住但报告过不了审，P2=表述）。
-- 效应量与不确定度：每个中央结果给效应量 + CI。p 值只回答「有没有」，效应量才回答「值不值得在乎」。
+- 多重比较：先定义比较族，再指定校正（Holm / BH-FDR / Tukey HSD），报告点名用了哪种；无族定义的批量比较按 P0 处理（P0=可能使中央主张失效，P1=主张或许站得住，报告过不了审，P2=表述）。
+- 效应量与不确定度：每个中央结果给效应量 + CI。p 值答有无，效应量答值不值得在乎。
 - 精确值：写 `p = .034`，不写 `p < .05`；仅 `.001` 以下用 `p < .001`。阈值式判据只出现在 pass 判据行。
 - 独立单元：n 是随机化单元数，不是重复测量数、切片数、seed 变体数；同批数据上的重复测量按嵌套/配对结构处理。
 - 种子与重复：默认 ≥3 seed，单次必须写明理由；每格「均值±什么」（sd/std/sem/CI）在表注定义。
@@ -115,7 +115,7 @@ flowchart TB
 - 「结构性错误无法在分析里补救」八条（伪重复、混杂、随机化走样、无同期对照、跑序与时间漂移）与设计文档化使分析成 confirmatory → `skills/experimental-design/SKILL.md:157-199` → MIT，拆进⑥⑦。
 - group-aware / time-respecting split → `skills/scikit-survival/SKILL.md:137-138`；切分先于一切学出来的变换（含 α 选择）→ 同上 `:70-75` + `skills/scikit-learn/SKILL.md:142-143`；同 fold 选参又报性能 → `skills/scikit-survival/SKILL.md:219-220`；时间栅限制 → 同上 `:78-80`；官方分裂加载期不重切 → `skills/aeon/SKILL.md:63-64` → MIT，直借机制并改写。
 - 影子模块禁令 → `skills/scikit-survival/SKILL.md:284-287`、`skills/umap-learn/SKILL.md:456` → MIT，扩写到本仓 `experiment/`、`evaluation/` 命名。
-- 断言行字段表（①下）：字段名与判据口径自定，`constraint` 四值对齐仓根 `AGENTS.md:147-150`；`tested_against` 一名与「pin 与数值同等」的口径 → 蒸馏笔记 `.intake-notes/_frag/ml-runner.md:353`（上游 `scientific-agent-skills/skills/scikit-survival/scripts/_common.py:16-25` 的 `PINNED_INSTALL`/`DEFAULT_SEED` 常量，MIT）→ 改写；`environment.json` 键名照抄 `ml-runbook` 定义，不另起。
+- 断言行字段表（①下）：字段名与判据口径自定，`constraint` 四值中 `leak`/`determinism`/`budget` 对齐仓根三约束、`objective` 承 objectives 读数行（仓根 `AGENTS.md:147-150` 两组字段都在表内，一行只挂一值）；`tested_against` 一名与「pin 与数值同等」的口径 → 蒸馏笔记 `.intake-notes/_frag/ml-runner.md:353`（上游 `scientific-agent-skills/skills/scikit-survival/scripts/_common.py:16-25` 的 `PINNED_INSTALL`/`DEFAULT_SEED` 常量，MIT）→ 改写；`environment.json` 键名照抄 `ml-runbook` 定义，不另起。
 - D0–D5 实验门 → Supervisor-Skills `skills/paper-writer/references/evidence-discipline.md:112-124`（CC BY-NC-SA 4.0）→ 一字不取，本体归 `evidence-discipline`，本文仅在接缝节按门名引用。
 - 反向提纲、claim-evidence map、措辞档位、断言对表本体 → 归 `evidence-discipline` 与 `paper-writing`，本文不重复。
 

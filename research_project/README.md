@@ -1,6 +1,6 @@
 # research_project/ — 研究项目文件区
 
-一项目一文件，随阶段自由生长。全部为人类可读文档，无中心账本：项目状态就写在各自文件头，planner 翻目录知全局（把 agent 当人用，人能读懂的都能读懂）。替代旧 `pool/` 与 `registry.json`（v0.4 起废止，git 参照 15c9049）。
+一项目一文件，随阶段自由生长。全部为人类可读文档，无中心账本：项目全貌就写在各自文件头（不设状态行，状态隐含在飞轮，全部真相=文件+git+台账），planner 翻目录知全局（把 agent 当人用，人能读懂的都能读懂）。替代旧 `pool/` 与 `registry.json`（v0.4 起废止，git 参照 15c9049）。
 
 ## 目录布局
 
@@ -11,10 +11,10 @@ research_project/
   <项目短名>.md                  # 研究项目文件（中文名，如「注意力低秩近似.md」）
   <项目短名>/
     dispatch.md                                    # 任务书存档（一节一封：发信角色+时刻+正文）
-    对线记录.md                                    # examiner⇄pi 攻防（追加式，轮次编号）
+    对线记录.md                                    # examiner⇄pi 攻防（追加式，节头带时刻与类型标）
     proposals/开题申报.md  结题报告.md           # 挂起期责任角色自书（pi/speculator）
     packs/结题送审包.md                      # qa 备齐给 chair 合议
-    gates/开题判定.md  中期判定.md  结题判定.md   # examiner/qa/chair 判词（中期=qa 独任追加式，含放门判词）
+    gates/开题判定.md  中期判定.md  结题判定.md   # examiner/qa/chair 判词（中期=qa 独任追加式，含放门（ready-to-draft）判词）
     gates/结题判定-评审甲.md  -评审乙.md  -评审丙.md  # referee 独立意见书
     data/                                       # 大数据档外用区（见下）
 ```
@@ -24,13 +24,13 @@ research_project/
 ## 文档制两条原则
 
 1. **不追求格式**。头四段与正文各段是生长指引。假设、待做实验、步骤依赖（「本实验以某某为前提」）等注记，各角色按情况自由加，写清指得到就行。下列参考格式只在判据相关的部位收紧（见两硬门）。
-2. **人读文档进 md，数据档进外用区**。measured/ 原始读数、环境采样、大表等以文件形式存在 `<项目短名>/measured/` 或 `<项目>/data/`，项目文件里用路径指过去；文档里不留机器格式。
+2. **人读文档进 md，数据档进外用区**。measured/ 原始读数、环境采样、大表等以文件形式存在 `<项目短名>/measured/` 或 `<项目短名>/data/`，项目文件里用路径指过去；文档里不留机器格式。
 
 ## 项目文件结构（生长指引）
 
 ```markdown
 # <项目短名>
-状态：进行中-理论段 ｜ 大课题：效率注意力（立项规划.md#某节） ｜ 轮次：2 ｜ budget：… ｜ human_gate：无
+budget：单项目算力与时间预算一句话 ｜ human_gate：无（缺省全自动；状态行与轮次已废止，元数据仅此两项）
 
 ## 问题背景        （pi：成因/机制/现有方法何处失效，只提问不解答）
 ## 前沿进展        （pi 成文，librarian 供行锚；摘要+指 research/frontier-notes.md）
@@ -50,15 +50,15 @@ research_project/
 
 ## 拆题三层与审批位
 
-- **大课题**（planner 出）：方向级，记立项规划.md，自动过，人事后可推翻（推翻=改文件+撤派）。
+- **大课题**（planner 出）：方向级，记立项规划.md，自动过，人可事后推翻（推翻=改文件+撤派）。
 - **研究项目**（pi 在大课题下拆）：一文件一命题；这一层的拆法要审：每个项目文件独立走开题对线，审的对象就是它的最终验证依据。
 - **假设/建模条目**（speculator⇄theorist 闭环内产出）：免审不设额外门，对线机制自持，轮数不设限。
 
 ## 关口
 
 - 开题审查（敌意对线）：examiner 四类攻击（前提崩塌/已被做过/不可测/自相矛盾）必带锚；弹药耗尽 pass（开工令→theorist），化解不了的实心攻击或致命实锤 fail（归案 planner）；轮数不设限。特定任务价值存疑走 examiner→Main 请示边。
-- 中期检查=qa 独任环上判词：continue/rectify（整改单直令 runner/speculator/theorist，文字类挂起期也发 speculator）/stop（经 chair 归案）落 gates/中期判定.md 追加式；设计段全 pass+三约束过→放门（ready-to-draft）通知 chair 启动结题。不组局不合议。
-- 结题验收五步（规程详见仓根 AGENTS.md 关口节）：qa 备六节料包 → chair 程序核验+约稿 referee×3（零倾向任务书）→ 三份独立意见书（依据核对/攻击点/建议档）→ chair 合议判 accept / minor revise / reject（与多数相悖须写理由）→ 判词落 gates/结题判定.md，accept 补结论段→planner 开新题。中期=合规判断（便宜档），结题=价值判断（贵档合议）。
+- 中期检查=qa 独任环上判词：continue/rectify（整改单直令 runner/speculator/theorist，文字类挂起期也发 speculator）/stop（经 chair 归案）落 gates/中期判定.md 追加式；设计段目标全部有实测支撑且三约束 pass→放门（ready-to-draft）通知 chair 启动结题。不组局不合议。
+- 结题验收五步（规程详见仓根 AGENTS.md「三个关口」段）：qa 备六节料包 → chair 程序核验+约稿 referee×3（零倾向任务书）→ 三份独立意见书（依据核对/攻击点/建议档）→ chair 合议判 accept / minor revise / reject（与多数相悖须写理由）→ 判词落 gates/结题判定.md，accept 补结论段→planner 开新题。中期=合规判断（便宜档），结题=价值判断（贵档合议）。
 - scribe 挂起中（写作单独调教）：papers/ 成稿与代笔线休眠，申报书/报告/文稿由责任角色自书；本区 proposals/ 两份报告挂起期归 speculator（结题报告）与 pi（开题申报）。
 
 判词落 `gates/<关口>判定.md`（判词+依据+签字+时刻），意见书 `gates/<关口>判定-评审<甲|乙|丙>.md`，提交前评审彼此不通。
