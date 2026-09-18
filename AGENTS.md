@@ -295,9 +295,9 @@ supervisor 会话档位见根 `.pi/settings.json` 的模型三元组（`generic-
 装配完成的瞬间，工作区有这些既定事实：
 
 - `stage=design`，分支 `theme/formal-research`；稿件转正后由 supervisor 把本行的 stage 改为 `stage=live`。
-- v1 运行时未起：`onlyne-server status` 无 socket，`onlyne-client status --workspace .onlyne/ws/formal/<phase>/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne-server run --root .`，十一个 role client 各占一个可见 tab 跑 `onlyne-client run --workspace .onlyne/ws/formal/<phase>/<role>`（client 侧仅有 `run`，`start`/`stop` 自 1.0.1 取消）。
+- v1 运行时未起：`onlyne server status` 无 socket，`onlyne client status --workspace .onlyne/ws/formal/<phase>/<role>` 起不来。通电 = server 一个可见前台 tab 跑 `onlyne server start --root .`（detached+pid；判活 socket_present，深路径看 `.onlyne/run/socket`），十一个 role client 各占一个可见 tab 跑 `onlyne client run --workspace .onlyne/ws/formal/<phase>/<role>`（client 侧仅有 `run`，`start`/`stop` 自 1.0.1 取消）。
 - `tasks` 表 0 行，`papers/` 空，`research_project/` 仅有 README.md（formal 项目目录尚未产生）。
-- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server run` 与十一个 `onlyne-client run` 属于通电，第一发属于开跑。
+- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne server start` 与十一个 `onlyne client run` 属于通电，第一发属于开跑。
 
 启动动作二选一：
 
@@ -318,7 +318,7 @@ supervisor 只负责把第一发投进 `★` role。
 - 十一角色 client = 各一个可见前台 tab 跑 `onlyne client run --workspace .onlyne/ws/formal/<phase>/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
 - 崩溃残留处理：`onlyne faults --open-only` 看核心检测（intent exhausted 落此），`onlyne repair inspect|retry|close|fail|ack --task <id>` 处置；投递层之外的残影走下面的恢复纪律。
 - 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。语义按源码校准：`close` 记 cancelled、`fail` 记 failed，两者都经 `retire_task_resource` 向属主 client 发 `Command::Cancel`（`<onlyne 仓>/crates/onlyne-server/src/faults.rs:336-368`），pane 一并回收。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
-- `onlyne-client` 不写 pid 文件（pid 真相在 server 侧 client_registry）。停某个 client 用 `ps` 按 args+cwd 精确匹配该 ws 的 `onlyne-client run` 进程再定点发信号，禁止 pkill 按名杀。
+- `onlyne-client` 不写 pid 文件（pid 真相在 server 侧 client_registry）。停某个 client 用 `ps` 按 args+cwd 精确匹配该 ws 的 `onlyne client run` / `onlyne-client run` 进程再定点发信号，禁止 pkill 按名杀。
 - 清理孤儿进程前先核对身份：`brew services`、launchd、其他 app 拉起的常驻服务不属于 swarm。杀之前查 launchd label / 父进程 / 端口归属，只回收 `.onlyne/run/` pid 文件与 client 注册表里存在的进程。误杀系统服务比留一个孤儿严重得多。
 - hindsight bank 重建、hindsight.json 实例面条款：v1 插件无该子系统，实例 `.pi/` 归装机者自管，暂不提供集中重建步骤（需要时按 pi hindsight 扩展原生方式现场配）。
 
