@@ -1,6 +1,6 @@
 {
   "packages": [
-    "/Users/dbydd/Documents/progs/onlyne/plugins/onlyne-agent-pi"
+    "npm:pi-onlyne"
   ],
   "defaultProvider": "axonhub",
   "defaultModel": "supercheap",

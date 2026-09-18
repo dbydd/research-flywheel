@@ -39,7 +39,7 @@
 - 主度量：端到端跑通轮数。`research_project/<项目短名>.md` 头定稿 → 假设段（假设/论据/形式化）→ 设计段（设计/结果 + `measured/`）→ `papers/<项目短名>/main.pdf` → `gates/结题判定.md` 全链条落盘记一轮。阈值 ≥1 轮完整跑通算推进。
 - 次度量：关口 revise/rectify 收敛情况，按台账如实计数，不设健康上限。
 
-算力与时间预算：本机 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<项目短名>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
+算力与时间预算：本树 pi 会话 + 宿主 lean 二进制 + 按需 GPU 跑批，无固定配额；单项目预算写进 `<项目短名>.md` 的 `budget` 字段。记账按轮在任务产物里做，配置、种子、耗时进 `measured/`。
 
 禁区四条：不伪造 `measured/` 数值；不改评测器语义迎合结论；不碰外部付费数据集与私有模型权重；speculator 出假设与实验设计、theorist 出形式化，两者都不写 `experiment/` 代码。`spec.md` 独立文书废止，runner 唯一输入 = 设计段实验设计段 + 断言清单。断言清单=动跑前落盘的断言行本体（字段见 experiment-design §①）；跑后 qa 把读数逐条对上形成的对照表称断言对表，是判词原料。两名一物，分跑前跑后两态。
 
@@ -98,9 +98,9 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，目录名 `<项目短名>/`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
-- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用、vendor 的 `.onlyne/agent/onlyne-agent-pi`、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
+- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用（`npm:pi-onlyne`）、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
 - 改 role 上下文的做法：改 `.onlyne/templates/formal/<phase>/<role>/`，再跑 `onlyne-server generate --root . --template formal/<phase>/<role> --role <role> --force`。
-- 模板 settings 的 packages 须写 agent_package 的字面绝对路径，generate 才触发 vendor 重写；写 `{{agent_package}}` 渲出形态缺 `../` 前缀，pi 不加载。
+- 模板 settings 的 packages 写 `npm:pi-onlyne`。自展开 supervisor 第一次装配执行 `pi install npm:pi-onlyne`（latest，命令无版本号）。`[server].agent_package` 留空；generate 把 packages 原样拷进角色工作区。
 - `.onlyne/`：v1 集群面。跟踪的模板真相是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
 - 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（generate 渲出的角色工作区，产物零绝对路径）。
 - v0 遗物冻结在 `.onlyne.v0-archive/`，内含旧 FIFO，勿递归读。
@@ -158,7 +158,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
 
-- 装具与插件各追自己渠道的最新，命令里没有版本号：升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`。onlyne 随时发版，每个小版本装进来的都是 bug fix；`onlyne version` 的 `protocol:1` 是兼容判据，各 crate 版本号独立前进。工具面事实以 `<onlyne 仓>`（本机 onlyne checkout，main 分支）源码与当期 `--help` 为准，本树只读它。
+- 装具与插件各追自己渠道的最新，命令里没有版本号：升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`。onlyne 随时发版，每个小版本装进来的都是 bug fix；`onlyne version` 的 `protocol:1` 是兼容判据，各 crate 版本号独立前进。工具面事实以 `<onlyne 仓>`（装机者的 onlyne checkout，main 分支）源码与当期 `--help` 为准，本树只读它。
 - 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne reload --server-root .`（`reload` 无 `--dry-run`，看待应用差异用只读动词 `onlyne spec_diff --server-root .`，别名 `spec-diff` 同解），运行期零回写。
 - role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`；note 骑在对方已活的 session 上，目标离线或在线无 working session 都直接 `recipient_offline`（本 spec `note_queue = false`；要排队先把该键设 true 并带 `--ttl`，到点记 expired）。`onlyne_complete {outcome:"done"|"failed"|"cancelled", text}` 交活。
 - 接力派下一跳用 bash `onlyne handoff --to <role> --task <当前task_id> --text "<任务书>"`（parent_task+hop 血缘顺链；task_id 在注入帧头、`/onlyne` 或 receipt JSON 里查）。
@@ -167,7 +167,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 观测命令：`onlyne status|roles|sessions|ledger|faults|watch|history --server-root .`；pi 内 `/onlyne`。op_id 换体重发 conflict，重试原帧重发。
 - supervisor 不注册 [[client]]：cwd=server-root 走 admin 面。第一发 `onlyne send --server-root . --from planner --to pi --file payload/first.md`（--from 须已注册持边角色，落账 admin=true）。
 - 角色零上行边：completion 走 origin 免 ACL 特例自动回账，进来源 role 收件箱（queued 行，pull 式），反边不用声明。
-- control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。backend：`ONLYNE_BACKEND` 取 `herdr|orca|zellij|exec|fake|auto`，留空或 `auto` 时探测序 herdr→orca→zellij，`exec`/`fake` 只认点名，探不到 `onlyne-client run` 退 5 并报 NO_SUPPORTED_HOST（判定在 `<onlyne 仓>/crates/onlyne-session/src/backend/mod.rs::select_backend_from_env`）；`onlyne-client doctor` 只读打印本机判定，恒退 0。
+- control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。backend：`ONLYNE_BACKEND` 取 `herdr|orca|zellij|exec|fake|auto`。选择链 env（非空）> 工作区 `config.toml` 的 `backend` > auto。留空或 `auto` 时探测序 herdr→orca→zellij，`exec`/`fake` 只认点名，全无匹配 `onlyne client run` 退 5 并报 NO_SUPPORTED_HOST。`onlyne-client doctor` 只读打印宿主判定，恒退 0。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > cwd 上行查找；规范路径越过 103 字节时绑短派生路径，实际路径写进 `.onlyne/run/socket`。会话结清后宿主资源随会话回收。`stalled` 只报仍在跑的会话。满容量 role 用 `control_only` pull 继续收 control。重连 `hello.live_tasks` 让在跑任务保持 `in_flight`。
 - 调度参数承接：per-role `[client.timeout]{ready_ms,running_ms,idle_ms}`（默认 30000/120000/60000，runner running_ms=3600000 承接旧 busy_secs）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
 - `relay_required`（任务主下游，单值）与角色表 `relay` 列同源；ACL 终表双边互认，边成立需两端都列。
 
@@ -313,9 +313,9 @@ supervisor 只负责把第一发投进 `★` role。
 
 - 配置唯一入口是 `.onlyne/spec.toml`（拓扑/prose/ACL/timeout/intent/agent_package/cert_pin）与 `.onlyne/templates/formal/<phase>/<role>/`（十一套细则+模型三元组）。
 - 生效路径：spec 改→reload；模板改→该 role generate --force（`--template formal/<phase>/<role>`）。无 sync/overlay/bootstrap 概念。generate 对两级模板目录的支持未实测，通电首检验证。
-- 装役：五件 `onlyne` / `onlyne-server` / `onlyne-client` / `onlyne-gateway` / `onlyne-tui` 装 crates.io latest，插件 `pi install npm:pi-onlyne`（同为 latest）。onlyne 发版频繁，内容基本全是 bug fix，本机长期跑 main 源码构建。策略口径：本树文档与脚本一律不钉版本、不写 tag 名，只设 `protocol=1` 下限。排查工具行为以 `<onlyne 仓>`（本机 onlyne checkout，main）源码与当期 `--help` 为准，role 会话只读。
-- server/tui 常驻 = 在 **本主题 worktree 的可见前台 tab** 里跑（`orca terminal create --worktree path:<本树> --command "onlyne-server run --root ."`，tui 同款），关 tab 即停环；禁入任何 agent 后台。client 起 tab 的 worktree 决定会话 spawn 定向（错配案：hub 起 client 继承它方 ORCA_WORKTREE_ID → 会话 cd 进错检出即死）。
-- 十一角色 client = 各一个可见前台 tab 跑 `onlyne-client run --workspace .onlyne/ws/formal/<phase>/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
+- 装役：五件 `onlyne` / `onlyne-server` / `onlyne-client` / `onlyne-gateway` / `onlyne-tui` 装 crates.io latest，插件 `pi install npm:pi-onlyne`（同为 latest）。onlyne 发版频繁，内容基本全是 bug fix。策略口径：本树文档与脚本一律不钉版本、不写 tag 名，只设 `protocol=1` 下限。排查工具行为以 `<onlyne 仓>`（装机者的 onlyne checkout，main）源码与当期 `--help` 为准，role 会话只读。
+- server/tui 常驻 = 在 **本主题 worktree 的可见前台 tab** 里跑（`orca terminal create --worktree path:<本树> --command "onlyne server start --root ."`，tui 同款），关 tab 即停环；禁入任何 agent 后台。client 起 tab 的 worktree 决定会话 spawn 定向（错配案：hub 起 client 继承它方 ORCA_WORKTREE_ID → 会话 cd 进错检出即死）。
+- 十一角色 client = 各一个可见前台 tab 跑 `onlyne client run --workspace .onlyne/ws/formal/<phase>/<role>`（60s ready 计时从起表，长活由 running_ms 续；client 侧无 `start`/`stop`）。
 - 崩溃残留处理：`onlyne faults --open-only` 看核心检测（intent exhausted 落此），`onlyne repair inspect|retry|close|fail|ack --task <id>` 处置；投递层之外的残影走下面的恢复纪律。
 - 恢复运行纪律（0912 补）：client 重挂后、投新任务前，对 `onlyne sessions` 里每条 working 逐个 `onlyne repair inspect --task <id>`；pane 已死而 lifecycle 仍 working 的残影用 `repair close` 收口（faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判；control cancel 属主判定挡 supervisor，close 走 admin 面可用）。语义按源码校准：`close` 记 cancelled、`fail` 记 failed，两者都经 `retire_task_resource` 向属主 client 发 `Command::Cancel`（`<onlyne 仓>/crates/onlyne-server/src/faults.rs:336-368`），pane 一并回收。伴生检查：`ps` 扫 v0 遗留守护进程（ppid=1 且与 runs/ environment.json 端口引用对上的回收，精确 PID）。
 - `onlyne-client` 不写 pid 文件（pid 真相在 server 侧 client_registry）。停某个 client 用 `ps` 按 args+cwd 精确匹配该 ws 的 `onlyne-client run` 进程再定点发信号，禁止 pkill 按名杀。

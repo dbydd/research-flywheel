@@ -5,7 +5,7 @@
 两个底座工具：
 
 - **onlyne**：多 agent 集群协调框架。负责把任务在角色之间传递、记账、监督会话生死（命令：`onlyne send / handoff / ledger / status`）。
-- **pi**：本机运行的编码 agent 会话程序，接已配置的大模型。每个角色的实际工作（读文件、写文档、跑实验代码）都在一个 pi 会话里完成。
+- **pi**：编码 agent 会话程序，接已配置的大模型。每个角色的实际工作（读文件、写文档、跑实验代码）都在一个 pi 会话里完成。
 
 ## 这套系统长什么样
 
@@ -63,8 +63,8 @@ payload/                  注入集群的第一发任务书
 ## 前置
 
 - onlyne v1 五件套，装 latest（命令里没有版本号，随时发版随时追）：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`——crate `onlyne-cli` 装出的命令叫 `onlyne`，其余四个 crate 名=命令名。升级＝同一条命令加 `--force` 重跑。兼容判据：`onlyne version` 报 `protocol:1`；各二进制版本号独立前进。要跟未发布的 fix：源码构建 `git clone https://github.com/dbydd/onlyne && cargo build --release`，产物进 PATH；macOS 上 cp 进 PATH 的二进制要先 `codesign --force --sign -` 重签，否则 exec 收 SIGKILL。
-- pi + onlyne 插件：`pi install npm:pi-onlyne`（1.0.0 起讲 protocol 1，relay 守卫在内）；generate 会把插件 vendor 进各角色工作区，ws 内副本零 npm 依赖。
-- 会话后端 `herdr`/`orca`/`zellij` 之一：`ONLYNE_BACKEND` 留空按 herdr→orca→zellij 探测，`onlyne-client doctor` 只读打印本机判定，探不到时 `onlyne-client run` 退 5。
+- pi + onlyne 插件：模板 packages 写 `npm:pi-onlyne`。第一次装配执行 `pi install npm:pi-onlyne`（1.0.0 起讲 protocol 1，relay 守卫在内），装当期 latest。
+- 会话后端 `herdr`/`orca`/`zellij` 之一：选择链 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只认点名。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - pi 侧 model/provider 配好（本主题三档模型设计见 `AGENTS.md` 角色表末列）。
 - 运行纪律：server 和每个角色的 client 各占一个**可见前台终端 tab**（关 tab 即停该角色），不进任何 agent 后台。
 
@@ -78,24 +78,25 @@ onlyne version
 
 # 1. 证书与密钥：server init 产 cert_pin 回填 spec [server]；逐 role client init 的 key 回填对应 [[client]]
 #    （端口查重 lsof -i :7820；回填前占位值必须保持合法 base64，REPLACE_ME 全链拒跑。11 role 循环命令见 BOOTSTRAP 步骤 4）
-onlyne-server init --root . --listen 127.0.0.1:7820
+onlyne server init --root . --listen 127.0.0.1:7820
 
-# 2. 用模板渲染 11 个角色工作区（模板改动后 --force 重渲；换机先改 11 份 settings.json 的插件绝对路径，见 BOOTSTRAP 步骤 3）
+# 2. 插件与渲染：第一次装配 `pi install npm:pi-onlyne`（见 BOOTSTRAP 步骤 3）；再用模板渲染 11 个角色工作区（模板改动后 --force 重渲）
+pi install npm:pi-onlyne
 for p in initiation/pi initiation/examiner common/librarian common/scribe \
          theory/speculator theory/theorist experiment/runner \
          review/qa review/referee review/chair archive/planner; do
-  onlyne-server generate --root . --template formal/$p --role $(basename $p) --force
+  onlyne server generate --root . --template formal/$p --role $(basename $p) --force
 done
 
 # 3. 通电：server 与 11 个 client 各占一个可见 tab（以 orca 为例）
-orca terminal create --worktree path:$PWD --title onlyne-server --command "onlyne-server run --root ."
+orca terminal create --worktree path:$PWD --title onlyne-server --command "onlyne server start --root ."
 for p in initiation/pi initiation/examiner common/librarian common/scribe \
          theory/speculator theory/theorist experiment/runner \
          review/qa review/referee review/chair archive/planner; do
   orca terminal create --worktree path:$PWD --title "onlyne-client-$(basename $p)" \
-    --command "onlyne-client run --workspace .onlyne/ws/formal/$p"
+    --command "onlyne client run --workspace .onlyne/ws/formal/$p"
 done
-onlyne status --server-root .   # connected 11/11 即环点亮；观测可加 onlyne-tui 一个 tab
+onlyne status --server-root .   # connected 11/11 即环点亮；观测可加 onlyne tui 一个 tab
 
 # 4. 第一发：研究方向写进 payload/first.md，注入 ★ entry role pi，环开始自转
 onlyne send --server-root . --from planner --to pi --file payload/first.md

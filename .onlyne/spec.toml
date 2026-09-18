@@ -12,7 +12,9 @@ note_queue = false
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-agent_package = "/Users/dbydd/Documents/progs/onlyne/plugins/onlyne-agent-pi"
+# Role templates list `npm:pi-onlyne` in `.pi/settings.json`. Leave empty so generate copies packages as-is. First-time bootstrap: `pi install npm:pi-onlyne`.
+# 1.1.x optional gates (omit = defaults): stale_watch_secs=60, heartbeat_grace_secs=90, requeue_max_attempts=0, requeue_ttl_secs=0.
+agent_package = ""
 template_root = ".onlyne/templates"
 
 # Each role is one `[[client]]` row. `onlyne-client init` prints a ready row
