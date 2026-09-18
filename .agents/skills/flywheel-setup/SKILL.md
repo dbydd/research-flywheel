@@ -11,6 +11,8 @@ description: Guide a fresh clone through theme assembly. Use when the user says 
 
 装配前 checkpoint：root `AGENTS.md` 必须是薄入口，即 §5.1 那几行。若它已经是主题约定版，说明本工作区已装配，不要重走本指南。
 
+第零步（动手改主题文件之前）：亲手装渠道 latest。`pi list` 没有 `npm:pi-onlyne` 就跑 `pi install npm:pi-onlyne`。五个 crate 用 `cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（已装过加 `--force`）。`onlyne version` 的 `protocol=1` 即兼容。role 模板 `.pi/settings.json` 已经写着 `npm:pi-onlyne`，`[server].agent_package` 保持空串。
+
 ## A 探询
 
 问用户：研究问题是什么？研究问题用一句话目标加验收它的度量来答。什么算进步？答主度量、次度量、阈值。可跑的评测是什么？算力与时间预算多少？禁区是什么？禁区指不做的事、不碰的数据集/模型。
@@ -55,7 +57,7 @@ description: Guide a fresh clone through theme assembly. Use when the user says 
 ./scripts/promote.sh --dry-run
 ```
 
-全绿才往下。红项逐条回 C/D 修。常见红项：THEME 残留、`★` 数量不对、角色表与 spec.toml 不一致、seed schema 缺字段、`workspace sync` 报 dangling、`pi-onlyne` 版本下限不够、二进制缺失。
+全绿才往下。红项逐条回 C/D 修。常见红项：THEME 残留、`★` 数量不对、角色表与 spec.toml 不一致、seed schema 缺字段、`workspace sync` 报 dangling、`pi list` 没有 `npm:pi-onlyne`（第一次跑 `pi install npm:pi-onlyne`）、二进制缺失。
 
 ## F 落定
 
@@ -69,7 +71,7 @@ description: Guide a fresh clone through theme assembly. Use when the user says 
 
 ## G 第一发
 
-先向用户转述 §6.5 的现场清单：tasks 0 行、`.ws/<role>` 无 session、`runs/` 空、`papers/` 空、pool 里是种子。`onlyne-server run` 与各 `onlyne-client run` 属于通电动作，开跑靠一发注入。
+先向用户转述 §6.5 的现场清单：tasks 0 行、`.ws/<role>` 无 session、`runs/` 空、`papers/` 空、pool 里是种子。`onlyne server start` 与各 `onlyne client run` 属于通电动作，开跑靠一发注入。
 
 再问：研究方向现在给不给？第一发由谁投？可选方案是 supervisor 写 `payload/first.md` 投，或者用户自己在 CLI 投。
 

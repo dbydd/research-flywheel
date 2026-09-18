@@ -55,7 +55,7 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 - 接力一律用 handoff。ledger 顺 `parent_task` 链能查出整条科研链路，追溯成本为零。
 - 失败交活：handoff/complete 的 text 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
 - 重试纪律：同一 `op_id` 换内容重发得到 `conflict`。重试时原帧重发。断线期照常干活：outgoing receipt 落 intent，重连后按序补投。
-- role 会话查现场：`onlyne who`、`onlyne watch --follow`（ws 内自动解析本地 socket）。pi 内用 `/onlyne` 命令看连接与 task 统计。
+- role 会话查现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。pi 内用 `/onlyne` 命令看连接与 task 统计。
 
 ## 任务书四段（send/handoff 的 text）
 
@@ -116,24 +116,25 @@ role 增删以 `.onlyne/spec.toml` 的 [[client]] 为准。本表与 `allowed_ta
 装配完成的瞬间，工作区处于这些事实下：
 
 - `stage=live`，`theme/<slug>` 分支已建，装配材料已消失。
-- v1 运行时未起：`onlyne-server status` 无 socket；`ws/` 未生成；spec.toml 的 REPLACE_ME 未替换。
+- v1 运行时未起：`onlyne server status` 无 socket；`ws/` 未生成；spec.toml 的 REPLACE_ME 未替换。
 - `tasks` 空，`runs/` 空，`papers/` 空，`pool/ideas.md` 里是种子或空。
-- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne-server start` 属于通电，第一发属于开跑。
+- 飞轮是反应式的：没有入站任务就什么都不会发生。`onlyne server start` 属于通电，第一发属于开跑。
 
 通电顺序（一次性，装配收官时做）：
 
 ```bash
-# 装具先到位：五个 crate + pi 插件全追 latest（升级＝同一条命令加 --force 重跑），兼容判据 onlyne version 的 protocol=1
-onlyne-server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin   # 多树并机查重：7813=ARIS live，第二集群自选 7814+
-# 回填 spec.toml 的 cert_pin；哨兵统一 sed：
-#   ABS="<onlyne checkout>/plugins/onlyne-agent-pi"
-#   sed -i '' "s\|__AGENT_PACKAGE_ABS__\|$ABS\|g" .onlyne/spec.toml .onlyne/templates/flywheel/*/.pi/settings.json
+# 装具先到位（自展开第一次 supervisor 亲手跑，之后升级同命令）：五个 crate + pi 插件全追 latest
+#   cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+#   pi install npm:pi-onlyne
+# 兼容判据 onlyne version 的 protocol=1。role 模板 settings 已写 npm:pi-onlyne，[server].agent_package 保持空串。
+onlyne server init --root . --listen 127.0.0.1:7812      # 写 [server] 真相、keys、cert_pin   # 多树并机查重：7813=ARIS live，第二集群自选 7814+
+# 回填 spec.toml 的 cert_pin
 # 各 role key 先播合法 32 字节占位 key（base64(32×0x01)=AQEBAQ...AQE=）——非法 key 全量 parse 连 client init 都跑不动
-onlyne-client init --workspace .onlyne/ws/$TOPO/<role> --role <role> --server-root .   # 逐 role 产真 key，回填 spec.toml
-onlyne-server generate --root .                          # 渲染 ws（vendor 插件、零绝对路径）
-onlyne-server start --root .                             # detached+pid；判活用 status 的 socket_present
-onlyne-client doctor                                     # 只读：本机后端探测结果（host / backend_selection / binary）
-onlyne-client run --workspace .onlyne/ws/$TOPO/<role>    # 每 role 一个 client（各一 tab；client 侧只有 run，后台化归 tab）
+onlyne client init --workspace .onlyne/ws/$TOPO/<role> --role <role> --server-root .   # 逐 role 产真 key，回填 spec.toml
+onlyne server generate --root .                          # 渲染 ws；agent_package 空则 settings 留下 npm:pi-onlyne
+onlyne server start --root .                             # detached+pid；判活用 status 的 socket_present；深路径看 .onlyne/run/socket
+onlyne client doctor                                     # 只读：宿主探测结果（host / backend_selection / binary）
+onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # 每 role 一个 client（各一 tab；client 侧只有 run，后台化归 tab）
 ```
 
 启动动作二选一：
@@ -149,14 +150,16 @@ supervisor 不进环，只在人问起时从 runs/ 与 ledger 汇报现场。
 ## 维护与配置（supervisor 用）
 
 - `spec.toml` 是唯一真相。[[client]] 的 prose/ACL/`max_sessions`/`reuse` 都在 role 条目上配。`[client.timeout]` 有 ready_ms=30000、running_ms=120000、idle_ms=60000。`[client.intent]` 有 attempts=3、backoff_ms=[1000,2000,4000]。改完跑 `onlyne reload --server-root .`；先看差异用只读动词 `onlyne spec_diff --server-root .`（reload 无 `--dry-run`）。失败时保留旧 spec，并记 `fault{spec_reload_failed}`。
-- 版本策略：工具链与 pi 插件各追自己渠道的 latest（升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`）。安装与升级命令里始终没有版本号；文中出现的号只做下限与历史标注。发版频繁，新 fix 全在最新。兼容判据 = `onlyne version` 的 `protocol:1`。
-- 后端选择：`ONLYNE_BACKEND` env，取值 `herdr|orca|zellij|exec|fake|auto`。空值与 `auto` 按能力探测，顺序 herdr→orca→zellij，探不到报 NO_SUPPORTED_HOST（`run` 退 5）。命令行型 role 用 orca/zellij/herdr 起 session_command。`onlyne-client doctor` 只读打印探测结果。SWARM_RUNTIME 已退役。
+- 版本策略：工具链与 pi 插件各追自己渠道的 latest（升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`）。安装与升级命令里始终没有版本号；文中出现的号只做下限与历史标注。发版频繁，新 fix 全在最新。兼容判据 = `onlyne version` 的 `protocol:1`。role 模板 `.pi/settings.json` 写 `npm:pi-onlyne`；第一次装配 supervisor 手动 `pi install npm:pi-onlyne`。
+- 后端选择：`ONLYNE_BACKEND` env，取值 `herdr|orca|zellij|exec|fake|auto`。选择链是 env（非空）> 工作区 `config.toml` 的 `backend` > auto。空值与 `auto` 按能力探测，顺序 herdr→orca→zellij。`exec`/`fake`/`headless` 只在显式写出其名时启用（`headless` 是 `exec` 的 parse 别名，投影仍写 `exec`）。全无匹配时报 NO_SUPPORTED_HOST（`run` 退 5）。herdr 按 label 认 workspace（`onlyne:<cluster>`），按名字认 tab（role 名）。`onlyne-client doctor` 只读打印探测结果。SWARM_RUNTIME 已退役。
+- socket：解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace`/cwd 上行查找。属主目录凭 `.onlyne/run/s` 或 `.onlyne/run/socket` 认定。规范路径不超过 103 字节时绑 `<owner>/.onlyne/run/s`；越过上界时绑短派生路径，实际路径写进 `run/socket`。client 拉起 session 时注入 `ONLYNE_SOCKET`。绑不上以 exit 1 结束。
+- 工作模式：会话结清后宿主资源随会话回收（pane/tab/zellij/exec 子进程），日志 `retiring idle session resource`。`reuse = true` 时仍挂着的 agent 留给下一跳。`stalled` 只描述仍在跑的会话。满容量 role 用 `control_only` pull 继续收 `recycle`/`cancel`/`focus`。重连 `hello.live_tasks` 让在跑任务保持 `in_flight`。`[server].requeue_max_attempts` / `requeue_ttl_secs` 约束自动重投（默认 0 = 不限 / 关）。
 - role 模型/思考档 = `.onlyne/templates/flywheel/<role>/.pi/settings.json` 三元组。生成后 ws 内的 `.pi/**` 归 role 与 supervisor 所有。重 generate 前先看 spec 的模板发现规则（templates/<topo>/<role>/，basename=role 名）。
 - ws 整目录 `mv` 即搬迁，这是设计内能力。client 的全部路径自 `--workspace` 推导，intents/游标随 `.onlyne/` 同行。搬完重启该 client。
 - 故障运维：`onlyne faults --open-only` 看核心检测。`onlyne repair inspect|retry|close|fail|ack` 与 `rebind|adopt` 把任务指回活 pane。`repair close|fail` 在销账之外还向属主 role 发 Cancel，走的是 admin 面，1.0.4 起会真停掉还在跑的 session。`DeliveryState::Exhausted` 是终态，重开要经过这里的显式决定。
 - 重启 client 后先 `onlyne ledger` 找 working 行，逐行 `onlyne repair inspect --task <id>`。pane 已死而 ledger 停在 working 的行不会自愈，faults 也是空的，只能逐条人工确认后销账：`onlyne repair close --task <id> --reason ...` 记 cancelled，`onlyne repair fail --task <id> --reason ...` 记 failed（`close` 没有 `--outcome` 参数，两个动词各自定终态）。原因：faults 只覆盖投递层，running_ms 活在 client 侧判定，client 重启后旧账无人续判；`control cancel` 走属主判定会被挡，repair 面走 admin 身份可用。
 - 清理孤儿进程前先核对身份：`brew services`、launchd、其他 app 拉起的常驻服务不属于 swarm。杀之前查 launchd label / 父进程 / 端口归属，只回收 `.onlyne/run/` pid 文件与 client 注册表里存在的进程。误杀系统服务比留一个孤儿严重得多。
-- 生命周期：`onlyne-server init|run|start|stop|status|generate`。通电用 start；run 不写 pid，status.running 只认 pid 文件，判活看 socket_present。`onlyne-client run|init|status|roles|sessions|history|watch|agent|doctor`——`start`/`stop` 自 1.0.1 取消，`run` 待前台，后台化交给 tab / launchd。查询与运维动词全在瘦入口 `onlyne --server-root .`。停环先 server stop，client 各自退出。杀进程不要按名字猜，先查 pid 文件（`.onlyne/run/`）与祖先链。daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可见 tab，不进 agent 后台；`onlyne-client` 从目标 worktree 自己的 tab 起，worktree 错配会开错检出。
+- 生命周期：`onlyne server init|run|start|stop|status|generate`。通电用 start；run 不写 pid，status.running 只认 pid 文件，判活看 socket_present，深路径再看 `run/socket`。`onlyne client run|init|status|roles|sessions|history|watch|agent|doctor`——`start`/`stop` 自 1.0.1 取消，`run` 待前台，后台化交给 tab / launchd。查询与运维动词全在瘦入口 `onlyne --server-root .`。停环先 server stop，client 各自退出。杀进程不要按名字猜，先查 pid 文件（`.onlyne/run/`）与祖先链。daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可见 tab，不进 agent 后台；`onlyne-client` 从目标 worktree 自己的 tab 起，worktree 错配会开错检出。
 - 错误词汇表（串对照源码 relay.rs / runloop.rs）：`acl_denied`＝spec 缺边；`unauthorized`＝key 未注册；`recipient_offline`＝note 落在两个门之一——目标 role 离线（`recipient role X is offline`）或在线但无 working session 可唤醒（`recipient role X has no working session to wake`），两门都在 `note_queue = false` 时生效；`note_queue = true` 时 queued note 到 `ttl_ms` 记 `expired`，投递时撞上无活 session 得 rejected，reason 串是 `note has no live session to wake`；`duplicate`＝同 op_id 原帧重发（返回原 receipt）；`conflict`＝同 op_id 换了 body；`not_admin`＝未注册身份用 `--from`。被拒不落账。
 - 观察：`onlyne --server-root . ledger|sessions|watch --follow --tier durable`；`onlyne tui` 有两页板（role 网络图 + ledger）。
 - 子集群上报：本 root 若挂到更大集群，把本 role 条目 `aggregate` 填父层身份，用 `onlyne cluster export-prose` 交接口文案。子层 role 名从不出现在父层 ledger。

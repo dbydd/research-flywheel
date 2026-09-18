@@ -11,25 +11,26 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 ## 前置
 
 - onlyne v1 最新版（不钉版本号，新 fix 全部随 latest 发）。发布渠道一行装齐：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`（crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名）。已装过要升级，同一条命令加 `--force` 重跑。兼容判据是 `onlyne version` 的 `protocol:1`。
-- `pi`，插件走 `pi install npm:pi-onlyne`（拉 npm latest，relay 守卫在内）。role 会话由 client 启动，generate 把插件 vendor 到各 ws，ws 内副本零 npm 依赖。
+- `pi`，插件走 `pi install npm:pi-onlyne`（拉 npm latest，relay 守卫在内）。role 模板 `.pi/settings.json` 已经写着 `npm:pi-onlyne`。自展开第一次由 supervisor 亲手跑这条安装。`[server].agent_package` 保持空串，generate 原样留下 npm 路径。
 - 源码构建作备用：`git clone https://github.com/dbydd/onlyne`（默认分支 main，未发布的 fix 在这儿）+ `cargo build --release`，五产物放 PATH。macOS 上 cp 完必做 `codesign --force --sign -`——复制后的二进制签名失效，直接 exec 收 SIGKILL。
-- 会话后端需要 `herdr`、`orca` 或 `zellij`。`ONLYNE_BACKEND` 留空或 `auto` 时探测序是 herdr→orca→zellij，探不到退 fake；`onlyne-client doctor` 打印本机判定。
+- 会话后端需要 `herdr`、`orca` 或 `zellij`。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne-client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - pi model/provider 已经配好。
 
 ## 起飞
 
 ```bash
 # 0. clone 后照 BOOTSTRAP.md 装配主题（THEME 槽、角色拓扑、种子 idea）；装具一律追 latest
-onlyne version        # protocol 读 1 即兼容；号落后就按「前置」两条命令重跑（cargo install --force / pi install npm:pi-onlyne）
+#    自展开第一次：cargo install 五个 crate + pi install npm:pi-onlyne
+onlyne version        # protocol 读 1 即兼容；号落后就按「前置」两条命令重跑
 ./scripts/promote.sh --dry-run && ./scripts/promote.sh
 
 # 1. 通电（一次性；人执行，supervisor 会话不起常驻）
-onlyne-server init --root . --listen 127.0.0.1:7812   # 产 keys/cert_pin，回填 spec.toml（key 先播合法占位再逐 role client init 换真身）   # 多树并机查重：7813=ARIS live，第二集群自选 7814+
-onlyne-server generate --root .                       # 渲染 .onlyne/ws/flywheel/<role>/
-onlyne-server start --root .                            # detached+pid；判活看 socket_present
+onlyne server init --root . --listen 127.0.0.1:7812   # 产 keys/cert_pin，回填 spec.toml（key 先播合法占位再逐 role client init 换真身）   # 多树并机查重：7813=ARIS live，第二集群自选 7814+
+onlyne server generate --root .                       # 渲染 .onlyne/ws/flywheel/<role>/；settings 留下 npm:pi-onlyne
+onlyne server start --root .                            # detached+pid；判活看 socket_present；深路径看 .onlyne/run/socket
 
 # 2. 每 role 起 client（各一 tab）
-onlyne-client run --workspace .onlyne/ws/flywheel/scout   # model/bench/writer/critic 同理
+onlyne client run --workspace .onlyne/ws/flywheel/scout   # model/bench/writer/critic 同理
 
 # 3. root 开 pi 会话即 supervisor；第一发注入
 onlyne --server-root . send --from _supervisor --to scout --file payload/first.md

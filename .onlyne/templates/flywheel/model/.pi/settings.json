@@ -1,6 +1,6 @@
 {
   "packages": [
-    "__AGENT_PACKAGE_ABS__"
+    "npm:pi-onlyne"
   ],
   "defaultProvider": "",
   "defaultModel": "",

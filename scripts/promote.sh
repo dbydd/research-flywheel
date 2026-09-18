@@ -69,10 +69,9 @@ for r in $ROLES; do
   python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INCOMPLETE (reason above)"
 import json,sys
 d = json.load(open(sys.argv[1]))
-import os
 assert d.get("defaultProvider") and d.get("defaultModel") and d.get("defaultThinkingLevel"), "defaultProvider/defaultModel/defaultThinkingLevel required non-empty"
 pkgs = d.get("packages", [])
-assert len(pkgs) == 1 and (pkgs[0] == "__AGENT_PACKAGE_ABS__" or os.path.isabs(pkgs[0])), f'packages={[p for p in pkgs]}: need sentinel or absolute literal ({{agent_package}} placeholder renders un-loadable in settings)' 
+assert pkgs == ["npm:pi-onlyne"], f'packages={pkgs}: published template ships npm:pi-onlyne (supervisor first-run: pi install npm:pi-onlyne)' 
 PY_CHECK2
 done
 
@@ -171,20 +170,23 @@ if ! ls research/ 2>/dev/null | grep -vq "^\.gitkeep$"; then
   fail "research/ needs a domain file besides .gitkeep"
 fi
 
-# --- check 8: [server].agent_package resolves to v1 pi plugin ------------------
-python3 - "$SPEC" <<'PY_PKG' || fail "agent_package INVALID (reason above)"
-import tomllib, sys, os, json
+# --- check 8: npm:pi-onlyne in every role settings; agent_package empty ------
+python3 - "$SPEC" <<'PY_PKG' || fail "pi-onlyne settings INVALID (reason above)"
+import tomllib, sys, glob, json
 spec = tomllib.load(open(sys.argv[1], "rb"))
 pkg = (spec.get("server") or {}).get("agent_package", "")
-assert pkg and os.path.isabs(pkg), f"agent_package={pkg!r}: absolute local path required (fill at assembly)"
-meta = json.load(open(os.path.join(pkg, "package.json")))
-import glob
-for s in glob.glob(os.path.join((spec.get("server") or {}).get("template_root", ".onlyne/templates"), "*", "*", ".pi", "settings.json")):
+assert pkg == "", f"agent_package={pkg!r}: published template keeps this empty; plugin is npm:pi-onlyne in each role .pi/settings.json"
+root = (spec.get("server") or {}).get("template_root", ".onlyne/templates")
+found = 0
+for s in glob.glob(root + "/*/*/.pi/settings.json"):
+    found += 1
     pk = json.load(open(s)).get("packages", [])
-    assert len(pk) == 1 and pk[0] == pkg, f"{s}: packages {pk} not sed-synced with agent_package"
-parts = [int(x) for x in meta.get("version", "0").split("-")[0].split(".")]
-assert (parts + [0, 0])[:3] >= [1, 0, 0], f"pi plugin version {meta.get('version')} below 1.0.0 floor (run `pi install npm:pi-onlyne` for latest)"
+    assert pk == ["npm:pi-onlyne"], f"{s}: packages {pk} want ['npm:pi-onlyne']"
+assert found >= 1, f"no role .pi/settings.json under {root}"
 PY_PKG
+if ! pi list 2>/dev/null | grep -q "npm:pi-onlyne"; then
+  fail "pi-onlyne MISSING: supervisor first-run is \`pi install npm:pi-onlyne\` (latest)"
+fi
 
 # --- check 9: v1 toolchain + backend candidates --------------------------------
 for b in onlyne onlyne-server onlyne-client pi; do
@@ -197,7 +199,7 @@ parts = [int(x) for x in sys.argv[1].split(".")]
 assert (parts + [0, 0])[:3] >= [1, 0, 0], "below the 1.0.0 floor (v0 line is legacy protocol; exit 2 on legacy .onlyne/); install latest"
 PY_VER
 if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no herdr/zellij/orca on PATH: ONLYNE_BACKEND will probe to fake (role sessions need a real backend)"
+  warn "no herdr/zellij/orca on PATH: auto probe empty, onlyne-client run exits 5 unless ONLYNE_BACKEND=exec or fake"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
@@ -252,11 +254,13 @@ git add -A
 git commit -qm "feat(bootstrap): promote template to theme $THEME"
 
 cat <<EOF
-1) run in this dir terminal: onlyne server init --root . --listen <port>, fill spec.toml pins/keys/agent_package,
-   onlyne server generate --root ., then onlyne-server run --root .     # power-on, human runs it
-2) open another terminal:    pi                                        # this session is the supervisor (_supervisor admin mount)
-3) start each role client:   onlyne-client run --workspace .onlyne/ws/$TOPO/<role>
-4) flywheel fully idle now:  empty ledger, empty runs/, seeds only in pool.
+1) first-run toolchain (once, latest): cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+   && pi install npm:pi-onlyne
+2) run in this dir terminal: onlyne server init --root . --listen <port>, fill spec.toml pins/keys,
+   onlyne server generate --root ., then onlyne server start --root .     # power-on, human runs it
+3) open another terminal:    pi                                        # this session is the supervisor (_supervisor admin mount)
+4) start each role client:   onlyne client run --workspace .onlyne/ws/$TOPO/<role>
+5) flywheel fully idle now:  empty ledger, empty runs/, seeds only in pool.
    power-on is not running; to turn the ring give the supervisor a direction, or run:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
 EOF

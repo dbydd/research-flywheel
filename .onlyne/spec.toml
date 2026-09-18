@@ -7,8 +7,8 @@
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
 #   3) 各 role key 先播合法 32 字节占位 base64（AWAAAAAAAA...AAA= 形）
 #   4) 逐 role `onlyne-client init --workspace <ws> --role <role> --server-root .` 拿真 key 替换
-#   5) `onlyne-server generate` → `onlyne-server start`（run 不写 pid，status 的 running 只认 pid 文件，
-#      判活用 socket_present）→ `onlyne reload`
+#   5) `onlyne server generate` → `onlyne server start`（run 不写 pid，status 的 running 只认 pid 文件，
+#      判活用 socket_present；深路径看 .onlyne/run/socket）→ `onlyne reload`
 # 运行期没有任何配置 API：这份文件就是全部。
 #
 # THEME:research-question —— 主题问题与判进标准写进 root AGENTS.md，此处只放拓扑。
@@ -21,13 +21,12 @@ note_queue = false                                 # note 不排队：目标离�
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# v1 pi 插件有两条获取路：`pi install npm:pi-onlyne`（拉 latest，含 relay 守卫与 activity panel），
-# 或本机 onlyne checkout 的 plugins/onlyne-agent-pi（跟 main 上的未发布 fix 时用这条）。装配时填插件包目录的绝对路径。
-# generate 一次性读它，vendor 进每个 ws 的 .onlyne/agent/<basename>/（本机 checkout 那条路即 onlyne-agent-pi），
-# 并把 settings 改写为工作区内相对引用（产物零绝对路径）。
-agent_package = "__AGENT_PACKAGE_ABS__"          # 装配时与五份模板 settings 同步 sed（见 BOOTSTRAP §3 表行6）；
-# generate 的 settings 重写只认「spec 字面值==settings 字面值」：装配者 sed "s|__AGENT_PACKAGE_ABS__|/abs/.../plugins/onlyne-agent-pi|g" 一次替换 spec+templates 全部出现点，
-# 渲染产物即 "../.onlyne/agent/onlyne-agent-pi"（pi 可加载形态）。1.0.0 起 {{agent_package}} 占位符也渲成 ../ 形态、三态全合法；哨兵跨版本兼容（beta.3 起），沿用。
+# pi 插件走 npm。五份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne`。
+# 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径。
+# 自展开第一次由 supervisor 手动跑 `pi install npm:pi-onlyne`，装渠道 latest（含 relay 守卫与 activity panel）。
+# 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi` 的绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，并把 settings 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`。
+agent_package = ""
+# 1.1.x 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关）。
 template_root = ".onlyne/templates"
 
 # ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----
