@@ -115,7 +115,7 @@ flowchart TB
 - 「结构性错误无法在分析里补救」八条（伪重复、混杂、随机化走样、无同期对照、跑序与时间漂移）与设计文档化使分析成 confirmatory → `skills/experimental-design/SKILL.md:157-199` → MIT，拆进⑥⑦。
 - group-aware / time-respecting split → `skills/scikit-survival/SKILL.md:137-138`；切分先于一切学出来的变换（含 α 选择）→ 同上 `:70-75` + `skills/scikit-learn/SKILL.md:142-143`；同 fold 选参又报性能 → `skills/scikit-survival/SKILL.md:219-220`；时间栅限制 → 同上 `:78-80`；官方分裂加载期不重切 → `skills/aeon/SKILL.md:63-64` → MIT，直借机制并改写。
 - 影子模块禁令 → `skills/scikit-survival/SKILL.md:284-287`、`skills/umap-learn/SKILL.md:456` → MIT，扩写到本仓 `experiment/`、`evaluation/` 命名。
-- 断言行字段表（①下）：字段名与判据口径自定，`constraint` 四值中 `leak`/`determinism`/`budget` 对齐仓根三约束、`objective` 承 objectives 读数行（仓根 `AGENTS.md:147-150` 两组字段都在表内，一行只挂一值）；`tested_against` 一名与「pin 与数值同等」的口径 → 蒸馏笔记 `.intake-notes/_frag/ml-runner.md:353`（上游 `scientific-agent-skills/skills/scikit-survival/scripts/_common.py:16-25` 的 `PINNED_INSTALL`/`DEFAULT_SEED` 常量，MIT）→ 改写；`environment.json` 键名照抄 `ml-runbook` 定义，不另起。
+- 断言行字段表（①下）：字段名与判据口径自定，`constraint` 四值中 `leak`/`determinism`/`budget` 对齐仓根三约束、`objective` 承 objectives 读数行（仓根 `AGENTS.md:147-150` 两组字段都在表内，一行只挂一值）；`tested_against` 一名与「pin 与数值同等」的口径 → 蒸馏笔记（本机，未跟踪）（上游 `scientific-agent-skills/skills/scikit-survival/scripts/_common.py:16-25` 的 `PINNED_INSTALL`/`DEFAULT_SEED` 常量，MIT）→ 改写；`environment.json` 键名照抄 `ml-runbook` 定义，不另起。
 - D0–D5 实验门 → Supervisor-Skills `skills/paper-writer/references/evidence-discipline.md:112-124`（CC BY-NC-SA 4.0）→ 一字不取，本体归 `evidence-discipline`，本文仅在接缝节按门名引用。
 - 反向提纲、claim-evidence map、措辞档位、断言对表本体 → 归 `evidence-discipline` 与 `paper-writing`，本文不重复。
 

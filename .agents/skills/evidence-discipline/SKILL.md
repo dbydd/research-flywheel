@@ -132,7 +132,7 @@ description: 证据与主张纪律。qa 出中期判词/放门前必载；specul
 - 七态不合并 / 禁自动插补 → scientific-agent-skills `skills/exploratory-data-analysis/SKILL.md:135-151` → MIT：取两条，余属 runner 面。
 - 三档 locator + 五标签溯源 + 谓词强度门 + 矛盾四步 → nature-skills `skills/nature-paper-card/references/evidence-and-provenance.md:7-94`、`skills/nature-paper-card/static/core/output-contract.md:47-62` → 根 Apache-2.0（该仓子包许可混杂，此两目录无独立 LICENSE，按根记）：只搬机制；`figures4papers/`（上游无 LICENSE）一字未取。
 - DOI 先查 + 字段级三档 + 并行分片 → nature-skills `skills/nature-ref-verifier/SKILL.md:45-105` → Apache-2.0（同上口径）：改写。
-- 入库门禁 1/5/6/7/8/9/10 → scientific-agent-skills `tests/_meta/test_repo_contract.py:72-115`、`AGENTS.md:224-229`、`docs/security-triage.md:3-28,91-92`、`tests/skill-requirements.toml:792-815`（经 `.intake-notes/_frag/repo-qa.md:141-187` 蒸馏）→ MIT：改写；剔除 scanner、plugin manifest 等宿主机制。
+- 入库门禁 1/5/6/7/8/9/10 → scientific-agent-skills `tests/_meta/test_repo_contract.py:72-115`、`AGENTS.md:224-229`、`docs/security-triage.md:3-28,91-92`、`tests/skill-requirements.toml:792-815`（经蒸馏笔记转录，本机未跟踪）→ MIT：改写；剔除 scanner、plugin manifest 等宿主机制。
 
 ## 与自家条款的接缝
 

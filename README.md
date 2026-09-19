@@ -9,7 +9,7 @@
 
 ## 这套系统长什么样
 
-新人第一步不用碰命令行。clone 下来后，对你的 agent 会话（pi / omp / claude 皆可）说一句「**帮我看看这棵树**」——会话会主动介绍这套飞轮、核装具版本、问清你的研究主题与部署方式，然后按 [`BOOTSTRAP.md`](BOOTSTRAP.md) 代你完成装配并投第一发。手工装配走同一份文档，逐条照抄。
+新人第一步不用碰命令行。clone 下来后，对你的 agent 会话（pi / omp / claude 皆可）说一句「**帮我看看这棵树**」——仓根的引导文件会让会话读 [`BOOTSTRAP.md`](BOOTSTRAP.md)：先介绍这套飞轮，问清四件本机事实（终端宿主、端口、模型档位、有无 vault），再跑 `scripts/bootstrap.sh --assemble` 代你装配并指导通电。手工装配走同一份文档，逐条照抄。
 
 11 个角色，每个角色 = 一份职责说明书 + 一个工作区 + 若干 pi 会话。角色之间按固定的边互相派任务，任务像飞轮一样转起来：
 
@@ -49,8 +49,11 @@ planner → pi → examiner → theorist → speculator → runner → qa → ch
 ## 目录
 
 ```text
-AGENTS.md                 全套契约：角色表、边义、关口规程、纪律（每个会话自动读到）
-设计议程.md               当前讨论事项清单（定案搬进契约后划账）
+AGENTS.md                 clone 态＝薄引导（指向 BOOTSTRAP）；--promote 后＝全套契约：角色表、边义、关口规程、纪律
+.agents/AGENTS.md         契约正本（11 角色公共约定），提升动作的复制源
+.pi/SYSTEM.md             supervisor 值班会话的岗位说明（装配引导、通电、账目、残影恢复）
+scripts/bootstrap.sh      装配器：--check 门禁 / --assemble 幂等装配 / --promote 契约上位
+设计议程.md               当前讨论事项清单（定案搬进契约后划账，本地工作件）
 research_project/         研究项目文件（一项目一 .md）+ 每项目过程件目录（提案/送审包/判词/推导/实测数据）
 research/                 文献检索台账（frontier-notes.md，URL+单行结论，追加式）
 experiment/ evaluation/   领域代码与评测器（评测命令写进断言清单，qa 照命令重跑对账）
@@ -62,7 +65,7 @@ payload/                  注入集群的第一发任务书
 
 ## 前置
 
-- onlyne v1 五件套，装 latest（命令里没有版本号，随时发版随时追）：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`——crate `onlyne-cli` 装出的命令叫 `onlyne`，其余四个 crate 名=命令名。升级＝同一条命令加 `--force` 重跑。兼容判据：`onlyne version` 报 `protocol:1`；各二进制版本号独立前进。要跟未发布的 fix：源码构建 `git clone https://github.com/dbydd/onlyne && cargo build --release`，产物进 PATH；macOS 上 cp 进 PATH 的二进制要先 `codesign --force --sign -` 重签，否则 exec 收 SIGKILL。
+- onlyne v1 五件套，装 latest（命令里没有版本号，随时发版随时追）：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`——crate `onlyne-cli` 装出的命令叫 `onlyne`，其余四个 crate 名=命令名。升级＝同一条命令加 `--force` 重跑。兼容判据：`onlyne version` 报 `protocol:1`；各二进制版本号独立前进。要跟未发布的 fix 就走源码构建（仓库地址问集群 owner，`cargo build --release` 后产物进 PATH；macOS 上复制进 PATH 的二进制要先 `codesign --force --sign -` 重签，Linux 免）。
 - pi + onlyne 插件：模板 packages 写 `npm:pi-onlyne`。第一次装配执行 `pi install npm:pi-onlyne`（1.0.0 起讲 protocol 1，relay 守卫在内），装当期 latest。
 - 会话后端 `herdr`/`orca`/`zellij` 之一：选择链 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只认点名。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - pi 侧 model/provider 配好（本主题三档模型设计见 `AGENTS.md` 角色表末列）。
@@ -70,40 +73,31 @@ payload/                  注入集群的第一发任务书
 
 ## 起飞
 
-手工路径（agent 代装配走同一套）：
+一条装配链（flag 语义与失败处理见 `BOOTSTRAP.md`）：
 
 ```bash
-# 0. 装具门禁：protocol 读 1 即兼容，号落后按「前置」命令重跑
-onlyne version
+scripts/bootstrap.sh --check      # 只读门禁：报这台机器缺哪几件（未装配时 3 项红，属正常）
+scripts/bootstrap.sh --assemble --dry-run
+scripts/bootstrap.sh --assemble   # 幂等：证书 → 11 key → 模型档位 → 渲染 11 工作区 → 可选 vault 软链 → 自检
+scripts/bootstrap.sh --promote    # 契约上位：.agents/AGENTS.md → 仓根 AGENTS.md
+```
 
-# 1. 证书与密钥：server init 产 cert_pin 回填 spec [server]；逐 role client init 的 key 回填对应 [[client]]
-#    （端口查重 lsof -i :7820；回填前占位值必须保持合法 base64，REPLACE_ME 全链拒跑。11 role 循环命令见 BOOTSTRAP 步骤 4）
-onlyne server init --root . --listen 127.0.0.1:7820
+通电＝server 一个可见前台 tab + 11 个 role client 各一个可见 tab（herdr / orca / zellij 任一宿主；关 tab 即停该角色，禁入 agent 后台与 nohup）：
 
-# 2. 插件与渲染：第一次装配 `pi install npm:pi-onlyne`（见 BOOTSTRAP 步骤 3）；再用模板渲染 11 个角色工作区（模板改动后 --force 重渲）
-pi install npm:pi-onlyne
-for p in initiation/pi initiation/examiner common/librarian common/scribe \
-         theory/speculator theory/theorist experiment/runner \
-         review/qa review/referee review/chair archive/planner; do
-  onlyne server generate --root . --template formal/$p --role $(basename $p) --force
-done
+```bash
+onlyne server start --root .
+onlyne client run --workspace .onlyne/ws/formal/initiation/pi   # 其余 10 个 phase/role 同式
+onlyne status --server-root .                                   # connected 11/11 = 环点亮
+```
 
-# 3. 通电：server 与 11 个 client 各占一个可见 tab（以 orca 为例）
-orca terminal create --worktree path:$PWD --title onlyne-server --command "onlyne server start --root ."
-for p in initiation/pi initiation/examiner common/librarian common/scribe \
-         theory/speculator theory/theorist experiment/runner \
-         review/qa review/referee review/chair archive/planner; do
-  orca terminal create --worktree path:$PWD --title "onlyne-client-$(basename $p)" \
-    --command "onlyne client run --workspace .onlyne/ws/formal/$p"
-done
-onlyne status --server-root .   # connected 11/11 即环点亮；观测可加 onlyne tui 一个 tab
+第一发：研究方向写进 `payload/first.md`（目标 / 输入 / 期望产物三段），注入 ★ entry role pi，环开始自转：
 
-# 4. 第一发：研究方向写进 payload/first.md，注入 ★ entry role pi，环开始自转
+```bash
 onlyne send --server-root . --from planner --to pi --file payload/first.md
 ```
 
-终结靠人：`onlyne control cancel --task <id> --server-root .`，或直接接管任一会话。日常用法词表（send/handoff/complete/ledger/faults/repair/control）见 `AGENTS.md`「onlyne v1 工具面」节。
+终结靠人：`onlyne control cancel --task <id> --server-root .`，或直接接管任一会话。日常用法词表（send/handoff/complete/ledger/faults/repair/control）与崩溃残影处置（`onlyne repair inspect|close|fail`）见 `BOOTSTRAP.md` 第 9 节与 `.pi/SYSTEM.md`。
 
 ## 观测
 
-`onlyne status|roles|sessions|ledger|faults|watch --server-root .`；pi 会话内 `/onlyne`。崩溃残影处置按 `AGENTS.md`「恢复运行纪律」节（`onlyne repair inspect|close|fail`）。
+`onlyne status|roles|sessions|ledger|faults|watch --server-root .`；pi 会话内 `/onlyne`；观测台 `onlyne tui --server-root .` 再起一个 tab。

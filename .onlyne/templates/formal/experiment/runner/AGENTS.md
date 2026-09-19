@@ -27,7 +27,7 @@
 ## 纪律
 - 段权：设计段结果只增不改；revise 只改本段；落笔在 run-log.md 记一行。
 - 终态断言：交付必带文件存在+计数+关键字段三类断言，自跑自验后写 run-log 一行。不带断言 qa 退单。
-- 功耗纪律：同时存活训练/拟合进程 ≤1；MPS 单进程；禁多 worker DataLoader；单片 ≤45 min；environment.json 记 wall-time/峰值内存/`pmset -g therm`；调度冲突宁可晚出数。
+- 功耗纪律：同时存活训练/拟合进程 ≤1；本机加速器后端单进程（CUDA/MPS/CPU，lightning 自选）；禁多 worker DataLoader；单片 ≤45 min；environment.json 记 wall-time/峰值内存/热节流读数（按平台取：macOS `pmset -g therm`；Linux `sensors` 或 `/sys/class/thermal/thermal_zone*/`；取不到记 `unavailable`）；调度冲突宁可晚出数。
 - 训练槽：起训前 `mkdir .train-slot`（仓根，跨项目全局串行锁）原子抢占；成功则 `echo "<task_id> <pid> <ISO>" > .train-slot/holder`；活 pid 则 5-10 min 轮询；死 pid 则 `rm -r` 接管并记 run-log；交活前 `rm -r .train-slot`。
 - 不伪造数值。框架优先公开 API。全量前最小闭环对拍。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。

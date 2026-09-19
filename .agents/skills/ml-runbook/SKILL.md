@@ -17,8 +17,8 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 | `slice_id` `task_id` `pid` `started_at` `finished_at` | 一片一份，时刻用 ISO | 可续跑可追责 |
 | `wall_time_s` | 实测秒数，不用步数折算 | 声明步数是下界，不是耗时 |
 | `peak_rss_mib` | 进程树峰值内存 | 预算条证据 |
-| `memory_model` | `unified_cpu_gpu` 或 `discrete` | Apple silicon 禁把统一内存当独立 VRAM 相加 |
-| `thermal` | `pmset -g therm` 原文一行 + `throttled: true|false|null` | 热降频迹象 |
+| `memory_model` | `unified_cpu_gpu` 或 `discrete` | 统一内存机型（Apple silicon 等）禁把统一内存当独立 VRAM 相加 |
+| `thermal` | 热节流读数按平台取（macOS `pmset -g therm`；Linux `sensors` 或 `/sys/class/thermal/thermal_zone*/`），原文一行 + `throttled: true|false|null`；取不到记 `unavailable` | 热降频迹象 |
 | `limits` | `available_cores` / `effective_capacity_cores` / `quota` / `mem_available_mib`，四类事实分开记 | quota 1.5 是 CPU 时间带宽，不是 1.5 个物理核 |
 | `budget_plan` | 计划值，非实测：`suggested_workers` / `threads_per_worker` / `binding_limits[]` / `warnings[]` | 多天花板取最小值；内存未知退到 1 worker 并记 `MEMORY_UNKNOWN` |
 | `backend` | `accelerator` + `usability: verified|not_verified` | 管理查询可见 ≠ 有调度权与运行时兼容 |
@@ -109,15 +109,15 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 - 评测与可解释工具目录（lm-eval-harness、NeMo Evaluator、bigcode、TransformerLens、SAELens、pyvene、nnsight）→ `AI-Research-SKILLs/11-evaluation/*`、`AI-Research-SKILLs/04-mechanistic-interpretability/*` → MIT，只登记名称与用途。
 - 读数器写入契约（常量即上限、`sort_keys`、`allow_nan=False`、`O_EXCL`+`O_NOFOLLOW`+`0o600`+`fsync`、拒 symlink/URL、固定 argv 探针、unknown≠unlimited、四类事实分开、Apple silicon 统一内存警告）→ `scientific-agent-skills/skills/get-available-resources/scripts/_common.py:15-87`、`scripts/detect_resources.py:2-7`、`SKILL.md:17-36,84-151` → MIT（该 skill frontmatter `license: MIT`），机制改写。
 - `budget_plan` 字段与算法（多天花板取 min、`binding_limits`、`threads_per_worker`、`MEMORY_UNKNOWN` 保守退化、warning 排序）→ `scientific-agent-skills/skills/get-available-resources/scripts/plan_workload.py:85-236` → MIT，字段直借。
-- version-scoped 包文档六层写法（底线与实测点分离、日期硬要求、pin 落常量、点名 API 变更、症状→配方陷阱节、Dated sources）→ `scientific-agent-skills/skills/{scikit-learn,pytorch-lightning,transformers,statistical-analysis,scikit-survival}/SKILL.md`（详 `.intake-notes/_frag/ml-runner.md:39-107`）→ MIT，取写法不取条目。
-- 反泄漏加严（split 先于学出的变换、per-fold refit、group-aware/time-respecting、outer/inner CV、影子模块禁令、禁 `latest` 与不反序列化外来 checkpoint）→ `scientific-agent-skills/skills/scikit-survival/SKILL.md:137-138,284-287`、`skills/pufferlib/scripts/repro_plan.py:96-100`（全表见 `.intake-notes/_frag/ml-runner.md:236-286`）→ MIT；与三约束重复者只作加严。
+- version-scoped 包文档六层写法（底线与实测点分离、日期硬要求、pin 落常量、点名 API 变更、症状→配方陷阱节、Dated sources）→ `scientific-agent-skills/skills/{scikit-learn,pytorch-lightning,transformers,statistical-analysis,scikit-survival}/SKILL.md` → MIT，取写法不取条目。
+- 反泄漏加严（split 先于学出的变换、per-fold refit、group-aware/time-respecting、outer/inner CV、影子模块禁令、禁 `latest` 与不反序列化外来 checkpoint）→ `scientific-agent-skills/skills/scikit-survival/SKILL.md:137-138,284-287`、`skills/pufferlib/scripts/repro_plan.py:96-100` → MIT；与三约束重复者只作加严。
 - 度量语义限定、可加性/分位数/NaN 自检、异步计时口径、步数是下界 → `scientific-agent-skills/skills/{shap/SKILL.md:18-28,262, timesfm-forecasting/SKILL.md:368-372, pufferlib/SKILL.md:123-126, stable-baselines3/SKILL.md:79-81, optimize-for-gpu/SKILL.md:119-146}` → MIT，改写。
 - 失败三分类词表（crash / timeout / 可修崩）→ `AI-Research-SKILLs/10-optimization/ml-training-recipes/references/experiment-loop.md` → MIT，只取分类词。
 - 日志字段二分（原始层与标准层互引、批次 ID 跨片一致、模糊信息不猜测写入）→ `nature-skills/skills/nature-experiment-log/SKILL.md:42-84` 与 `references/example-log.md:7-32` → 该目录 frontmatter 标 MIT（仓库根 Apache-2.0，逐目录记出处），只取字段；Obsidian/Dataview/cron/飞书层全弃。
 
 ## 与自家条款的接缝
 
-- 功耗纪律与训练槽（单进程、串行、≤45 min 片、`.train-slot` 锁、`pmset -g therm` 采样）正本在仓根 `AGENTS.md`「当前工作模式」节，⑤只补步骤；冲突以仓根为准。
+- 功耗纪律与训练槽（单进程、串行、≤45 min 片、`.train-slot` 锁、热节流读数按平台取——macOS `pmset -g therm`，Linux `sensors` 或 `/sys/class/thermal/thermal_zone*/`，取不到记 `unavailable`）正本在仓根 `AGENTS.md`「当前工作模式」节，⑤只补步骤；冲突以仓根为准。
 - 三约束：断言清单字段与切分归 `experiment-design`，核验与判词归 qa 及 `evidence-discipline`/`review-discipline`。① 是确定性条与预算条的证据载体，③ 是泄漏条的机械检查，均不改写判词口径。
 - raw/derived 二分与命名前缀（`derived_`、`subset_`、七态不合并）正本归 `evidence-discipline` ⑤。① 的「缺观察写 `null`」与其「缺失记 unavailable 而非 0」同向：`null` 与 `unavailable` 是状态标记，不是数值，聚合时不得当 0 吃进。
 - 段权：设计段结果节与 `measured/` 流件只增不改。③ 的「多跑一次 held-out」只能作为新增事故记录，不许覆盖原读数。

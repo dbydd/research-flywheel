@@ -1,6 +1,6 @@
 ---
 name: paper-figures
-description: 论文图表制作规范。writer 画 figs、排表格时加载：matplotlib 脚本一份 conf 一张图、图型决策、8pt/双通道/灰度无障碍、诚实轴与 Ours 不高亮、面板推理角色与必要性三问、逐面板 QA 表、渲染后视觉复检环、三线表 LaTeX 表格规则、图注与溯源。用户提到论文配图、实验图、图表审阅、表格样式、figs 时使用。
+description: 论文图表制作规范。scribe 画 figs、排表格时加载：matplotlib 脚本一份 conf 一张图、图型决策、8pt/双通道/灰度无障碍、诚实轴与 Ours 不高亮、面板推理角色与必要性三问、逐面板 QA 表、渲染后视觉复检环、三线表 LaTeX 表格规则、图注与溯源。用户提到论文配图、实验图、图表审阅、表格样式、figs 时使用。
 ---
 
 # 图表制作
@@ -116,7 +116,7 @@ cfg = {
 
 要画架构/流程/attention 机制图：
 - 先翻 ml-visuals 的 `figures/` 找同型模板（transformer、CNN、RNN、attention、训练流程），draw.io 打开改。署名保留 MIT 来源。
-- 本机已装桌面版（`/Applications/draw.io.app`，CLI `drawio`）。`.drawio` 本体是 XML，agent 直接写文本；要成图走无头导出（命令行直接渲染，不开图形窗口）：`drawio -x -f pdf|png -s 2 fig.drawio`（论文用 pdf 矢量）。文本源与导出图同目录留存；导出图属生成物，要改就改 XML 源重导，不手改导出件。
+- 可用 draw.io CLI（命令 `drawio`）时，走无头导出。`.drawio` 本体是 XML，agent 直接写文本；要成图走无头导出（命令行直接渲染，不开图形窗口）：`drawio -x -f pdf|png -s 2 fig.drawio`（论文用 pdf 矢量）。CLI 不可用的机器采用下条 Mermaid/TikZ 文本源路线。文本源与导出图同目录留存；导出图属生成物，要改就改 XML 源重导，不手改导出件。
 - 模板不够用再手绘。导出 SVG/PDF，文字保持可选中（导出时勾 outline text 关闭）。
 - 结构性/关系图起手用文本源（mermaid 或 tikz），成图可重生、可 git diff；mermaid 源与 tikz 源存 `papers/<项目短名>/figs/`，成图同目录，一个图一份源，文本源永不为出图而删。
 

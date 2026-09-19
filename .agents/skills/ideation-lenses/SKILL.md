@@ -138,7 +138,7 @@ pi 头四段「问题背景」应带这张表的一部分；examiner 据此生�
 - 动笔前倒序五问（含「为何没有成熟解法」闸）与正序落笔顺序 → Research-Paper-Writing-Skills `research-paper-writing/references/introduction.md:50-65` → MIT → 摘问句；双列逻辑链归 `paper-writing`。
 - 贡献四段（Core / Why needed / How responds / Claim boundary）、`Evidence required·available·missing` 三行、novelty·significance risk 自评、动机从证据反推并锁定一条主线 → PaperSpine `paperspine5/core/01_PaperSpine4/src/skill/references/contribution.md` 与 `motivation-thread-writing.md` → 整仓 CC BY-NC → 格名保留英文字段、正文一字不搬，只把四条机制化进 ④：先列怀疑者要什么再看自己有什么、missing 非空则软化或补做、缺口不许写成「少有人研究」、主线须落在读者可见表面；其 `contribution_check.py` 与「user-confirmed 硬闸」不迁（我们无用户签字位，改由 examiner 判）。
 - 八条设计红线（结构性错误无法在分析里补救）与七类反复失败 → scientific-agent-skills `skills/experimental-design/SKILL.md:153-197`、`docs/examples.md:6619-6640` → MIT → 取立场与问句表，生物学样例译成 CS/ML 口径；逐条机器可核版归 `experiment-design`。
-- 与笔记冲突处：`.intake-notes/Supervisor-Skills.md:65-70` 的五维纪律条目只写了「从 5 起 / 两类 grounds / 未隔离消融前封顶」，未收原仓 §10 的另一侧「不得系统性封顶未测好点子」；本文件按原仓 `five-dimensions.md:269-282` 补回，两条对称写在 ⑤ 反向保险与 ⑦ 第一条。
+- 与笔记冲突处：蒸馏笔记（本机，未跟踪）Supervisor-Skills 一条的五维纪律条目只写了「从 5 起 / 两类 grounds / 未隔离消融前封顶」，未收原仓 §10 的另一侧「不得系统性封顶未测好点子」；本文件按原仓 `five-dimensions.md:269-282` 补回，两条对称写在 ⑤ 反向保险与 ⑦ 第一条。
 
 ## 与自家条款的接缝
 

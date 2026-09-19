@@ -1,6 +1,6 @@
 ---
 name: paper-writing
-description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字审时加载：稿件骨架、主线映射与动笔前五问、反向提纲、段落四问、Method 三件套、反模式、文字审计（七锚点/七类缺陷/浅改比率）、修订三维台账、返修回复与 cover letter、LaTeX 排版雷区。用户提到写论文、改稿、润色、逐点回复、审稿文字面、LaTeX 格式时使用。
+description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字审时加载：稿件骨架、主线映射与动笔前五问、反向提纲、段落四问、Method 三件套、反模式、文字审计（七锚点/七类缺陷/浅改比率）、修订三维台账、返修回复与 cover letter、LaTeX 排版雷区。用户提到写论文、改稿、润色、逐点回复、审稿文字面、LaTeX 格式时使用。
 ---
 
 # 论文写作
@@ -94,7 +94,7 @@ description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字�
 
 - 主张强度对齐证据：消融只涨 0.1 就不能写 `significantly outperforms`；`state-of-the-art` 要有对照表撑。
 - 全篇时态一致：描述已有工作现在时/过去时二选一，本文实验结果过去时或现在时择一。
-- 每个数字出现处，critic 都能指回 `measured/` 一个文件；指不回去的数字删掉。
+- 每个数字出现处，referee 都能指回 `measured/` 一个文件；指不回去的数字删掉。
 - 图表未引用的先删，引用的先补指涉句。
 - 限定语（hedge）不许在字数压力下删：删 hedge 是诚信故障，不是文风问题；词表与判定归 `evidence-discipline`（hedge 校准节）。
 - 过程泄漏（第四面墙）：读者可见文字里不出现写作/评审史与规划记号（「为回应评审建议…」「前期初稿缺少…」）；正则表与正本条款归 `evidence-discipline`，本处只留禁令。
@@ -120,7 +120,7 @@ description: 论文写作规范与 LaTeX 细则。writer 成稿、critic 文字�
 ## 流程约定（本飞轮）
 
 - 成稿目录 `papers/<项目短名>/`：`main.tex`（NeurIPS 2024 风格，模板 `papers/_template/neurips2024/`）+ `refs.bib` + `figs/`，编译出 `main.pdf`。草稿与中间件先落 role ws 的 `work/`（私有、不入 git），定稿一次性发布到 root 路径，并在 `research_project/<项目短名>/run-log.md` 记一行本地→发布映射。
-- 每轮修订记进 `research_project/<项目短名>/revisions.md` 的三维台账（键为 `gates/` finding 编号）；critic 打回的文字问题逐条改，逐条把 `work_status` 推到 `VERIFIED_DONE` 并填 `verification_evidence` 销账。
+- 每轮修订记进 `research_project/<项目短名>/revisions.md` 的三维台账（键为 `gates/` finding 编号）；qa 打回的文字问题逐条改，逐条把 `work_status` 推到 `VERIFIED_DONE` 并填 `verification_evidence` 销账。
 - scribe 挂起中：`papers/` 文稿由责任角色自书（结题整改期的文字整改归 speculator，送审包由 qa 自书），本 skill 是它们的下笔规范。
 
 ## Sources
