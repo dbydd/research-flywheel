@@ -1,8 +1,8 @@
 # formal-research 大循环 — onlyne v1 公共约定
 
-这是 formal-research 主题的公共约定正本，装机无关。装配期它是仓根材料的上游：`scripts/bootstrap.sh --promote` 把本文件原样复制为仓根 `AGENTS.md`，此后 pi 沿父目录自动拼上下文，树内每个 role session 都读到同一份约定（role ws 在仓根之下）。
+这是 formal-research 主题的公共约定正本，树内每个 role session 沿父目录自动拼上下文读到同一份（role ws 在仓根之下）。
 
-读者分层：role 会话读本文（装配后 = 仓根 `AGENTS.md`）；clone 后的第一个会话读仓根薄引导与 `README.md`「装配与通电」节；supervisor 值班职责读 `.pi/SYSTEM.md`。分支 `theme/formal-research` 是模板发布分支，换机实例化按 `README.md`「装配与通电」节走。
+读者分层：role 会话读本文；supervisor 值班职责读 `.pi/SYSTEM.md`；系统全景与运维手册读 `README.md`。
 
 本体论：运行时 + 工作区（数据、记录、上下文文件）构成 agent 的本体；workspace = role，指该角色的「记忆 + 设定 + 历史文件」；session = 该 role 手头的一件工作，做一跳就回收，来消息拉新 session。一切值得写入持久状态的信息应写尽写，不落文件的等于没发生。
 
@@ -98,14 +98,12 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，目录名 `<项目短名>/`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
-- `.onlyne/ws/formal/<phase>/<role>/`：generate 渲出的角色工作区（路径随 template 子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用（`npm:pi-onlyne`）、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
-- 改 role 上下文的做法：改 `.onlyne/templates/formal/<phase>/<role>/`，再跑 `onlyne-server generate --root . --template formal/<phase>/<role> --role <role> --force`。
-- 模板 settings 的 packages 写 `npm:pi-onlyne`。自展开 supervisor 第一次装配执行 `pi install npm:pi-onlyne`（latest，命令无版本号）。`[server].agent_package` 留空；generate 把 packages 原样拷进角色工作区。
-- `.onlyne/`：v1 集群面。跟踪的模板真相是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
-- 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（generate 渲出的角色工作区，产物零绝对路径）。
+- `.onlyne/ws/formal/<phase>/<role>/`：角色工作区（路径随模板子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用（`npm:pi-onlyne`）、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
+- `.onlyne/`：v1 集群面。集群真相文件是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
+- 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（角色工作区，产物零绝对路径）。
 - 台账：账本在 server store，用 `onlyne ledger --server-root .` pull 式读。
 - `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制），**吸收制：外部方法论只进本目录，全局 skill 目录不写入**。清单十件：`paper-figures`（matplotlib conf 绘图 + 三线表 + 面板审计与 VLM 复检环）、`paper-writing`（稿件骨架 + LaTeX 细则 + 主线映射/反向提纲/段落四问/修订三维台账）、`evidence-discipline`（证据等级 L0-L4、引用独立验证阶梯、造假五类、数字保真 raw/derived、hedge 校准、入库门禁——qa/speculator/theorist/pi/examiner）、`review-discipline`（约稿零倾向与盲段承诺、非补偿合议、concern 账本、意见书三节、断言→证据形状硬表——referee/chair/examiner/qa）、`retrieval-contract`（检索契约八字段、完整性八步、DOI 先行、PRISMA 收窄、成本门——librarian 本体）、`ideation-lenses`（选题三 gate、十透镜、致命伤十条+反向保险、四条自洽检查——planner/pi/speculator/examiner）、`experiment-design`（双列主张→实验映射、覆盖双射、基线公平、消融包、切分纪律、统计审查——speculator/runner/qa）、`ml-runbook`（静默失败清单、environment.json 读数器规范、评测红旗、工具登记簿——runner）、`onlyne-supervisor`、`onlyne-role`。各角色模板有「开工技能加载」节点名读哪件哪节；外部仓库的蒸馏笔记在 `.intake-notes/`（gitignored 的本机吸收暂存区，吸收完成后可清）。
-- 入口 role 以角色表 ★ 行为准（本主题 = pi）；v1 没有 flywheel.json 那类状态文件，装配进度看磁盘与台账。
+- 入口 role 以角色表 ★ 行为准（本主题 = pi）；v1 没有 flywheel.json 那类状态文件，全部真相 = 文件 + git + 台账。
 
 路径约定：本文件与一切任务书里的路径都相对 server-root。配套五条：
 
@@ -117,7 +115,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## Obsidian vault 对接与写作规范（全员遵守）
 
-- vault 根路径在装配时确定（`scripts/bootstrap.sh --assemble --vault <路径>`，见 `README.md`「装配」步 5），本文件不记录任何机器上的绝对路径。仓根 `obsidian/` 下四个软链直达 vault 相应位置：`obsidian/论文`→`<vault>/论文/`（原文 PDF 归档）、`obsidian/reports`→`<vault>/reports/`（精读报告）、`obsidian/draft`→`<vault>/draft/`（日常学习与 idea）、`obsidian/templates`→`<vault>/templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在本树里复制 vault 文件。本机没建这组软链（未接 vault）时，本节从「写作规范唯一入口」起的 vault 条款整段作废，产物全留本树。
+- 仓内不记录任何机器上的绝对路径：vault 根由本机仓根 `obsidian/` 软链给出。四个软链直达 vault 相应位置：`obsidian/论文`→`<vault>/论文/`（原文 PDF 归档）、`obsidian/reports`→`<vault>/reports/`（精读报告）、`obsidian/draft`→`<vault>/draft/`（日常学习与 idea）、`obsidian/templates`→`<vault>/templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在本树里复制 vault 文件。软链不在盘时，本节从「写作规范唯一入口」起的 vault 条款整段失效，产物全留本树。
 - 写作规范唯一入口：`obsidian/templates/writing-and-report-guide.md`；精读报告骨架用 `obsidian/templates/paper-report.md`。
 - 该规范覆盖所有用户可见文字：`derivation.md`、`measured/summary.md`、`papers/<项目短名>/main.tex` 与编译出的 `main.pdf`、`revisions.md`、gates/ 判词、vault 落库的精读报告。
 - 规范要点：直接陈述、累加式、结论先行；数字带单位与出处（Table/Figure/公式编号或文件路径）；论文事实与「我的分析」分区；流程用 mermaid；数学用 `$$…$$` 独立公式块；YAML frontmatter 可解析；内部链接与 wikilink 可达。
@@ -127,7 +125,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `draft/` 是 idea 源之一：librarian 每跳先读 `obsidian/draft/00-索引.md` 再读相关笔记，把值得开正式链路的判断转为研究项目，证据指到 `obsidian/draft/<笔记>.md` 具体章节，项目文件「前沿进展」段注明 idea 源自该笔记。
 - 半成品纪律沿用 vault 约定：未核对结论进「证据边界与待核对项」，不直接当 claim 写进稿件。
 - 人物画像不归本工作区：不读不写 vault 的 `人物/`、`关系图谱/`；reading/writing 任务保持人物档案创建关闭，已有规范人物页可 wikilink 引用，不新建。
-- 精读报告自检跑 vault 校验器（只读调用，不往 vault 写脚本）：校验器住 vault 自己的 `scripts/validate_reading_report.py`，绝对路径由本机 vault 根拼出（装配问答里登记，仓内不记录），按其报错修 frontmatter、围栏、`$$` 定界符、来源锚点与内部链接。未接 vault 的机器跳过本条，报告自检交 qa。
+- 精读报告自检跑 vault 校验器（只读调用，不往 vault 写脚本）：校验器住 vault 自己的 `scripts/validate_reading_report.py`，绝对路径由 vault 根拼出（仓内不记录），按其报错修 frontmatter、围栏、`$$` 定界符、来源锚点与内部链接。软链不在盘时跳过本条，报告自检交 qa。
 
 ## 项目目录布局（research_project/<项目短名>/）
 
@@ -155,9 +153,9 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 各 role 放开用 pi 本体的一切工具：文件读写、检索、eval、subagent 系统。预算无上限，数量与深度不设配额。能拆的活拆给 subagent 并行干，主会话做判断与整合；会话回收只回收内存，工具与 subagent 每次会话都在。
 - 自带 web_search 与 librarian 的分工：web_search 是自用裸检索，快、散、查完即弃，不落档、不经排队，看个新现象顺手查它。librarian 是专职文献官：同样会 web_search，另加整理分类、对照本工作区历史文件、当前任务与文献存档（`research/frontier-notes.md` 行锚、obsidian draft 索引），产出可被引用与回查的归档行。要「谁做过什么、撞不撞车、证据链」这种判断，派单给她；只要「这东西是什么」，自己搜。
 
-## onlyne v1 工具面（版本口径：追 latest，闸只设 protocol=1 下限）
+## onlyne v1 工具面
 
-- 装具与插件各追自己渠道的最新，命令里没有版本号：升级 `cargo install --force onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui` + `pi install npm:pi-onlyne`。onlyne 随时发版，每个小版本装进来的都是 bug fix；`onlyne version` 的 `protocol:1` 是兼容判据，各 crate 版本号独立前进。工具面事实以 `<onlyne 仓>`（装机者的 onlyne checkout，main 分支）源码与当期 `--help` 为准，本树只读它。
+- 命令行为以 `<onlyne 仓>`（onlyne 的源码 checkout）与当期 `--help` 为准，本树只读它。装具与插件的版本口径在 `README.md`「前置」。
 - 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne reload --server-root .`（`reload` 无 `--dry-run`，看待应用差异用只读动词 `onlyne spec_diff --server-root .`，别名 `spec-diff` 同解），运行期零回写。
 - role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`；note 骑在对方已活的 session 上，目标离线或在线无 working session 都直接 `recipient_offline`（本 spec `note_queue = false`；要排队先把该键设 true 并带 `--ttl`，到点记 expired）。`onlyne_complete {outcome:"done"|"failed"|"cancelled", text}` 交活。
 - 接力派下一跳用 bash `onlyne handoff --to <role> --task <当前task_id> --text "<任务书>"`（parent_task+hop 血缘顺链；task_id 在注入帧头、`/onlyne` 或 receipt JSON 里查）。
@@ -246,7 +244,7 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | powerful/high |
 | planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | powerful/medium |
 
-`档位` 列是语义档位名；实际 `provider/model` 路由只写在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`（换供应商跑 `scripts/bootstrap.sh --assemble --provider … --model-powerful … --model-supercheap …`，见 `README.md`「装配」步 3）。
+`档位` 列是语义档位名；实际 `provider/model` 与 effort 路由写在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`，role 读自己工作区 `.pi/settings.json` 的实际值。
 
 theory 域两员：speculator + theorist，由旧 model 位拆来（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。
 
@@ -269,7 +267,7 @@ supervisor 不在工作环里：没有任何 role 的上游或下游是 root。s
 
 例外边（开题关口常设请示边，human_gate 条款的实例化）：examiner 在特定开题任务上可经 pi-intercom 向 supervisor 会话发请示（本机地址，缺省 `Main`；触发条件=题目价值存疑或资源取舍超出判据），supervisor 向人开 ask 提请批复，批复结果回 examiner 后代落 gates/。阻塞等批；此边只服务开题裁量，日常攻防不触发。其余关口的请示资格按 human_gate 条款点名制另定。
 
-supervisor 只做工作区维护，条目为：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。supervisor 不参与工作流转。
+supervisor 只做工作区维护与传话：idle 判定与报告、配置对表、知识产物 git commit、人机传话（值班细则见 `.pi/SYSTEM.md`）。supervisor 不参与工作流转。
 
 三档模型语义（角色表 `档位` 列的三档 = powerful / weak / supercheap，effort 档 = off…max 中的指定级）：
 
@@ -277,7 +275,7 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 - weak 档：科研判断强，能指导 worker 写代码，必要时自己小写两段；supervisor 值班位同档。
 - supercheap 档：写代码强且便宜，容易想多做多把自己绕晕，不适合长时间独立工作；runner 用 low effort（历史上自 minimal 上调一档，目的仍是压住加戏）。
 
-档位到实际 `provider/model` 的映射存在 settings 里：role 看 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`，supervisor 看仓根 `.pi/settings.json`。改模板后跑 `onlyne server generate --root . --template formal/<phase>/<role> --role <role> --force` 落到该 ws；换供应商整体用 `scripts/bootstrap.sh --assemble` 的模型 flag（`README.md`「装配」步 3）。
+档位到实际 `provider/model` 的映射存在 settings 里：role 看自己工作区 `.pi/settings.json`（模板正身在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`），supervisor 看仓根 `.pi/settings.json`。
 
 ## 大循环宏观流（接力闭环，从角色表推导）
 
@@ -289,15 +287,15 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 4. role 的产物未齐时 `onlyne_complete outcome:"cancelled"`（或不 complete 等 idle 回收）静默交回，等接力唤醒，不写无依据产物。
 5. 委托检索的接收面是 librarian：各 role 的补检索任务写清缺哪段文献、要什么来源；librarian 补完 `research/` 后回委托方。
 
-环路自转：主环 pi→examiner→theorist⇄speculator⇄runner⇄qa（理论⇄实验⇄中期持续环）→qa 放门→chair（+referee×3 结题合议；成稿挂起期直接验收，文稿各方自书）→planner→pi；对线环 speculator⇄theorist；执行环 speculator⇄runner（设计段设计与失败回传）；把关与 probe 环 speculator/theorist→qa⇄runner（次生写法点单、probe 派单）；中期整改环 qa→runner/speculator/theorist/scribe（直令）；结题整改环 chair→speculator/theorist/scribe；验收包线 scribe→qa→chair（三处 scribe 段挂起期休眠，文字整改发 speculator、包由 qa 自书）；复研环 theory 组⇄examiner；合议环 chair⇄referee；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护：idle 判定与报告、generate/reload、spec 对表、知识产物 git commit、人机传话。
+环路自转：主环 pi→examiner→theorist⇄speculator⇄runner⇄qa（理论⇄实验⇄中期持续环）→qa 放门→chair（+referee×3 结题合议；成稿挂起期直接验收，文稿各方自书）→planner→pi；对线环 speculator⇄theorist；执行环 speculator⇄runner（设计段设计与失败回传）；把关与 probe 环 speculator/theorist→qa⇄runner（次生写法点单、probe 派单）；中期整改环 qa→runner/speculator/theorist/scribe（直令）；结题整改环 chair→speculator/theorist/scribe；验收包线 scribe→qa→chair（三处 scribe 段挂起期休眠，文字整改发 speculator、包由 qa 自书）；复研环 theory 组⇄examiner；合议环 chair⇄referee；委托边 librarian 回全部委托方。人随时可接管任一 session。自激发无熔断，终结靠人 `onlyne control cancel --task <id>` 或会话接管。supervisor（人 + root 会话）只做维护与传话，不进任何环。
 
-## 装配与运行面（指针）
+## 运行面指针
 
-本文只定角色与流程约定。装机、通电、值班三件事各有正本：
+本文只定角色与流程约定。运维与值班各有正本：
 
-- 换机装配与通电顺序：`README.md`「装配与通电」节（装机前四条确认 → `scripts/bootstrap.sh --assemble` → `--check` → `--promote` → 可见 tab 起 server 与 11 个 client → 第一发与验收）。`--promote` 用本文覆盖仓根薄引导，引导态就地终止；换机与重建都回那一节走。
 - supervisor 值班职责（账目读取、残影恢复、idle 判定、对人报告、权限边界）：`.pi/SYSTEM.md`。
-- 飞轮的反应式性质：没有入站任务时环不动。通电与第一发之后，推进全靠角色表的接力边自转，supervisor 不进气泡。
+- 集群的运维操作口径：`README.md`。
+- 飞轮的反应式性质：没有入站任务时环不动。第一发之后，推进全靠角色表的接力边自转，supervisor 不进气泡。
 
 ## 纪律
 
