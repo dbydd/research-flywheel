@@ -81,7 +81,7 @@ assert d["protocol"]==1 and p>=(1,0,0)
 ' 2>/dev/null; then
     ok "onlyne 五件套在 PATH，protocol=1，版本 $(printf '%s' "$v" | python3 -c 'import json,sys;print(json.load(sys.stdin)["onlyne-cli"])')（下限 1.0.0，口径追 latest）"
   else
-    bad "onlyne 版本不过闸：需 protocol=1 且 ≥1.0.0（$v）"
+    bad "onlyne 版本不过闸：需 protocol=1 且 ≥1.0.0（${v}）"
   fi
 }
 
@@ -165,17 +165,21 @@ PY
 }
 
 gate_workspaces() {
-  local n=0 bad_pkgs=0 p
+  local n=0 bad_pkgs=0 nokey=0 p
   for p in "${ROLES[@]}"; do
     if [ -d "$WSD/$p/.pi" ]; then n=$((n+1)); else continue; fi
+    [ -f "$WSD/$p/.onlyne/keys/role.key" ] || nokey=$((nokey+1))
     python3 - "$WSD/$p/.pi/settings.json" <<'PY' || bad_pkgs=$((bad_pkgs+1))
 import json,sys
 d=json.load(open(sys.argv[1]))
 assert d.get("packages")==["npm:pi-onlyne"], d.get("packages")
 PY
   done
-  if [ "$n" = "11" ] && [ "$bad_pkgs" = "0" ]; then ok "11 份角色工作区目录在盘（存在性），packages 全为 npm:pi-onlyne"
-  else bad "角色工作区渲染 $n/11，packages 不过闸 $bad_pkgs 份（跑 --assemble）"; fi
+  if [ "$n" = "11" ] && [ "$bad_pkgs" = "0" ] && [ "$nokey" = "0" ]; then
+    ok "11 份角色工作区在盘（.pi/settings.json + .onlyne/keys/role.key），packages 全为 npm:pi-onlyne"
+  else
+    bad "角色工作区：渲染 $n/11，packages 不过闸 $bad_pkgs 份，缺 role.key $nokey 份（跑 --assemble）"
+  fi
 }
 
 gate_backend() {
@@ -196,7 +200,7 @@ print(tomllib.load(open(sys.argv[1],"rb"))["server"]["listen"])
 PY
 )"
   local socket=".onlyne/run/s"
-  if [ -S "$socket" ] || [ -f ".onlyne/run/socket" ]; then skip "server 已在跑（$addr），端口占用不判"; return; fi
+  if [ -S "$socket" ] || [ -f ".onlyne/run/socket" ]; then skip "server 已在跑（${addr}），端口占用不判"; return; fi
   if python3 - "$addr" <<'PY'
 import socket,sys
 h,_,p=sys.argv[1].rpartition(":")
@@ -251,7 +255,7 @@ import sys, tomllib
 print(tomllib.load(open(sys.argv[1],"rb"))["server"]["listen"])
 PY
 )"; fi
-  echo "装配 1/6 证书：onlyne-server init --root . --listen $LISTEN（spec.toml 暂移，init 见 spec 即拒）"
+  echo "装配 1/6 证书：onlyne-server init --root . --listen ${LISTEN}（spec.toml 暂移，init 见 spec 即拒）"
   if [ "$DRY" = "1" ]; then echo "DRY  mv $SPEC → 临时 → init → 还原 → 替换 cert_pin"; return; fi
   local out
   cp "$SPEC" "$SPEC.pre-bootstrap" || die "$0: 暂移前存不下改前备份，拒绝改动拓扑真相"
@@ -306,7 +310,7 @@ PY
 )"
     if [ -n "$key" ] && [ "$key" != "$KEY_PLACEHOLDER" ]; then skip "[$i/11] $role key 已在 spec"; continue; fi
     ws="$WSD/$p"
-    echo "装配 2/6 密钥 [$i/11] $role：onlyne-client init --workspace $ws --role $role"
+    echo "装配 2/6 密钥 [$i/11] ${role}：onlyne-client init --workspace $ws --role $role"
     if [ "$DRY" = "1" ]; then echo "DRY  init + 回填 key"; continue; fi
     if ! out="$(onlyne-client init --workspace "$ws" --role "$role" --server-root . 2>&1)"; then
       bad "[$i/11] $role client init 失败：$(printf '%s' "$out" | tail -2 | tr '\n' ' ')"; continue
@@ -357,7 +361,13 @@ asm_generate() {
   for p in "${ROLES[@]}"; do
     role="${p##*/}"; i=$((i+1))
     echo "装配 4/6 渲染 [$i/11] $p"
-    act onlyne server generate --root . --template "formal/$p" --role "$role" --force
+    if [ "$DRY" = "1" ]; then echo "DRY  onlyne server generate --root . --template formal/${p} --role ${role} --force"; continue; fi
+    # generate 会把该 role 的 [[client]] 行原样打到 stdout，装机日志里不需要，只留 stderr
+    if onlyne server generate --root . --template "formal/$p" --role "$role" --force >/dev/null; then
+      ok "[$i/11] $p 渲染到 $WSD/$p"
+    else
+      bad "[$i/11] $p generate 失败（看上一行 stderr）"
+    fi
   done
 }
 
@@ -368,14 +378,14 @@ asm_vault() {
   act mkdir -p obsidian
   local d
   for d in 论文 reports draft templates; do
-    if [ ! -d "$VAULT/$d" ]; then warn "vault 缺子目录 $d，跳该链"; continue; fi
+    if [ ! -d "$VAULT/$d" ]; then warn "vault 缺子目录 ${d}，跳该链"; continue; fi
     act ln -sfn "$VAULT/$d" "obsidian/$d"
   done
   [ "$DRY" = "1" ] || ok "vault 软链就位（obsidian/ 已 gitignore）"
 }
 
 run_assemble() {
-  echo "== bootstrap assemble${DRY:+（dry-run）}=="
+  if [ "$DRY" = "1" ]; then echo "== bootstrap assemble（dry-run）=="; else echo "== bootstrap assemble =="; fi
   asm_toolchain; asm_cert; asm_keys; asm_models
   [ "$DRY" = "1" ] || verify_spec_or_restore
   asm_generate; asm_vault

@@ -31,8 +31,5 @@ __pycache__/
 # skill 吸收暂存笔记（蒸馏工人落盘区，吸收完成后清）
 .intake-notes/
 
-# supervisor 值班本机笔记（留盘不入库）
-设计议程.md
-
 # 训练槽锁（运行态）
 .train-slot/

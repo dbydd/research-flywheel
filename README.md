@@ -53,7 +53,6 @@ AGENTS.md                 clone 态＝薄引导（指向 BOOTSTRAP）；--promot
 .agents/AGENTS.md         契约正本（11 角色公共约定），提升动作的复制源
 .pi/SYSTEM.md             supervisor 值班会话的岗位说明（装配引导、通电、账目、残影恢复）
 scripts/bootstrap.sh      装配器：--check 门禁 / --assemble 幂等装配 / --promote 契约上位
-设计议程.md               当前讨论事项清单（定案搬进契约后划账，本地工作件）
 research_project/         研究项目文件（一项目一 .md）+ 每项目过程件目录（提案/送审包/判词/推导/实测数据）
 research/                 文献检索台账（frontier-notes.md，URL+单行结论，追加式）
 experiment/ evaluation/   领域代码与评测器（评测命令写进断言清单，qa 照命令重跑对账）
