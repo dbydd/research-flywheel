@@ -84,7 +84,7 @@ onlyne --server-root . send --from _supervisor --to scout --file payload/first.m
 onlyne tui
 ```
 
-entry role 见角色表的 `★` 行，本主题是 scout。第一发落地后环即成形：scout 产出入池并自取 queued 派给下游，后续每轮靠接力任务推进。supervisor 不进环。
+示例按模板默认拓扑写 `--to scout`；实际入口以角色表 `★` 行为准，换主题时同步这一行。第一发落地后环即成形：entry role 产出入池并自取 queued 派给下游，后续每轮靠接力任务推进。supervisor 不进环。
 
 ## 动力源
 
