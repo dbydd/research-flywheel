@@ -33,7 +33,17 @@ or, inside a pi session, the `onlyne_complete{outcome, text}` tool.
   capped at 200 characters. Put the whole answer there. It is the only upward channel.
 - `--outcome done|failed|cancelled`. Provable impossibility → `failed`, with the reason in
   `text`. If you fall silent, a fallback still files a receipt from your last assistant
-  text — so name the result in that text.
+  text — so name the result in that text. A turn that left no result line still files a
+  completion receipt whose text is empty (onlyne 1.2.1).
+- A `backend = "acp"` session mounts nothing and needs no `onlyne` command. Its prompt
+  ends with an absolute report path `<workspace>/.onlyne/out/<task-id>.md`. The last
+  action before you stop is one line in that file — `hop-done: <the result in one line>`
+  or `hop-failed: <why it failed, one sentence>` — written under a temporary name in the
+  same directory and renamed into place. The client reads the file once at the turn's end
+  and deletes it. `hop-done` replaces `out_head`; `hop-failed` settles Failed with that
+  line as head and fault reason; any other file shape settles Cancelled, fault reason
+  starting `acp payload invalid:`. Each read appends a `payload` record to
+  `logs/session-<task>.events.jsonl`, `payload_kind` one of `done|failed|invalid|absent`.
 - The second completion for the same task is refused. Call it once.
 
 ## Passing work sideways

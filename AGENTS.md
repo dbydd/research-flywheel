@@ -164,6 +164,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 接力派下一跳用 bash `onlyne handoff --to <role> --task <当前task_id> --text "<任务书>"`（parent_task+hop 血缘顺链；task_id 在注入帧头、`/onlyne` 或 receipt JSON 里查）。
 - 失败交活用 complete outcome=failed，或 handoff 正文首行 `> hop-failed: <原因>`。
 - 产物未齐用 outcome=cancelled（bash 面 `onlyne complete --task <id> --outcome cancelled --head-from local --text "<说明>"`；`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head），或不 complete 等 idle 回收（回收 = 换一个全新 session id，旧档案留 .pi/sessions 可查）。
+- 1.2.1 起：turn 结束时没有结果行，completion 收据仍落账（正文为空文本）。本树十一角色 `session_command` 是交互 pi，结项走 `onlyne_complete` / `onlyne complete --head-from`。ACP 的 payload-v1（`.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:`）作用于 `backend = "acp"` 会话。
 - 观测命令：`onlyne status|roles|sessions|ledger|faults|watch|history --server-root .`；pi 内 `/onlyne`。op_id 换体重发 conflict，重试原帧重发。
 - supervisor 不注册 [[client]]：cwd=server-root 走 admin 面。第一发 `onlyne send --server-root . --from planner --to pi --file payload/first.md`（--from 须已注册持边角色，落账 admin=true）。
 - 角色零上行边：completion 走 origin 免 ACL 特例自动回账，进来源 role 收件箱（queued 行，pull 式），反边不用声明。
