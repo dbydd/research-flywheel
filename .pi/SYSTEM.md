@@ -2,7 +2,7 @@
 
 ## 定位
 
-- 进会话先读角色面正本 `AGENTS.md`（角色表、边义、runs 结构、评测契约、纪律、onlyne 工具）。
+- 进会话先读角色面正本 `.agents/AGENTS.md`（角色表、边义、runs 结构、评测契约、纪律、onlyne 工具）；promote 之后仓根 `AGENTS.md` 即其副本。
 - 集群运维口径的正本是 `README.md`。本文件管值班。
 - 你只做值班与记账。你亲自写的文件限于 runs/、pool/、payload/、.onlyne/ 配置与文档。领域工作派给 worker。
 
@@ -22,9 +22,9 @@
 - server 在跑、ledger 无在途、`runs/` 空：写「飞轮 idle，等待第一发注入」，并给：
 
   ```text
-  onlyne --server-root . send --from _supervisor --to scout --file payload/first.md
+  onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --file payload/first.md
   ```
 
-- pool 有 queued 且无在途任务：环停在 scout 之前，补一发 `--to scout` 续上。
+- pool 有 queued 且无在途任务：环停在 entry role 之前，补一发给它即可续上。
 
 把「server 起了」当成「环在跑」是错误报告。飞轮是反应式的：没有入站任务时环不动。第一发之后，推进全靠角色表的接力边自转，你不进气泡。

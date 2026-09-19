@@ -205,8 +205,10 @@ for s in glob.glob(root + "/*/*/.pi/settings.json"):
     assert pk == ["npm:pi-onlyne"], f"{s}: packages {pk} want ['npm:pi-onlyne']"
 assert found >= 1, f"no role .pi/settings.json under {root}"
 PY_PKG
-if ! pi list 2>/dev/null | grep -q "npm:pi-onlyne"; then
-  fail "pi-onlyne MISSING: supervisor first-run is \`pi install npm:pi-onlyne\` (latest)"
+if pi list 2>/dev/null | grep -q "npm:pi-onlyne"; then
+  info "pi plugin npm:pi-onlyne present"
+else
+  warn "pi plugin npm:pi-onlyne not installed here: the role client loads it at runtime, so the supervisor runs \`pi install npm:pi-onlyne\` before starting the ring"
 fi
 
 # --- check 9: v1 toolchain + backend candidates --------------------------------
@@ -272,7 +274,7 @@ if [ "$PAYLOAD_MISSING" = "1" ]; then
 fi
 rm -rf "${RETIRE[@]}"
 git add -A
-git commit -qm "feat(bootstrap): promote template to theme $THEME"
+git commit -qm "feat(promote): promote template to theme $THEME"
 
 cat <<EOF
 promoted to theme/$THEME. Power-on is manual and is not running yet.

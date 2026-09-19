@@ -77,7 +77,7 @@ daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可�
 
 ### 第一发
 
-写 `payload/first.md`（目标、约束、期望三段），然后：
+写 `payload/first.md`（目标、输入、期望产物、下一跳建议四段，口径见角色面正本的「任务书四段」），然后：
 
 ```bash
 onlyne --server-root . send --from _supervisor --to scout --file payload/first.md
