@@ -3,7 +3,7 @@
 #
 # Usage: ./scripts/promote.sh [--dry-run] [--theme <slug>] [--force-stage]
 #
-# Contract: BOOTSTRAP.md section 6. Checks (section 6.3) run first; any
+# Contract: README.md "装配与通电 > 装配". Checks run first; any
 # failure exits 1 with the stage unchanged. --dry-run runs checks and prints
 # the planned actions with zero writes. Already live refuses to run.
 set -euo pipefail
@@ -19,7 +19,7 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY_RUN=1; shift ;;
     --theme) THEME="${2:-}"; shift 2 ;;
     --force-stage) FORCE_STAGE=1; shift ;;
-    *) echo "unknown flag: $1 (see BOOTSTRAP.md section 6.1)" >&2; exit 1 ;;
+    *) echo "unknown flag: $1 (usage: promote.sh [--dry-run] [--theme <slug>] [--force-stage])" >&2; exit 1 ;;
   esac
 done
 
@@ -40,8 +40,25 @@ case "$STAGE" in
   *) fail "unexpected stage '$STAGE' (expected configuring or checking)" ;;
 esac
 
-# --- check 1: THEME slots filled -------------------------------------------
+# --- check 1: role surface carries no assembly or ops content --------------
+# Scope is the file set a role session reads through the parent-directory
+# chain. README.md, .pi/SYSTEM.md, and scripts/ are the operator and duty
+# surface and carry their own rule below.
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
+ROLE_SURFACE=( ".agents/AGENTS.md" )
+while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
+OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|generate|stop)|/Users/|/home/|codesign'
+OPS_HITS="$(grep -nE "$OPS_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
+if [ -n "$OPS_HITS" ]; then
+  printf '%s\n' "$OPS_HITS" >&2
+  fail "role surface carries assembly or ops content (lines above)"
+fi
+# The duty canon holds ops verbs by design; it carries no assembly content.
+DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|codesign|npm:pi-onlyne' .pi/SYSTEM.md 2>/dev/null || true)"
+if [ -n "$DUTY_HITS" ]; then
+  printf '%s\n' "$DUTY_HITS" >&2
+  fail ".pi/SYSTEM.md carries assembly content (lines above)"
+fi
 if grep -q "<!-- THEME:" .agents/AGENTS.md; then
   LEFT="$(grep -o "<!-- THEME:[a-z-]*" .agents/AGENTS.md | sort -u | tr '\n' ' ')"
   fail "THEME slots REMAIN:: $LEFT"
@@ -69,7 +86,11 @@ for r in $ROLES; do
   python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INCOMPLETE (reason above)"
 import json,sys
 d = json.load(open(sys.argv[1]))
-assert d.get("defaultProvider") and d.get("defaultModel") and d.get("defaultThinkingLevel"), "defaultProvider/defaultModel/defaultThinkingLevel required non-empty"
+keys = ("defaultProvider", "defaultModel", "defaultThinkingLevel")
+missing = [k for k in keys if not isinstance(d.get(k), str)]
+assert not missing, f"keys absent or not strings: {missing}"
+if not all(d[k] for k in keys):
+    print(f"{sys.argv[1]}: model triplet empty, the installer fills it (pi falls back to its own default)")
 pkgs = d.get("packages", [])
 assert pkgs == ["npm:pi-onlyne"], f'packages={pkgs}: published template ships npm:pi-onlyne (supervisor first-run: pi install npm:pi-onlyne)' 
 PY_CHECK2
@@ -206,7 +227,7 @@ info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
 
 # --- plan ---------------------------------------------------------------
 [ -z "$THEME" ] && THEME="$(basename "$ROOT")"
-RETIRE=( ".agents/AGENTS.md" ".agents/skills/flywheel-setup/" "BOOTSTRAP.md" )
+RETIRE=( ".agents/AGENTS.md" )
 info "plan:"
 info "  1) git checkout -b theme/$THEME"
 info "  2) cp .agents/AGENTS.md AGENTS.md"
@@ -216,7 +237,7 @@ if [ "$PAYLOAD_MISSING" = "1" ]; then
 else
   info "  4) payload/ exists, skip mkdir"
 fi
-info "  5) runtime power-on stays manual (AGENTS cold-start: server init/generate/run, client run)"
+info "  5) runtime power-on stays manual (README: 装配与通电 > 通电)"
 info "  6) remove assembly material: ${RETIRE[*]}"
 info "  7) git add -A && commit"
 if [ "$DRY_RUN" = "1" ]; then
@@ -235,7 +256,7 @@ else
   git checkout -qb "theme/$THEME" || fail "create branch theme/$THEME FAILED"
 fi
 cp .agents/AGENTS.md AGENTS.md
-TEMPLATE_COMMIT="$(git log --format=%H -1 -- BOOTSTRAP.md .agents/AGENTS.md 2>/dev/null || echo unknown)"
+TEMPLATE_COMMIT="$(git log --format=%H -1 -- .agents/AGENTS.md README.md 2>/dev/null || echo unknown)"
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ROLES_JSON="$(printf '%s\n' $ROLES | python3 -c "import json,sys;print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")"
 python3 - "$THEME" "$ENTRY" "$ROLES_JSON" "$TEMPLATE_COMMIT" "$NOW" <<'PY_FLY'
@@ -254,14 +275,15 @@ git add -A
 git commit -qm "feat(bootstrap): promote template to theme $THEME"
 
 cat <<EOF
-1) first-run toolchain (once, latest): cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+promoted to theme/$THEME. Power-on is manual and is not running yet.
+Full procedure: README.md "装配与通电".
+1) toolchain (once, latest): cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
    && pi install npm:pi-onlyne
-2) run in this dir terminal: onlyne server init --root . --listen <port>, fill spec.toml pins/keys,
-   onlyne server generate --root ., then onlyne server start --root .     # power-on, human runs it
-3) open another terminal:    pi                                        # this session is the supervisor (_supervisor admin mount)
-4) start each role client:   onlyne client run --workspace .onlyne/ws/$TOPO/<role>
-5) flywheel fully idle now:  empty ledger, empty runs/, seeds only in pool.
-   power-on is not running; to turn the ring give the supervisor a direction, or run:
+2) server:   onlyne server init --root . --listen <port>   # then fill spec.toml cert_pin and per-role keys
+   onlyne server generate --root . && onlyne server start --root .
+3) supervisor: open pi in this directory (the _supervisor admin mount)
+4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
+5) flywheel is idle: empty ledger, empty runs/, seeds only in pool. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
 EOF
 

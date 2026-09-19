@@ -10,6 +10,7 @@
 ## verdict.md
 - 首行一行 verdict（accept / revise / reject）。随后是编号 finding，每条点名稿件小节与具体出入。
 - revise 时 handoff writer 修订接力。
+- 触及理论的 finding 直接 handoff model 补推导，任务书点名稿件小节与断言位置。
 
 ## 归档（accept/reject 本跳做完）
 - keep：稿件留 papers/，pool 该小节框符改 `[x]`。

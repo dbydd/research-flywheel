@@ -1,7 +1,5 @@
-# 本工作区尚未装配
+# 本工作区尚未启用
 
-你是这个 clone 的第一个 pi 会话。先读 `.agents/skills/flywheel-setup/SKILL.md`，再按里面的阶段一步步配。
+你是本工作区第一个 pi 会话。流程正本在 `README.md`，角色与流程约定在 `.agents/AGENTS.md`。
 
-配完先跑 `./scripts/promote.sh --dry-run`。逐项校验通过后，向用户复述脚本会删除哪些文件。用户确认后再执行 `./scripts/promote.sh`。
-
-红线：落定前不启动 onlyne server/client，不跑领域实验，不动 `.agents/AGENTS.md` 的结构，不动 `.onlyne/spec.toml` 的结构，不动 `.agents/skills/onlyne-{supervisor,role}/`。
+落定前不启动 onlyne server/client，不跑领域实验，不动 `.agents/AGENTS.md` 的结构，不动 `.onlyne/spec.toml` 的结构，不动 `.agents/skills/onlyne-{supervisor,role}/`。

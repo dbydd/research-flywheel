@@ -15,19 +15,6 @@
 !.onlyne/templates/
 !.onlyne/templates/**
 .onlyne.v0-archive/
-# The marquee protocol example ships its instance Pi settings and prompt
-# wrappers. Runtime-only .onlyne/ and onlyne_in/ under those instances stay
-# ignored by the patterns below.
-!examples/
-!examples/marquee/
-!examples/marquee/.ws/
-!examples/marquee/.ws/*/
-!examples/marquee/.ws/*/.pi/
-!examples/marquee/.ws/*/.pi/**
-!examples/marquee/.ws/*/prompts/
-!examples/marquee/.ws/*/prompts/**
-**/onlyne_in/
-**/channels/loopback/{in,out}
 
 # knowledge products (pool/, runs/, research/, papers/) stay tracked
 !.gitkeep

@@ -16,7 +16,7 @@
 [server]
 name = "flywheel"                                  # 集群名；{{cluster}}/{{server_name}} 占位符的源头
 listen = "127.0.0.1:7812"
-cert_pin = "sha256/REPLACE_ME"
+cert_pin = "sha256/REPLACE_ME_after_server_init"
 note_queue = false                                 # note 不排队：目标离线即 recipient_offline
 fault_history_days = 14
 resync_lag = 256
@@ -51,7 +51,7 @@ session_command = []
 
 [[client]]
 role = "scout"                                     # ★ entry role（第一发投递对象）
-key = "ed25519/REPLACE_ME"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 research flywheel 的 scout（前沿侦察员）。检索→盘点→按 idea schema 入池；入池后自取一条 queued idea 固化 runs/<run-id>/idea.json（status=running），handoff 给 model 建模任务（任务书指向 idea.json 与 research/ 证据）。失败回传接收口：收到正文首行 `> hop-failed:` 的接力时，把结论记入 runs/ 并从 pool 取下一条 queued 续环。你 handoff 的下游只有 model。不跑实验，不下结论。"""
 admin = false
 max_sessions = 1
@@ -62,7 +62,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "model"
-key = "ed25519/REPLACE_ME"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 research flywheel 的 model（建模）。读 idea.json 与证据→derivation.md 推导→关键断言用宿主 lean 形式化→方法与评测器各出一份 spec 落 runs/<run-id>/spec.md。代码与评测器由 bench 按 spec 落地；你对 bench handoff 评测任务、就绪后对 writer handoff 成稿任务（注明待 measured/）。Lean 失败：把失败命令与断言位置写进 derivation.md，handoff scout 失败回传（正文首行 `> hop-failed:`），不再下派。"""
 admin = false
 max_sessions = 1
@@ -73,7 +73,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "bench"
-key = "ed25519/REPLACE_ME"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 research flywheel 的 bench（跑批与测量）。按 runs/<run-id>/spec.md 落地 experiment/ 与 evaluation/，跑 baseline 与 candidate，原始 stdout/stderr、配置、种子、耗时逐条落 runs/<run-id>/measured/，汇总与 delta 写 measured/summary.md：每个 objective 一个实测值，每个 constraint 一个 pass/fail。命令失败也归档，不伪造数值，不改评测器语义。落盘后 handoff writer 续作（指向 summary.md）；跑不动时 handoff scout 失败回传（正文首行 `> hop-failed:` + 现场路径）。"""
 admin = false
 max_sessions = 1
@@ -84,7 +84,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "writer"
-key = "ed25519/REPLACE_ME"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 research flywheel 的 writer（成稿）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete outcome=cancelled 静默交回，等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>.md：结论先行，每个数字标注来源路径，open questions 单独一节。figure 兼职归你：数据图 matplotlib 从 measured/ 重绘、脚本与成图落 papers/figs/<run-id>/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后 handoff critic 送审（稿件+证据+figs 清单路径）。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md；涉理论 handoff model 补推导，涉证据 handoff scout 补检索。"""
 admin = false
 max_sessions = 1
@@ -95,7 +95,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "critic"
-key = "ed25519/REPLACE_ME"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质 handoff writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 该小节框符改 [x]；failed 记 verdict.md、框符改 [!]），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
 admin = false
 max_sessions = 1
