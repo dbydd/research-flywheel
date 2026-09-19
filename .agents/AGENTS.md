@@ -50,7 +50,7 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 ## onlyne 工具（v1 pi 插件在 role 会话提供）
 
 - `onlyne_send {to, text, kind}`：激发新任务族用 kind:"task"。给在飞任务追加 note 用 kind:"note"，这也是默认值。note 不建 session：目标离线、或者在线但手头没有 working session，都直接得 `recipient_offline`（server 侧 `note_queue = true` 才排队，排队后到 `ttl_ms` 记 expired）。to 必须在本 role 的 `allowed_targets` 里，否则返回 `acl_denied`，行都不落。
-- `onlyne_complete {outcome, text}`：交活结项。`outcome: done|failed|cancelled`（`cancelled` 表示这一跳体面交回、产物未齐）。CLI 同面：`onlyne complete --task <id> --outcome <o> --head-from local --text "..."`（`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head）。text 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就指产物路径。同一 task 第二次 complete 会被拒，只喊一次。
+- `onlyne_complete {outcome, text}`：交活结项。`outcome: done|failed|cancelled`（`cancelled` 表示这一跳体面交回、产物未齐）。CLI 同面：`onlyne complete --task <id> --outcome <o> --head-from local --text "..."`（`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head）。text 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就指产物路径。同一 task 第二次 complete 会被拒，只喊一次。onlyne-client 1.2.1 起，结清时没有结果行也会落一条正文为空的 `completion` 收据，等这张收据的下一跳能继续。ACP 结项报告（往 `<ws>/.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:` 一行）只在 `backend = "acp"` 时生效；本模板 `session_command` 是 pi 插件路径，结项走 `onlyne_complete`。
 - CLI 同面（shell 里跑）：`onlyne handoff --to <role> --task <id> --text "..."` 表示转派新任务，并记 `parent_task` 与 hop+1 血缘。`onlyne send --to <role> --text|--file ...` 开新任务族。`onlyne reply --to <msg-id> --text "..."` 回执。`onlyne control recycle|probe|snapshot|cancel|focus --task <id>` 管任务（`--from`/`--task` 全局，子命令前后都认）。
 - 接力一律用 handoff。ledger 顺 `parent_task` 链能查出整条科研链路，追溯成本为零。
 - 失败交活：handoff/complete 的 text 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。

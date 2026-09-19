@@ -32,9 +32,25 @@ or, inside a pi session, the `onlyne_complete{outcome, text}` tool.
 - Your `--text` becomes the ledger `out_head`, verbatim: one line, whitespace-collapsed,
   capped at 200 characters. Put the whole answer there. It is the only upward channel.
 - `--outcome done|failed|cancelled`. Provable impossibility → `failed`, with the reason in
-  `text`. If you fall silent, a fallback still files a receipt from your last assistant
-  text — so name the result in that text.
-- The second completion for the same task is refused. Call it once.
+  `text`. The report path depends on your host. A mounted pi session answers through the
+  `onlyne_complete` tool, and if you fall silent there the plugin files a fallback receipt
+  from your last assistant text — so name the result in that text. A plain `exec` session
+  carries no plugin and no fallback: `onlyne complete` is yours to run before you stop.
+- A `backend = "acp"` session mounts nothing and needs no `onlyne` command. Its prompt
+  ends with an absolute report path the client prepared under the workspace
+  (`<workspace>/.onlyne/out/<task-id>.md`); the last action before you stop is one line
+  in that file — `hop-done: <the result in one line>` or `hop-failed: <why it failed, one
+  sentence>` — written via a temp name in the same directory then renamed into place.
+  The client reads that file once at turn end and deletes it. Missing file keeps the old
+  behavior (head from the last streamed line). `hop-done` replaces `out_head`. `hop-failed`
+  settles Failed. A file that fails the contract settles Cancelled, with a fault reason
+  opening `acp payload invalid:`. This flywheel template's `session_command` is pi; the
+  ACP file contract stays dormant until a workspace sets `backend = "acp"`.
+- From onlyne-client 1.2.1, a settled task with no result line still files its
+  `completion` receipt, with empty text. The next hop waiting on that receipt proceeds.
+- One completion per task. Inside your session the plugin keeps that record: a second
+  `onlyne_complete` for a task it already reported answers `duplicate`, files no report, and the
+  process exits once. Call it once.
 
 ## Passing work sideways
 
@@ -52,6 +68,9 @@ mechanics here never change.
 rides an already-live session on the receiving role — a role that is offline, or online
 with every session settled, refuses it with `recipient_offline`. Follow-up instructions
 for your own in-flight task are notes; new work is a task.
+
+This tree's handoff convention `> hop-failed: <环节> <一句话>` is body text on the
+relay, a different object from the ACP payload-v1 file prefix `hop-failed:`.
 
 ## Rules of the ring
 

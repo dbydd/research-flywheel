@@ -122,6 +122,15 @@ keeps the whole trail either way.
 A role at `max_sessions` keeps pulling with `control_only = true`, so `focus`/`recycle`/`cancel`
 still land while work rows stay `queued`.
 
+From onlyne-client 1.2.1 a settled task with no result line still files its `completion`
+receipt, body empty. A next hop waiting on that receipt proceeds. ACP payload-v1
+(`hop-done:` / `hop-failed:` one line in `<ws>/.onlyne/out/<task-id>.md`) is the
+`backend = "acp"` report path only; this flywheel's `session_command` is pi.
+
+`onlyne ledger` prints `reason` among the row keys when the row has one. A pane backend
+refuses a protocol `session_command` (`--mode rpc`, `--acp`) with a ledger reason naming
+`exec` or `acp` as the matching workspace backend.
+
 ## Errors you will see
 
 `acl_denied` → the edge is missing from the spec. `unauthorized` → the key is not
