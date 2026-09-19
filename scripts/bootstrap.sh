@@ -91,7 +91,7 @@ gate_pi() {
   out="$(pi list 2>/dev/null || true)"
   case "$out" in
     *"npm:pi-onlyne"*) ok "pi 插件 npm:pi-onlyne 在册" ;;
-    *) bad "pi 插件缺 npm:pi-onlyne（跑 pi install npm:pi-onlyne）" ;;
+    *) warn "pi 插件缺 npm:pi-onlyne：通电前由 supervisor 跑 pi install npm:pi-onlyne（用户级安装，不属本脚本的写盘动作）" ;;
   esac
 }
 
