@@ -2,7 +2,7 @@
 
 这是 formal-research 主题的公共约定正本，装机无关。装配期它是仓根材料的上游：`scripts/bootstrap.sh --promote` 把本文件原样复制为仓根 `AGENTS.md`，此后 pi 沿父目录自动拼上下文，树内每个 role session 都读到同一份约定（role ws 在仓根之下）。
 
-读者分层：role 会话读本文（装配后 = 仓根 `AGENTS.md`）；clone 后的第一个会话读仓根薄引导与 `BOOTSTRAP.md`；supervisor 值班职责读 `.pi/SYSTEM.md`。分支 `theme/formal-research` 是模板发布分支，换机实例化按 `BOOTSTRAP.md` 走。
+读者分层：role 会话读本文（装配后 = 仓根 `AGENTS.md`）；clone 后的第一个会话读仓根薄引导与 `README.md`「装配与通电」节；supervisor 值班职责读 `.pi/SYSTEM.md`。分支 `theme/formal-research` 是模板发布分支，换机实例化按 `README.md`「装配与通电」节走。
 
 本体论：运行时 + 工作区（数据、记录、上下文文件）构成 agent 的本体；workspace = role，指该角色的「记忆 + 设定 + 历史文件」；session = 该 role 手头的一件工作，做一跳就回收，来消息拉新 session。一切值得写入持久状态的信息应写尽写，不落文件的等于没发生。
 
@@ -117,7 +117,7 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 
 ## Obsidian vault 对接与写作规范（全员遵守）
 
-- vault 根路径在装配时确定（`scripts/bootstrap.sh --assemble --vault <路径>`，见 `BOOTSTRAP.md` 第 6 步），本文件不记录任何机器上的绝对路径。仓根 `obsidian/` 下四个软链直达 vault 相应位置：`obsidian/论文`→`<vault>/论文/`（原文 PDF 归档）、`obsidian/reports`→`<vault>/reports/`（精读报告）、`obsidian/draft`→`<vault>/draft/`（日常学习与 idea）、`obsidian/templates`→`<vault>/templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在本树里复制 vault 文件。本机没建这组软链（未接 vault）时，本节从「写作规范唯一入口」起的 vault 条款整段作废，产物全留本树。
+- vault 根路径在装配时确定（`scripts/bootstrap.sh --assemble --vault <路径>`，见 `README.md`「装配」步 5），本文件不记录任何机器上的绝对路径。仓根 `obsidian/` 下四个软链直达 vault 相应位置：`obsidian/论文`→`<vault>/论文/`（原文 PDF 归档）、`obsidian/reports`→`<vault>/reports/`（精读报告）、`obsidian/draft`→`<vault>/draft/`（日常学习与 idea）、`obsidian/templates`→`<vault>/templates/`（写作规范与报告模板）。读用软链，写同样经软链落 vault，不在本树里复制 vault 文件。本机没建这组软链（未接 vault）时，本节从「写作规范唯一入口」起的 vault 条款整段作废，产物全留本树。
 - 写作规范唯一入口：`obsidian/templates/writing-and-report-guide.md`；精读报告骨架用 `obsidian/templates/paper-report.md`。
 - 该规范覆盖所有用户可见文字：`derivation.md`、`measured/summary.md`、`papers/<项目短名>/main.tex` 与编译出的 `main.pdf`、`revisions.md`、gates/ 判词、vault 落库的精读报告。
 - 规范要点：直接陈述、累加式、结论先行；数字带单位与出处（Table/Figure/公式编号或文件路径）；论文事实与「我的分析」分区；流程用 mermaid；数学用 `$$…$$` 独立公式块；YAML frontmatter 可解析；内部链接与 wikilink 可达。
@@ -246,7 +246,7 @@ supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne h
 | referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | powerful/high |
 | planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | powerful/medium |
 
-`档位` 列是语义档位名；实际 `provider/model` 路由只写在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`（换供应商跑 `scripts/bootstrap.sh --assemble --provider … --model-powerful … --model-supercheap …`，见 `BOOTSTRAP.md` 第 4 步）。
+`档位` 列是语义档位名；实际 `provider/model` 路由只写在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`（换供应商跑 `scripts/bootstrap.sh --assemble --provider … --model-powerful … --model-supercheap …`，见 `README.md`「装配」步 3）。
 
 theory 域两员：speculator + theorist，由旧 model 位拆来（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。
 
@@ -277,7 +277,7 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 - weak 档：科研判断强，能指导 worker 写代码，必要时自己小写两段；supervisor 值班位同档。
 - supercheap 档：写代码强且便宜，容易想多做多把自己绕晕，不适合长时间独立工作；runner 用 low effort（历史上自 minimal 上调一档，目的仍是压住加戏）。
 
-档位到实际 `provider/model` 的映射存在 settings 里：role 看 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`，supervisor 看仓根 `.pi/settings.json`。改模板后跑 `onlyne server generate --root . --template formal/<phase>/<role> --role <role> --force` 落到该 ws；换供应商整体用 `scripts/bootstrap.sh --assemble` 的模型 flag（`BOOTSTRAP.md` 第 4 步）。
+档位到实际 `provider/model` 的映射存在 settings 里：role 看 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`，supervisor 看仓根 `.pi/settings.json`。改模板后跑 `onlyne server generate --root . --template formal/<phase>/<role> --role <role> --force` 落到该 ws；换供应商整体用 `scripts/bootstrap.sh --assemble` 的模型 flag（`README.md`「装配」步 3）。
 
 ## 大循环宏观流（接力闭环，从角色表推导）
 
@@ -295,7 +295,7 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 
 本文只定角色与流程约定。装机、通电、值班三件事各有正本：
 
-- 换机装配与通电顺序：`BOOTSTRAP.md`（开场协议四问 → `scripts/bootstrap.sh --assemble` → `--check` → `--promote` → 可见 tab 起 server 与 11 个 client → 第一发）。
+- 换机装配与通电顺序：`README.md`「装配与通电」节（装机前四条确认 → `scripts/bootstrap.sh --assemble` → `--check` → `--promote` → 可见 tab 起 server 与 11 个 client → 第一发与验收）。装配手册常驻该节，仓内无独立引导文件；`--promote` 之后仓根薄引导被本文覆盖，引导态就地终止。
 - supervisor 值班职责（账目读取、残影恢复、idle 判定、对人报告、权限边界）：`.pi/SYSTEM.md`。
 - 飞轮的反应式性质：没有入站任务时环不动。通电与第一发之后，推进全靠角色表的接力边自转，supervisor 不进气泡。
 

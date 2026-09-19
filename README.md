@@ -9,7 +9,7 @@
 
 ## 这套系统长什么样
 
-新人第一步不用碰命令行。clone 下来后，对你的 agent 会话（pi / omp / claude 皆可）说一句「**帮我看看这棵树**」——仓根的引导文件会让会话读 [`BOOTSTRAP.md`](BOOTSTRAP.md)：先介绍这套飞轮，问清四件本机事实（终端宿主、端口、模型档位、有无 vault），再跑 `scripts/bootstrap.sh --assemble` 代你装配并指导通电。手工装配走同一份文档，逐条照抄。
+新人第一步不用碰命令行。clone 下来后，对你的 agent 会话（pi / omp / claude 皆可）说一句「**帮我看看这棵树**」——仓根的薄引导会把会话带到本文的[「装配与通电」节](#装配与通电)：先问四件本机事实（终端宿主、端口、模型档位、有无 vault），再跑 `scripts/bootstrap.sh --assemble` 代装，最后 `--promote` 让公共约定上位、薄引导就地消失。手工装机照抄同一节。
 
 11 个角色，每个角色 = 一份职责说明书 + 一个工作区 + 若干 pi 会话。角色之间按固定的边互相派任务，任务像飞轮一样转起来：
 
@@ -49,7 +49,7 @@ planner → pi → examiner → theorist → speculator → runner → qa → ch
 ## 目录
 
 ```text
-AGENTS.md                 clone 态＝薄引导（指向 BOOTSTRAP）；--promote 后＝全套契约：角色表、边义、关口规程、纪律
+AGENTS.md                 clone 态＝薄引导（指向本文「装配与通电」节）；--promote 后＝全套契约：角色表、边义、关口规程、纪律
 .agents/AGENTS.md         契约正本（11 角色公共约定），提升动作的复制源
 .pi/SYSTEM.md             supervisor 值班会话的岗位说明（装配引导、通电、账目、残影恢复）
 scripts/bootstrap.sh      装配器：--check 门禁 / --assemble 幂等装配 / --promote 契约上位
@@ -70,32 +70,91 @@ payload/                  注入集群的第一发任务书
 - pi 侧 model/provider 配好（本主题三档模型设计见 `AGENTS.md` 角色表末列）。
 - 运行纪律：server 和每个角色的 client 各占一个**可见前台终端 tab**（关 tab 即停该角色），不进任何 agent 后台。
 
-## 起飞
+## 装配与通电
 
-一条装配链（flag 语义与失败处理见 `BOOTSTRAP.md`）：
+`theme/formal-research` 是模板发布分支：拓扑（11 角色）、角色细则、领域技能、评测契约都已定稿。装配不改设计，只补三件本机事实——服务器证书指纹、11 个角色密钥、模型路由与可选 vault 路径。装配脚本零守护进程，跑完环还是停的。
+
+### 装机前四条确认
+
+agent 会话接手本树时向用户一次问全，手工装机同样先定这四件：
+
+1. **终端宿主**：herdr / orca / zellij 之一——server 与 11 个 client 之后各占一个用户可见的前台 tab。
+2. **端口**：spec 现值 `127.0.0.1:7820`；一台机器并跑多棵树就换号（`--listen`）。
+3. **模型供应商与档位路由**：powerful 档（pi/examiner/theorist/speculator/chair/referee/planner）与 supercheap 档（librarian/runner/qa/scribe）的实际 model id；沿用模板现值就不给 flag。
+4. **Obsidian vault 与功耗边界**：给 vault 根路径就接四软链，没有就跳过，约定里的 vault 节在这台机器上整段失效；算力口径默认「训练单进程、串行、单片 ≤45 min」，要改在约定正本「功耗与训练槽纪律」节改。
+
+### 装配
 
 ```bash
-scripts/bootstrap.sh --check      # 只读门禁：报这台机器缺哪几件（未装配时 3 项红，属正常）
-scripts/bootstrap.sh --assemble --dry-run
-scripts/bootstrap.sh --assemble   # 幂等：证书 → 11 key → 模型档位 → 渲染 11 工作区 → 可选 vault 软链 → 自检
-scripts/bootstrap.sh --promote    # 契约上位：.agents/AGENTS.md → 仓根 AGENTS.md
+scripts/bootstrap.sh --check                      # 只读门禁，零写入；报这台机器缺哪几件
+scripts/bootstrap.sh --assemble --dry-run         # 先看要做啥
+scripts/bootstrap.sh --assemble \
+  --provider <名> --model-powerful <id> --model-supercheap <id> \
+  --vault <vault 根路径> --listen 127.0.0.1:7821
 ```
 
-通电＝server 一个可见前台 tab + 11 个 role client 各一个可见 tab（herdr / orca / zellij 任一宿主；关 tab 即停该角色，禁入 agent 后台与 nohup）：
+`--assemble` 六步全幂等，已达状态打 `SKIP`：
+
+| 步 | 动作 | 幂等判据 |
+|---|---|---|
+| 1 | 证书：暂移 `spec.toml` → `onlyne-server init --root . --listen <addr>` → 还原跟踪版并把打印的 `cert_pin` 写回 `[server]` | `cert_pin` 非占位且 `.onlyne/keys/server.key` 在盘 |
+| 2 | 密钥：逐 role `onlyne-client init --workspace .onlyne/ws/formal/<phase>/<role> --role <role>`，把打印行的 `key` 回填进对应 `[[client]]` | spec 里 11 个 key 非占位 |
+| 3 | 模型档位：按 flag 重写 11 份模板 `.pi/settings.json` 的 `defaultProvider`/`defaultModel`，effort 档不动，`packages` 钉回 `["npm:pi-onlyne"]` | flag 全缺省即整步 SKIP |
+| 4 | 渲染：逐 role `onlyne server generate --root . --template formal/<phase>/<role> --role <role> --force` | 以 spec/keys 为准，可反复跑 |
+| 5 | vault：`obsidian/{论文,reports,draft,templates}` 四软链（`obsidian/` 已 gitignore） | `--vault` 给了才做 |
+| 6 | 门禁：自动接跑 `--check` | — |
+
+第 1 步为什么要暂移：`onlyne-server init` 见 `spec.toml` 存在即拒（无 `--force` 时 refuse）。**别给 init 加 `--force`**——那会用它自带的极简模板覆盖整份 spec，11 行拓扑与 ACL 全丢。脚本因此在暂移前留 `spec.toml.pre-bootstrap` 改前备份，中途异常还原后退出。
+
+`--check` 十二项覆盖：五件套与 protocol 闸、pi 插件在册、spec 可 parse 且 11 role 与模板目录双向一致、relay 边双向闭合、`_supervisor` 零上行边、cert_pin 与 server.key 同机、11 key 非占位、11 工作区在盘且 packages 为 `npm:pi-onlyne`、终端宿主可探测、listen 端口空闲、文档卫生（跟踪件零本机绝对路径、零装机者标识、零已废栈字样）、vault 软链一致性。未装配的模板树跑 `--check` 会红三项（证书/密钥/工作区），属正常提示。
+
+### 契约上位
 
 ```bash
-onlyne server start --root .
-onlyne client run --workspace .onlyne/ws/formal/initiation/pi   # 其余 10 个 phase/role 同式
-onlyne status --server-root .                                   # connected 11/11 = 环点亮
+scripts/bootstrap.sh --promote     # cp .agents/AGENTS.md → 仓根 AGENTS.md
 ```
 
-第一发：研究方向写进 `payload/first.md`（目标 / 输入 / 期望产物三段），注入 ★ entry role pi，环开始自转：
+仓根 `AGENTS.md` 在 clone 态是一份薄引导（只讲去哪读、怎么装）。`--promote` 用 11 角色公共约定正本原样覆盖它，此后 pi 沿父目录链拼进树内每个 role 会话的正是那份约定，薄引导就地消失。判据：仓根 `AGENTS.md` 首行是「formal-research 大循环 — onlyne v1 公共约定」。已上位时再跑 `--promote` 报 `SKIP`，零写入。装配手册常驻本文这一节，不设单独文件。
+
+### 通电
+
+daemon 起在用户可见的前台终端 tab，关 tab 即停环；禁入任何 agent 后台，禁 nohup。起 client 的宿主目录决定会话 spawn 定向，起错检出=会话一起就死。
+
+```bash
+onlyne server start --root .                                   # 一个 tab；判活 socket_present
+onlyne client run --workspace .onlyne/ws/formal/initiation/pi  # 11 个 role 各一个 tab
+# phase/role 全集：initiation/{pi,examiner}、common/{librarian,scribe}、theory/{speculator,theorist}、
+#                 experiment/runner、review/{qa,referee,chair}、archive/planner
+onlyne tui --server-root .                                     # 可选观测位
+onlyne status --server-root .                                  # connected 11/11 = 环点亮
+```
+
+### 第一发与验收
+
+研究方向写进 `payload/first.md`（目标 / 输入 / 期望产物三段，见约定正本「任务书三段」），投给角色表 ★ entry role（pi）：
 
 ```bash
 onlyne send --server-root . --from planner --to pi --file payload/first.md
 ```
 
-终结靠人：`onlyne control cancel --task <id> --server-root .`，或直接接管任一会话。日常用法词表（send/handoff/complete/ledger/faults/repair/control）与崩溃残影处置（`onlyne repair inspect|close|fail`）见 `BOOTSTRAP.md` 第 9 节与 `.pi/SYSTEM.md`。
+`--from` 须是在册持边角色（supervisor 不注册 `[[client]]`，走 admin 面代发，落账 `admin=true`）。用户自己在 CLI 投也行，supervisor 事后从 ledger 与项目目录接上下文。第一发落地后环自转：pi 出头四段申报 examiner，后续推进全靠接力任务。
+
+通电后先跑最小闭环用例：向 pi 投一条自包含小任务（内容如「读 AGENTS.md 后回一句本环入口确认」）→ session 起 → pi 内 `onlyne_complete` outcome=done → `onlyne ledger --server-root .` 出现 task acked 与 completion 回 origin 两行 → `onlyne faults --open-only` 空。绿了再投研究方向的第一发。
+
+### 换机速查
+
+要动的本机项三件：`cert_pin`、11 个 `[[client]].key`、各 settings.json 的模型三元组；vault 路径可选。全部由 `--assemble` 幂等代做，其余文件跨机通用。`.onlyne/run|store|keys|logs|ws/`、`obsidian/`、`.train-slot/` 是运行态，不入 git，装机过程自然再生。装机产生的 `spec.toml` 与仓根 `AGENTS.md` 改动属本机实例状态：往模板分支提交前先问用户，缺省不入库。
+
+### 常见坑
+
+- 装具报 command not found 或行为像旧版：核 `which onlyne` 与 PATH 序（cargo install 与手拷二进制并存时先入 PATH 者生效），`onlyne version` 不过闸就重跑「前置」那五条。
+- 非法 key 会让 spec 全量 parse 连 `client init` 都跑不动：回填前 key 位必须保持合法 32 字节 base64（模板占位 `ed25519/AQEB…` 即合法），改成 `REPLACE_ME` 之类字面串会全链拒跑。
+- `onlyne client run` 退 5 报 NO_SUPPORTED_HOST：终端宿主缺失或 `ONLYNE_BACKEND` 点错，跑 `onlyne-client doctor` 看判定。
+- 深路径工作区 socket 绑不上：看 `.onlyne/run/socket` 里的短派生路径，属正常行为。
+- client 重挂后有 working 残影（faults 只覆盖投递层）：逐条 `onlyne repair inspect --task <id>`，死 pane 的用 `onlyne repair close --task <id>` 收口（close 记 cancelled、fail 记 failed，两者都向属主 client 发 Cancel 并回收宿主资源）。
+- 停某个 client：`onlyne-client` 不写 pid 文件，用 `ps` 按 args+cwd 精确匹配再定点发信号，禁按名杀。
+
+终结靠人：`onlyne control cancel --task <id> --server-root .`，或直接接管任一会话。日常用法词表（send/handoff/complete/ledger/faults/repair/control）与值班恢复纪律见 `.pi/SYSTEM.md`。
 
 ## 观测
 

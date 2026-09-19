@@ -240,7 +240,7 @@ run_check() {
 # ---------- 装配 ----------
 asm_toolchain() {
   if command -v onlyne >/dev/null && command -v pi >/dev/null; then skip "装具在 PATH（版本闸交给 check）"; return; fi
-  bad "装具缺失：先装 onlyne 五件套与 pi（BOOTSTRAP 第 1 步），再重跑"
+  bad "装具缺失：先装 onlyne 五件套与 pi（README「前置」节），再重跑"
 }
 
 asm_cert() {

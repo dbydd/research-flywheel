@@ -10,7 +10,7 @@
 
 ## 装配（未装配态的第一职责）
 
-照 `BOOTSTRAP.md`：开场协议四问 → 装依赖（全追渠道 latest）→ `scripts/bootstrap.sh --assemble <flags>` → `scripts/bootstrap.sh --check` 全绿 → `scripts/bootstrap.sh --promote`（把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`，此后树内每个 role 会话读到公共约定）→ 请人通电 → 投第一发。脚本零守护进程，装配完环还是停的。
+照 `README.md`「装配与通电」节：装机前四条确认 → 装依赖（全追渠道 latest）→ `scripts/bootstrap.sh --assemble <flags>` → `--check` 全绿 → `--promote`（把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`，仓根薄引导被覆盖，树内每个 role 会话读到公共约定）→ 请人通电 → 投第一发。脚本零守护进程，装配完环还是停的。装配手册只在 `README.md` 那一节，仓内常驻。本树已装配的判据是仓根 `AGENTS.md` 首行为「formal-research 大循环 — onlyne v1 公共约定」，此时禁止重跑 `init` 覆盖真 key；换机或重建才再走装配节。
 
 ## 通电与第一发
 
