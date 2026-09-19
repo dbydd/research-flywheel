@@ -67,7 +67,7 @@ payload/                  注入集群的第一发任务书
 - onlyne v1 五件套，装 latest（命令里没有版本号，随时发版随时追）：`cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui`——crate `onlyne-cli` 装出的命令叫 `onlyne`，其余四个 crate 名=命令名。升级＝同一条命令加 `--force` 重跑。兼容判据：`onlyne version` 报 `protocol:1`；各二进制版本号独立前进。要跟未发布的 fix 就走源码构建（仓库地址问集群 owner，`cargo build --release` 后产物进 PATH；macOS 上复制进 PATH 的二进制要先 `codesign --force --sign -` 重签，Linux 免）。
 - pi + onlyne 插件：模板 packages 写 `npm:pi-onlyne`。第一次装配执行 `pi install npm:pi-onlyne`（1.0.0 起讲 protocol 1，relay 守卫在内），装当期 latest。
 - 会话后端 `herdr`/`orca`/`zellij` 之一：选择链 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只认点名。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
-- pi 侧 model/provider 配好（本主题三档模型设计见 `AGENTS.md` 角色表末列）。
+- pi 侧 model/provider 配好（本主题三档模型设计见 `.agents/AGENTS.md` 角色表末列；装配后同一份内容在仓根 `AGENTS.md`）。
 - 运行纪律：server 和每个角色的 client 各占一个**可见前台终端 tab**（关 tab 即停该角色），不进任何 agent 后台。
 
 ## 装配与通电
@@ -114,7 +114,7 @@ scripts/bootstrap.sh --assemble \
 scripts/bootstrap.sh --promote     # cp .agents/AGENTS.md → 仓根 AGENTS.md
 ```
 
-仓根 `AGENTS.md` 在 clone 态是一份薄引导（只讲去哪读、怎么装）。`--promote` 用 11 角色公共约定正本原样覆盖它，此后 pi 沿父目录链拼进树内每个 role 会话的正是那份约定，薄引导就地消失。判据：仓根 `AGENTS.md` 首行是「formal-research 大循环 — onlyne v1 公共约定」。已上位时再跑 `--promote` 报 `SKIP`，零写入。装配手册常驻本文这一节，不设单独文件。
+仓根 `AGENTS.md` 在 clone 态是一份薄引导（只讲去哪读、怎么装）。`--promote` 用 11 角色公共约定正本原样覆盖它，此后 pi 沿父目录链拼进树内每个 role 会话的正是那份约定，薄引导就地消失。判据：仓根 `AGENTS.md` 首行是「formal-research 大循环 — onlyne v1 公共约定」。已上位时再跑 `--promote` 报 `SKIP`，零写入。装配手册就是本文这一节。
 
 ### 通电
 

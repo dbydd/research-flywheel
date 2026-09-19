@@ -295,7 +295,7 @@ supervisor 只做工作区维护，条目为：idle 判定与报告、generate/r
 
 本文只定角色与流程约定。装机、通电、值班三件事各有正本：
 
-- 换机装配与通电顺序：`README.md`「装配与通电」节（装机前四条确认 → `scripts/bootstrap.sh --assemble` → `--check` → `--promote` → 可见 tab 起 server 与 11 个 client → 第一发与验收）。装配手册常驻该节，仓内无独立引导文件；`--promote` 之后仓根薄引导被本文覆盖，引导态就地终止。
+- 换机装配与通电顺序：`README.md`「装配与通电」节（装机前四条确认 → `scripts/bootstrap.sh --assemble` → `--check` → `--promote` → 可见 tab 起 server 与 11 个 client → 第一发与验收）。`--promote` 用本文覆盖仓根薄引导，引导态就地终止；换机与重建都回那一节走。
 - supervisor 值班职责（账目读取、残影恢复、idle 判定、对人报告、权限边界）：`.pi/SYSTEM.md`。
 - 飞轮的反应式性质：没有入站任务时环不动。通电与第一发之后，推进全靠角色表的接力边自转，supervisor 不进气泡。
 
