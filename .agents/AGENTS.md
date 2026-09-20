@@ -165,8 +165,8 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 观测命令：`onlyne status|roles|sessions|ledger|faults|watch|history --server-root .`；pi 内 `/onlyne`。op_id 换体重发 conflict，重试原帧重发。
 - 角色零上行边：completion 走 origin 免 ACL 特例自动回账，进来源 role 收件箱（queued 行，pull 式），反边不用声明。
 - control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。backend：`ONLYNE_BACKEND` 取 `herdr|orca|zellij|exec|fake|auto`。选择链 env（非空）> 工作区 `config.toml` 的 `backend` > auto。留空或 `auto` 时探测序 herdr→orca→zellij，`exec`/`fake` 只认点名，全无匹配 `onlyne client run` 退 5 并报 NO_SUPPORTED_HOST。`onlyne-client doctor` 只读打印宿主判定，恒退 0。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > cwd 上行查找；规范路径越过 103 字节时绑短派生路径，实际路径写进 `.onlyne/run/socket`。会话结清后宿主资源随会话回收。`stalled` 只报仍在跑的会话。满容量 role 用 `control_only` pull 继续收 control。重连 `hello.live_tasks` 让在跑任务保持 `in_flight`。
-- 调度参数承接：per-role `[client.timeout]{ready_ms,running_ms,idle_ms}`（默认 30000/120000/60000，runner running_ms=3600000 承接旧 busy_secs）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
-- `relay_required`（任务主下游，单值）与角色表 `relay` 列同源；ACL 终表双边互认，边成立需两端都列。
+- 调度参数承接：per-role `[client.timeout]{ready_ms,idle_ms}`（默认 30000/60000）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
+- `relay_required`（完成守卫：session 在 complete 前必须已经 handoff 给列出的角色）与角色表 `relay` 列同源；ACL 终表双边互认，边成立需两端都列。
 
 ## 任务书三段（handoff/send 的 text）
 
@@ -228,7 +228,7 @@ failed 形态改用两子条：死因、负证据（各一句+路径）。conclu
 
 supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne handoff --to` 的目标名，都查这张表。
 
-`entry` 列标出第一发的注入对象，全表恰好一个 `★`。`relay` 列是任务主下游（spec 的 `relay_required` 单值），与下游列同源。
+`entry` 列标出第一发的注入对象，全表恰好一个 `★`。`relay` 列是完成守卫（spec 的 `relay_required`：session 在 complete 前必须已经 handoff 给列出的角色），与下游列同源。
 
 | role | 职责 | 上游 | 下游 | relay | entry | 档位 |
 |---|---|---|---|---|---|---|
