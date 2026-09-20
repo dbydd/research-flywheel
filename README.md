@@ -6,7 +6,19 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 工作按「射后不理」进行：读任务书 → 干活 → 产物写 `runs/` → handoff peer → `onlyne_complete` 交活退出。role 不等下游。投递后立即返回一行 receipt JSON。过程与回执写进 server ledger，结果通过文件返回。
 
-状态全在文件里：接收方是全新会话，只读任务书点名的路径。
+## 三层文件
+
+|文件|装什么|谁能改|
+|---|---|---|
+|仓根 `AGENTS.md`|共享目标记录：主线、支线 todo、外部索引|两个 role 都能改|
+|`.onlyne/AGENTS.md`|角色行为约定：一跳、任务书四段、工具面、记事纪律|模板定稿，运行期只读|
+|`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：工作过程条目与索引|只有该 role 自己写|
+
+三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/gemini/<role>/` 目录下。
+
+## 记事纪律
+
+正本在 `.onlyne/AGENTS.md`。六条：索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳。
 
 ## 角色树
 
@@ -16,7 +28,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 └─ pollux   接任务书干活 → handoff castor                    axonhub/supercheap，thinking max
 ```
 
-两个 role 职责相同，模型位不同；边的方向决定谁是下一跳。角色表、ACL 与模型位都在 `.agents/AGENTS.md`，每个 session 自动继承它。调度与值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
+两个 role 职责相同，模型位不同；边的方向决定谁是下一跳。角色表、ACL 与模型位都在 `.onlyne/AGENTS.md` 与 `.onlyne/spec.toml`，每个 session 自动继承。调度与值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
 
 ## 前置
 
@@ -40,9 +52,9 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 装配把模板填成一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
-1. **定题**。写 `payload/first.md`：任务书四段（口径见角色面正本的「任务书四段」）。它是第一发，也是本主题的种子。
+1. **定题**。写目标记录 `.agents/AGENTS.md`（主线、判据、支线 todo、索引；它落分支后就是仓根 `AGENTS.md`），再写 `payload/first.md` 的第一发任务书（四段，口径见 `.onlyne/AGENTS.md`）。
 2. **模型位**。逐 role 看 `.onlyne/templates/gemini/<role>/.pi/settings.json` 的三元组。
-3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/gemini/<role>/`。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。
+3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/gemini/<role>/`。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与 `.onlyne/AGENTS.md` 的角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。
 4. **装具**。跑上面「前置」的两条安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。
 5. **落分支**：
 
@@ -51,7 +63,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
    ./scripts/promote.sh               # 复核清单后执行
    ```
 
-   脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为 root `AGENTS.md`、写 `.onlyne/gemini.json`、删装配材料、commit。
+   脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`、写 `.onlyne/gemini.json`、删装配材料、commit。
 
 ### 通电
 
@@ -59,14 +71,16 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ```bash
 onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.key；cert_pin 打到 stdout
-# 把本仓的 .onlyne/spec.toml 与 .onlyne/templates/ 放回 .onlyne/，回填 [server].cert_pin
+# 把本仓的 .onlyne/spec.toml、.onlyne/templates/、.onlyne/AGENTS.md 放回 .onlyne/，回填 [server].cert_pin
 onlyne-server generate --root .                        # 渲染 .onlyne/ws/gemini/<role>/，逐 role 铸 key，stdout 打 [[client]] 行
-# 把每行 key 粘回 spec.toml 对应的 [[client]]；generate 只跑一次，重跑前先看 ws 内的 key 是否被换
+# 把每行 key 粘回 spec.toml 对应的 [[client]]
 onlyne-server start --root .                           # detached+pid；判活看 socket_present
 onlyne-client doctor                                   # 只读：宿主探测结果
 onlyne client run --workspace .onlyne/ws/gemini/castor  # 每 role 一个 client，各占一个可见 tab
 onlyne client run --workspace .onlyne/ws/gemini/pollux
 ```
+
+渲染进 ws 的 `AGENTS.md` 是模板骨架，之后由该 role 手记维护。重跑 `generate` 不带 `--force` 会拒绝覆盖已有 ws（退 4）；带 `--force` 则把记事换回骨架。
 
 key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）。非法 key 会让全量 parse 连 `onlyne client init` 都跑不动。`[server].cert_pin` 在 `onlyne-server init` 之前保持字符串形态。
 
@@ -83,24 +97,26 @@ onlyne --server-root . send --from _supervisor --to castor --file payload/first.
 onlyne tui
 ```
 
-示例按模板默认拓扑写 `--to castor`；实际入口以角色表 `★` 行为准。第一发落地后环即成形：每跳的产物落 `runs/`，下一跳任务书交给 peer。
+示例按模板默认拓扑写 `--to castor`；实际入口以 `.onlyne/AGENTS.md` 角色表 `★` 行为准。第一发落地后环即成形：每跳的产物落 `runs/`，下一跳任务书交给 peer。
 
 ## 动力源
 
-第一颗 seed 由人给，内容是方向和问题，写在 `payload/first.md`。之后每一跳自己产生下一跳任务书。
+第一颗 seed 由人给，写在仓根 `AGENTS.md` 的主线与 `payload/first.md`。之后每一跳自己产生下一跳任务书。
 
 收束判据写在任务书里：判据满足即只 complete 不 handoff，环停在那一跳。人用 `onlyne control cancel --task <id>` 终结任务族，也可以在 TUI 里按终结键。
 
 ## 目录
 
 ```text
-AGENTS.md                  角色面正本：角色表、一跳的生命周期、任务书四段、文件纪律（装配期在 .agents/AGENTS.md）
-.agents/AGENTS.md          角色面正本源，promote 的复制起点
+AGENTS.md                  共享目标记录：主线、支线 todo、外部索引（装配期在 .agents/AGENTS.md）
+.onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、工具面、记事纪律
+.agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .pi/SYSTEM.md              supervisor 值班会话的岗位说明
 scripts/promote.sh         装配器：九检 + 落分支
-onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/gemini/<role>/（细则与模型位）
+onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/gemini/<role>/（role 记事骨架与模型位）
 产物面：runs/（一件任务一个子目录）；第一发任务书：payload/
+role 工作区：.onlyne/ws/gemini/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 ```
 
 领域目录（数据、代码、成稿、证据）按题目自建，装配时补进本节。

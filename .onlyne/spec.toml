@@ -2,7 +2,7 @@
 #
 # 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
 # 改完用 `onlyne reload --server-root <root>`；预览差异跑只读动词 `onlyne spec_diff --server-root <root>`（reload 无 --dry-run）。
-# 定稿顺序（F1 死锁修法：全量 parse 之下，非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
+# 定稿顺序（非法 key 会让全量 parse 连 client init 都跑不动，占位 key 必须合法长度）：
 #   1) 空根 `onlyne-server init --root . --listen 127.0.0.1:7812`（产 .onlyne/keys/server.key 与 cert_pin，cert_pin 打到 stdout）
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
 #   3) 各 role key 先播合法 32 字节占位 base64（AQEBAQ...AQE= 形）

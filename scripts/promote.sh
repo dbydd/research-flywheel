@@ -47,7 +47,7 @@ esac
 # chain. README.md, .pi/SYSTEM.md, and scripts/ are the operator and duty
 # surface and carry their own rule below.
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
-ROLE_SURFACE=( ".agents/AGENTS.md" )
+ROLE_SURFACE=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
 while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
 OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|generate|stop)|/Users/|/home/|codesign'
 OPS_HITS="$(grep -nE "$OPS_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
@@ -95,11 +95,11 @@ PY_CHECK2
 done
 
 # --- check 3: exactly one entry role -----------------------------------------
-STAR_COUNT="$(grep -c '^|.*★' .agents/AGENTS.md || true)"
+STAR_COUNT="$(grep -c '^|.*★' .onlyne/AGENTS.md || true)"
 [ "$STAR_COUNT" = "1" ] || fail "star-table rows=$STAR_COUNT (want exactly 1)"
 ENTRY="$(python3 - <<'PY_ENTRY'
 import re
-text = open(".agents/AGENTS.md").read()
+text = open(".onlyne/AGENTS.md").read()
 rows = [l for l in text.splitlines() if l.startswith("|") and "★" in l]
 name = rows[0].split("|")[1].strip() if rows else ""
 print(name)
@@ -136,7 +136,7 @@ PY_SPEC
 
 # --- check 5: role table matches spec [[client]] exactly -----------------------
 TABLE_ROLES="$(python3 - <<'PY_TABLE'
-text = open(".agents/AGENTS.md").read().splitlines()
+text = open(".onlyne/AGENTS.md").read().splitlines()
 names, inside = [], False
 for line in text:
     if line.startswith("## "):
@@ -161,17 +161,42 @@ for t in $TABLE_ROLES; do
   printf '%s' " $ROLES " | grep -q " $t " || fail "table EXTRA role '$t' (table has it, spec lacks it)"
 done
 
-# --- check 6: first task book ---------------------------------------------------
+# --- check 6: record surface (three layers, first task book, product root) ---
+[ -f .onlyne/AGENTS.md ] || fail ".onlyne/AGENTS.md MISSING (role behavior canon)"
+[ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING (shared objective record)"
 [ -f payload/first.md ] || fail "payload/first.md MISSING (first injection task book)"
-python3 - <<'PY_PAYLOAD' || fail "payload/first.md four-section INCOMPLETE (reason above)"
-import re
-txt = open("payload/first.md", encoding="utf-8").read()
-missing = [k for k in ("目标", "输入", "期望产物", "下一跳建议") if not re.search("^" + k + r"[：:]", txt, flags=re.M)]
-assert not missing, f"missing section headers: {missing}"
-PY_PAYLOAD
-
-# --- check 7: product root ------------------------------------------------------
 [ -d runs ] || fail "runs/ MISSING (product root: one directory per task)"
+python3 - <<'PY_RECORDS' || fail "record surface INCOMPLETE (reason above)"
+import re
+def missing_sections(path, names):
+    txt = open(path, encoding="utf-8").read()
+    return [n for n in names if not re.search(r"^#{0,6}\s*" + re.escape(n) + r"\s*(?:[：:]|$)", txt, flags=re.M)]
+for path, names in (
+    (".agents/AGENTS.md", ("主线", "支线", "索引")),
+    ("payload/first.md", ("目标", "输入", "期望产物", "下一跳建议")),
+):
+    miss = missing_sections(path, names)
+    assert not miss, f"{path}: missing sections {miss}"
+PY_RECORDS
+
+# --- check 7: note discipline (mechanical parts) -----------------------------
+python3 - "$SPEC" <<'PY_DISC' || fail "note discipline VIOLATED (reason above)"
+import glob, re, sys, tomllib
+spec = tomllib.load(open(sys.argv[1], "rb"))
+root = (spec.get("server") or {}).get("template_root", ".onlyne/templates")
+paths = [".agents/AGENTS.md", ".onlyne/AGENTS.md", ".onlyne/spec.toml", ".pi/SYSTEM.md", "README.md", "payload/first.md"]
+paths += sorted(glob.glob(".agents/skills/**/*.md", recursive=True))
+paths += sorted(glob.glob(root + "/**/*.md", recursive=True))
+label = re.compile(r"\b[A-Z]{1,4}-?\d+\b")
+stamp = re.compile(r"\b(?:19|20)\d{2}-\d{2}-\d{2}\b")
+for p in paths:
+    txt = open(p, encoding="utf-8").read()
+    hits = sorted(set(label.findall(txt)))
+    assert not hits, f"{p}: letter+digit labels banned, write the title instead: {hits}"
+    st = sorted(set(stamp.findall(txt)))
+    if st:
+        print(f"WARN: {p}: date-like strings, records carry no timestamps: {st}")
+PY_DISC
 
 # --- check 8: npm:pi-onlyne in every role settings; agent_package empty ------
 python3 - "$SPEC" <<'PY_PKG' || fail "pi-onlyne settings INVALID (reason above)"
