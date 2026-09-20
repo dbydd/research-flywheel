@@ -10,9 +10,9 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 |文件|装什么|谁能改|
 |---|---|---|
-|仓根 `AGENTS.md`|共享目标记录：记叙段写主线与判据，条目段写支线与材料|两个 role 都能改|
+|仓根 `AGENTS.md`|共享目标记录：记叙段是主线（目标与判据），条目段是支线 todo 与索引表|两个 role 都能改|
 |`.onlyne/AGENTS.md`|角色行为约定：一跳、任务书四段、工具面、记事纪律|模板定稿，运行期只读|
-|`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引|只有该 role 自己写|
+|`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引表|只有该 role 自己写|
 
 三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/gemini/<role>/` 目录下。
 
@@ -120,7 +120,7 @@ onlyne tui
 ## 目录
 
 ```text
-AGENTS.md                  共享目标记录：主线、支线 todo、外部索引（装配期在 .agents/AGENTS.md）
+AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、工具面、记事纪律
 .agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
