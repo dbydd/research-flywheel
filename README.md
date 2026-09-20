@@ -25,7 +25,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 ## 角色树
 
 ```text
-.        supervisor（管理者节点，就是仓根；会话开在 .supervisor/，由人拉起）：值班、观察、记账，不进环
+.        supervisor（管理者节点，就是仓根；由人拉起）：值班、观察、记账，不进环
 ├─ castor   接任务书干活 → handoff pollux    ★ 第一发入口   axonhub/generic-researcher-powerful，thinking max
 └─ pollux   接任务书干活 → handoff castor                    axonhub/supercheap，thinking max
 ```
@@ -50,13 +50,13 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ## 装配与通电
 
-自展开四步：定题 → 核拓扑与模型位 → 落分支 → 通电与第一发。仓根 `AGENTS.md` 就是共享目标记录本身，定题时就地改它；落分支不搬运、不替换它。本节是逐条细节。
+模板态下的入口在仓根 `AGENTS.md` 的「自展开规则」：定题 → 核拓扑 → 落分支 → 通电与第一发。本节是同一套流程的逐条细节。
 
 ### 装配
 
 装配把模板填成一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
-1. **定题**。改写仓根 `AGENTS.md`：记叙段写主线与判据，条目段写支线与材料。再写 `payload/first.md` 的第一发任务书（四段，口径见 `.onlyne/AGENTS.md`）。
+1. **定题**。写目标记录 `.agents/AGENTS.md`（主线、判据、支线 todo、索引；它落分支后就是仓根 `AGENTS.md`），再写 `payload/first.md` 的第一发任务书（四段，口径见 `.onlyne/AGENTS.md`）。
 2. **模型位**。逐 role 看 `.onlyne/templates/gemini/<role>/.pi/settings.json` 的三元组。
 3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/gemini/<role>/`。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与 `.onlyne/AGENTS.md` 的角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。
 4. **装具**。跑上面「前置」的两条安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。
@@ -67,7 +67,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
    ./scripts/promote.sh               # 复核清单后执行
    ```
 
-   脚本建 `theme/<slug>` 分支、写 `.onlyne/gemini.json`（stage=live）、commit。仓根 `AGENTS.md` 与 `.agents/skills/` 原样保留。
+   脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`、写 `.onlyne/gemini.json`、删装配材料、commit。
 
 ### 通电
 
@@ -80,7 +80,7 @@ onlyne-server generate --root .                        # 渲染 .onlyne/ws/gemin
 # 把每行 key 粘回 spec.toml 对应的 [[client]]
 onlyne server start --root .                           # detached+pid；判活看 socket_present
 onlyne-client doctor                                   # 只读：宿主探测结果
-# supervisor：由人在 .supervisor/ 开一个 agent 会话（pi、omp 都行），该目录的 AGENTS.md 是值班说明
+# supervisor：由人在仓根开一个 agent 会话（pi、omp 都行），先读 .supervisor/AGENTS.md
 onlyne client run --workspace .onlyne/ws/gemini/castor  # 每 role 一个 client，各占一个可见 tab
 onlyne client run --workspace .onlyne/ws/gemini/pollux
 ```
@@ -113,10 +113,11 @@ onlyne tui
 ## 目录
 
 ```text
-AGENTS.md                  共享目标记录：记叙段写主线与判据，条目段写支线与材料
+AGENTS.md                  共享目标记录：主线、支线 todo、外部索引（装配期在 .agents/AGENTS.md）
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、工具面、记事纪律
+.agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
-.supervisor/AGENTS.md      supervisor 值班岗位说明（会话开在 .supervisor/，由人拉起）
+.supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 scripts/promote.sh         装配器：九检 + 落分支
 onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/gemini/<role>/（role 记事骨架与模型位）
 第一发任务书：payload/；产物路径由任务书点名，不设统一目录

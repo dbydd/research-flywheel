@@ -46,8 +46,8 @@ esac
 # Scope is the file set a role session reads through the parent-directory
 # chain. README.md, .supervisor/, and scripts/ are the operator and duty
 # surface and carry their own rule below.
-[ -f AGENTS.md ] || fail "AGENTS.md MISSING (shared objective record)"
-ROLE_SURFACE=( "AGENTS.md" ".onlyne/AGENTS.md" )
+[ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
+ROLE_SURFACE=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
 while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
 OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|generate|stop)|/Users/|/home/|codesign'
 OPS_HITS="$(grep -nE "$OPS_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
@@ -163,7 +163,7 @@ done
 
 # --- check 6: record surface (three layers + first task book) ----------------
 [ -f .onlyne/AGENTS.md ] || fail ".onlyne/AGENTS.md MISSING (role behavior canon)"
-[ -f AGENTS.md ] || fail "AGENTS.md MISSING (shared objective record)"
+[ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING (shared objective record)"
 [ -f payload/first.md ] || fail "payload/first.md MISSING (first injection task book)"
 python3 - <<'PY_RECORDS' || fail "record surface INCOMPLETE (reason above)"
 import re
@@ -171,7 +171,7 @@ def missing_sections(path, names):
     txt = open(path, encoding="utf-8").read()
     return [n for n in names if not re.search(r"^#{0,6}\s*" + re.escape(n) + r"\s*(?:[：:]|$)", txt, flags=re.M)]
 for path, names in (
-    ("AGENTS.md", ("记叙", "条目")),
+    (".agents/AGENTS.md", ("记叙", "条目")),
     ("payload/first.md", ("目标", "输入", "期望产物", "下一跳建议")),
 ):
     miss = missing_sections(path, names)
@@ -183,7 +183,7 @@ python3 - "$SPEC" <<'PY_DISC' || fail "note discipline VIOLATED (reason above)"
 import glob, re, sys, tomllib
 spec = tomllib.load(open(sys.argv[1], "rb"))
 root = (spec.get("server") or {}).get("template_root", ".onlyne/templates")
-paths = ["AGENTS.md", ".onlyne/AGENTS.md", ".onlyne/spec.toml", ".supervisor/AGENTS.md", "README.md", "payload/first.md"]
+paths = [".agents/AGENTS.md", ".onlyne/AGENTS.md", ".onlyne/spec.toml", ".supervisor/AGENTS.md", "README.md", "payload/first.md"]
 paths += sorted(glob.glob(".agents/skills/**/*.md", recursive=True))
 paths += sorted(glob.glob(root + "/**/*.md", recursive=True))
 label = re.compile(r"\b[A-Z]{1,4}-?\d+\b")
@@ -235,11 +235,14 @@ info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
 
 # --- plan ---------------------------------------------------------------
 [ -z "$THEME" ] && THEME="$(basename "$ROOT")"
+RETAIN=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
 info "plan:"
 info "  1) git checkout -b theme/$THEME"
-info "  2) write .onlyne/gemini.json (stage=live, theme=$THEME, entry_role=$ENTRY)"
-info "  3) git add -A && commit"
-info "  4) runtime power-on stays manual (README: 装配与通电 > 通电)"
+info "  2) promote .agents/AGENTS.md to AGENTS.md (root objective record)"
+info "  3) write .onlyne/gemini.json (stage=live, theme=$THEME, entry_role=$ENTRY)"
+info "  4) keep the pre-promote snapshot: ${RETAIN[*]}"
+info "  5) git add -A && commit"
+info "  6) runtime power-on stays manual (README: 装配与通电 > 通电)"
 if [ "$DRY_RUN" = "1" ]; then
   info "--dry-run: zero writes, stopping here."
   exit 0
@@ -255,7 +258,8 @@ if git show-ref --verify --quiet "refs/heads/theme/$THEME"; then
 else
   git checkout -qb "theme/$THEME" || fail "create branch theme/$THEME FAILED"
 fi
-TEMPLATE_COMMIT="$(git log --format=%H -1 -- AGENTS.md README.md 2>/dev/null || echo unknown)"
+cat .agents/AGENTS.md > AGENTS.md
+TEMPLATE_COMMIT="$(git log --format=%H -1 -- .agents/AGENTS.md README.md 2>/dev/null || echo unknown)"
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ROLES_JSON="$(printf '%s\n' $ROLES | python3 -c "import json,sys;print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")"
 python3 - "$THEME" "$ENTRY" "$ROLES_JSON" "$TEMPLATE_COMMIT" "$NOW" <<'PY_FLY'
@@ -277,8 +281,9 @@ Full procedure: README.md "装配与通电".
    then copy .onlyne/spec.toml + templates back, fill cert_pin from the init output
    onlyne-server generate --root .   # prints one [[client]] row per role: paste each key back
    onlyne-server start --root .
-3) supervisor: you open your agent in .supervisor/ (pi, omp, anything); its AGENTS.md is the duty
+3) supervisor: you open your agent in this directory (pi, omp, anything) and read .supervisor/AGENTS.md
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) gemini is idle: empty ledger. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
+The pre-promote snapshot stays in .agents/AGENTS.md; root AGENTS.md is its promoted copy.
 EOF
