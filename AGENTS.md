@@ -1,8 +1,6 @@
 # gemini 双子模板
 
-我是用户拉起来的 supervisor 会话，开在仓根管理这个双子集群：supervisor 由人来开，集群自己不产出 supervisor，role 也拉不动它。harness 不挑，pi、omp、别的都行。
-
-模板还没有展开：没有 server 在跑，没有 role 在转，ledger 是空的。
+我是这个模板里的第一个会话，也就是 supervisor 会话。harness 不挑：pi、omp、别的都行，谁开在这里谁当值。这里还没有活的工作区：没有 server 在跑，没有 role 在转。
 
 两个 role（castor 与 pollux）互相推任务的极简工作区模板。三层记录：仓根 `AGENTS.md` 装共享目标，`.onlyne/AGENTS.md` 装角色行为约定，`.onlyne/ws/gemini/<role>/AGENTS.md` 是 role 私有记事。展开之前，仓根这份是模板说明，目标记录的正本在 `.agents/AGENTS.md`。
 

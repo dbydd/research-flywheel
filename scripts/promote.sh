@@ -281,7 +281,7 @@ Full procedure: README.md "装配与通电".
    then copy .onlyne/spec.toml + templates back, fill cert_pin from the init output
    onlyne-server generate --root .   # prints one [[client]] row per role: paste each key back
    onlyne-server start --root .
-3) supervisor: you open your agent in this directory (pi, omp, anything) and read .supervisor/AGENTS.md
+3) supervisor: open your agent in this directory (pi, omp, anything) and read .supervisor/AGENTS.md
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) gemini is idle: empty ledger. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
