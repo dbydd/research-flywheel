@@ -50,7 +50,14 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ## 装配与通电
 
-模板态下的入口在仓根 `AGENTS.md` 的「自展开规则」：定题 → 核拓扑 → 落分支 → 通电与第一发。本节是同一套流程的逐条细节。
+自展开四步：定题 → 核拓扑与模型位 → 落分支 → 通电与第一发。仓根 `AGENTS.md` 就是那份共享目标记录——记事本写主线，支线开成 todo，材料走索引表；模板态和活态是同一份，装配时就地改它。下面是逐条细节。
+
+起环的四条引导：
+
+- 值班会话开在 `.supervisor/`，岗位说明在该目录的 `AGENTS.md`。
+- 起环前先报前置缺什么（onlyne 五件套、pi 插件、会话后端），缺的东西由人装。
+- 常驻进程（server、client、tui）一律起在可见 tab，不进 agent 后台。
+- 定题没写完不落分支：让双子空转没有意义。
 
 ### 装配
 
@@ -67,7 +74,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
    ./scripts/promote.sh               # 复核清单后执行
    ```
 
-   脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`、写 `.onlyne/gemini.json`、删装配材料、commit。
+   脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md`、写 `.onlyne/gemini.json`、保留装配快照、commit。
 
 ### 通电
 
