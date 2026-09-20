@@ -25,7 +25,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 ## 角色树
 
 ```text
-.        supervisor（管理者节点，就是仓根）：值班、观察、记账，不进环
+.        supervisor（管理者节点，就是仓根；由人拉起）：值班、观察、记账，不进环
 ├─ castor   接任务书干活 → handoff pollux    ★ 第一发入口   axonhub/generic-researcher-powerful，thinking max
 └─ pollux   接任务书干活 → handoff castor                    axonhub/supercheap，thinking max
 ```
@@ -80,7 +80,7 @@ onlyne-server generate --root .                        # 渲染 .onlyne/ws/gemin
 # 把每行 key 粘回 spec.toml 对应的 [[client]]
 onlyne server start --root .                           # detached+pid；判活看 socket_present
 onlyne-client doctor                                   # 只读：宿主探测结果
-# supervisor：在仓根开一个 agent 会话（pi、omp 都行），先读 .supervisor/AGENTS.md
+# supervisor：由人在仓根开一个 agent 会话（pi、omp 都行），先读 .supervisor/AGENTS.md
 onlyne client run --workspace .onlyne/ws/gemini/castor  # 每 role 一个 client，各占一个可见 tab
 onlyne client run --workspace .onlyne/ws/gemini/pollux
 ```

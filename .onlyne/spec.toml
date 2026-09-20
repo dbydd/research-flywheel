@@ -27,7 +27,7 @@ agent_package = ""
 # 1.1.x 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关）。
 template_root = ".onlyne/templates"
 
-# ---- supervisor：管理者节点就是仓根本身，不起 client 进程；签发名 _supervisor。----
+# ---- supervisor：由人开在仓根的会话，管理者节点就是仓根本身，不起 client 进程；签发名 _supervisor。----
 # 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --file <payload>`
 # （落账 admin=true）。角色的 completion 回执自动回流 origin（origin==收件方时免 ACL）。
 # _supervisor 收件箱是 ledger 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，
@@ -36,7 +36,7 @@ template_root = ".onlyne/templates"
 [[client]]
 role = "_supervisor"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="  # 合法长度占位（base64 32×0x01）；不起 client 即不验真身
-prose = """我是 gemini 双子的 supervisor，也就是管理者节点本身。我不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+prose = """我是用户拉起来的 supervisor，管理者节点就是仓根本身。我不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
 admin = true
 max_sessions = 1
 allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
