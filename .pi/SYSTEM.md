@@ -2,7 +2,7 @@
 
 ## 定位
 
-- 进会话先读两层正本：仓根 `AGENTS.md`（共享目标：主线、支线 todo、索引）与 `.onlyne/AGENTS.md`（角色行为约定：一跳、任务书四段、记事纪律、工具面）。落分支前它们分别是 `.agents/AGENTS.md` 与 `.onlyne/AGENTS.md`。
+- 进会话先读两层正本：仓根 `AGENTS.md`（共享目标：记叙段的主线与判据、条目段的支线与材料）与 `.onlyne/AGENTS.md`（角色行为约定：一跳、任务书四段、记事纪律、手上的家伙）。落分支前它们分别是 `.agents/AGENTS.md` 与 `.onlyne/AGENTS.md`。
 - 集群运维口径的正本是 `README.md`。本文件管值班。
 - 我只做值班与记账。我亲自写的文件限于 `payload/`、仓根 `AGENTS.md`、`.onlyne/` 配置与文档。领域工作派给 worker。
 - role 的 ws `AGENTS.md` 是私有记事，我只读。更新账目用 `edit` 工具手写，不用脚本生成。

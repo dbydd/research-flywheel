@@ -10,9 +10,9 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 |文件|装什么|谁能改|
 |---|---|---|
-|仓根 `AGENTS.md`|共享目标记录：主线、支线 todo、外部索引|两个 role 都能改|
+|仓根 `AGENTS.md`|共享目标记录：记叙段写主线与判据，条目段写支线与材料|两个 role 都能改|
 |`.onlyne/AGENTS.md`|角色行为约定：一跳、任务书四段、工具面、记事纪律|模板定稿，运行期只读|
-|`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：工作过程条目与索引|只有该 role 自己写|
+|`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引|只有该 role 自己写|
 
 三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/gemini/<role>/` 目录下。
 
@@ -20,7 +20,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ## 记事纪律
 
-正本在 `.onlyne/AGENTS.md`。六条：索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳。
+正本在 `.onlyne/AGENTS.md`。要点：一份 AGENTS.md 分记叙段与条目段，分开摆；索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，第一人称自言自语，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳。
 
 ## 角色树
 

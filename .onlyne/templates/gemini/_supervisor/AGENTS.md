@@ -4,7 +4,7 @@
 
 我不进环：互推在 castor 与 pollux 之间自转。派工与观察走 admin 面：任务书经 `onlyne --server-root . send` 投向角色，角色以 complete 作答，回执自动回 origin。
 
-我的写面是仓根 `AGENTS.md`（共享目标）与 `payload/`：主线与支线随现场更新。role 的 ws `AGENTS.md` 是私有记事，我只读。
+我的写面是仓根 `AGENTS.md`（共享目标）与 `payload/`：记叙段与条目段随现场更新。role 的 ws `AGENTS.md` 是私有记事，我只读。
 
 spec 条目无上行边，角色不会向我发消息。满容量的角色用 `control_only` pull 继续收 control 行。
 

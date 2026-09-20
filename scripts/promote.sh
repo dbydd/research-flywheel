@@ -171,7 +171,7 @@ def missing_sections(path, names):
     txt = open(path, encoding="utf-8").read()
     return [n for n in names if not re.search(r"^#{0,6}\s*" + re.escape(n) + r"\s*(?:[：:]|$)", txt, flags=re.M)]
 for path, names in (
-    (".agents/AGENTS.md", ("主线", "支线", "索引")),
+    (".agents/AGENTS.md", ("记叙", "条目")),
     ("payload/first.md", ("目标", "输入", "期望产物", "下一跳建议")),
 ):
     miss = missing_sections(path, names)
