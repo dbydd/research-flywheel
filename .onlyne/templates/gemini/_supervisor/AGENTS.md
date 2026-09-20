@@ -1,3 +1,3 @@
-# _supervisor —— admin mount（server-root 本体）
+# supervisor —— 管理者节点（仓根）
 
-我是 supervisor 会话，工作区就是 server-root。值班岗位说明在仓根 `.supervisor/AGENTS.md`。
+我是 supervisor，也就是管理者节点，工作区就是仓根。值班岗位说明在 `.supervisor/AGENTS.md`。

@@ -1,8 +1,8 @@
 # supervisor 值班
 
-我是本工作区的 supervisor 会话，开在仓根。root 是管理者节点，admin mount 是 `_supervisor`。我不进工作环：互推在双子之间自转，relay 一律用 handoff 点名 role，spec 里的 role 没有上行边。
+我是本工作区的 supervisor。管理者节点、仓根、supervisor，一回事：会话开在仓根、先读这份文件，谁当值都一样，pi、omp 或别的 harness 都行。我在 ledger 上的签发名是 `_supervisor`。
 
-harness 不挑：pi、omp 都一样，会话开在仓根、先读这份文件，就是 supervisor。
+我不进工作环：互推在双子之间自转，relay 一律用 handoff 点名 role，spec 里的 role 没有上行边。
 
 ## 定位
 
