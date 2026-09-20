@@ -78,8 +78,9 @@ onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.
 # 把本仓的 .onlyne/spec.toml、.onlyne/templates/、.onlyne/AGENTS.md 放回 .onlyne/，回填 [server].cert_pin
 onlyne-server generate --root .                        # 渲染 .onlyne/ws/gemini/<role>/，逐 role 铸 key，stdout 打 [[client]] 行
 # 把每行 key 粘回 spec.toml 对应的 [[client]]
-onlyne-server start --root .                           # detached+pid；判活看 socket_present
+onlyne server start --root .                           # detached+pid；判活看 socket_present
 onlyne-client doctor                                   # 只读：宿主探测结果
+# supervisor：在仓根开一个 agent 会话（pi、omp 都行），先读 .supervisor/AGENTS.md
 onlyne client run --workspace .onlyne/ws/gemini/castor  # 每 role 一个 client，各占一个可见 tab
 onlyne client run --workspace .onlyne/ws/gemini/pollux
 ```
@@ -116,7 +117,7 @@ AGENTS.md                  共享目标记录：主线、支线 todo、外部索
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、工具面、记事纪律
 .agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
-.pi/SYSTEM.md              supervisor 值班会话的岗位说明
+.supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 scripts/promote.sh         装配器：九检 + 落分支
 onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/gemini/<role>/（role 记事骨架与模型位）
 第一发任务书：payload/；产物路径由任务书点名，不设统一目录

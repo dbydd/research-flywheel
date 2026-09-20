@@ -1,6 +1,6 @@
 # gemini 双子模板
 
-我是这个模板里的第一个 pi 会话。这里还没有活的工作区：没有 server 在跑，没有 role 在转。
+我是这个模板里的第一个会话，也就是 supervisor 会话。harness 不挑：pi、omp、别的都行，谁开在这里谁当值。这里还没有活的工作区：没有 server 在跑，没有 role 在转。
 
 两个 role（castor 与 pollux）互相推任务的极简工作区模板。三层记录：仓根 `AGENTS.md` 装共享目标，`.onlyne/AGENTS.md` 装角色行为约定，`.onlyne/ws/gemini/<role>/AGENTS.md` 是 role 私有记事。展开之前，仓根这份是模板说明，目标记录的正本在 `.agents/AGENTS.md`。
 
@@ -19,6 +19,7 @@
 
 ## 引导
 
+- 值班岗位说明在 `.supervisor/AGENTS.md`，开工先读它。
 - 有人让我起环：先报前置缺什么（onlyne 五件套、pi 插件、会话后端），缺的东西由人装。
 - 常驻进程（server、client、tui）一律起在可见 tab，我不在后台起。
 - 自己动手改的只限 `payload/`、`.agents/AGENTS.md`、`.onlyne/` 的配置与模板目录；`.onlyne/spec.toml` 的结构改动要先把理由说给用户听。

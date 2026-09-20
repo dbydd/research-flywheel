@@ -44,7 +44,7 @@ esac
 
 # --- check 1: role surface carries no assembly or ops content --------------
 # Scope is the file set a role session reads through the parent-directory
-# chain. README.md, .pi/SYSTEM.md, and scripts/ are the operator and duty
+# chain. README.md, .supervisor/, and scripts/ are the operator and duty
 # surface and carry their own rule below.
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
 ROLE_SURFACE=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
@@ -56,10 +56,10 @@ if [ -n "$OPS_HITS" ]; then
   fail "role surface carries assembly/ops content (list above)"
 fi
 # The duty canon holds ops verbs by design; it carries no assembly content.
-DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|codesign|npm:pi-onlyne' .pi/SYSTEM.md 2>/dev/null || true)"
+DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|codesign|npm:pi-onlyne' .supervisor/AGENTS.md 2>/dev/null || true)"
 if [ -n "$DUTY_HITS" ]; then
   echo "$DUTY_HITS" >&2
-  fail ".pi/SYSTEM.md carries assembly content (list above)"
+  fail ".supervisor/AGENTS.md carries assembly content (list above)"
 fi
 
 # --- collect roles (single source of truth: spec.toml [[client]]) ----------
@@ -183,7 +183,7 @@ python3 - "$SPEC" <<'PY_DISC' || fail "note discipline VIOLATED (reason above)"
 import glob, re, sys, tomllib
 spec = tomllib.load(open(sys.argv[1], "rb"))
 root = (spec.get("server") or {}).get("template_root", ".onlyne/templates")
-paths = [".agents/AGENTS.md", ".onlyne/AGENTS.md", ".onlyne/spec.toml", ".pi/SYSTEM.md", "README.md", "payload/first.md"]
+paths = [".agents/AGENTS.md", ".onlyne/AGENTS.md", ".onlyne/spec.toml", ".supervisor/AGENTS.md", "README.md", "payload/first.md"]
 paths += sorted(glob.glob(".agents/skills/**/*.md", recursive=True))
 paths += sorted(glob.glob(root + "/**/*.md", recursive=True))
 label = re.compile(r"\b[A-Z]{1,4}-?\d+\b")
@@ -281,7 +281,7 @@ Full procedure: README.md "装配与通电".
    then copy .onlyne/spec.toml + templates back, fill cert_pin from the init output
    onlyne-server generate --root .   # prints one [[client]] row per role: paste each key back
    onlyne-server start --root .
-3) supervisor: open pi in this directory (the _supervisor admin mount)
+3) supervisor: open your agent in this directory (pi, omp, anything) and read .supervisor/AGENTS.md
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) gemini is idle: empty ledger. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md

@@ -1,11 +1,15 @@
-我是本集群 server-root 的 supervisor 会话。root 是管理者节点，admin mount 是 `_supervisor`。我不进工作环：互推在双子之间自转，relay 一律用 handoff 点名 role。spec 里的 role 没有上行边。
+# supervisor 值班
+
+我是本工作区的 supervisor 会话，开在仓根。root 是管理者节点，admin mount 是 `_supervisor`。我不进工作环：互推在双子之间自转，relay 一律用 handoff 点名 role，spec 里的 role 没有上行边。
+
+harness 不挑：pi、omp 都一样，会话开在仓根、先读这份文件，就是 supervisor。
 
 ## 定位
 
-- 进会话先读两层正本：仓根 `AGENTS.md`（共享目标：记叙段的主线与判据、条目段的支线与材料）与 `.onlyne/AGENTS.md`（角色行为约定：一跳、任务书四段、记事纪律、手上的家伙）。落分支前它们分别是 `.agents/AGENTS.md` 与 `.onlyne/AGENTS.md`。
+- 进会话先读两层正本：仓根 `AGENTS.md`（共享目标：记叙段的主线与判据、条目段的支线与材料）与 `.onlyne/AGENTS.md`（角色行为约定：一跳、任务书四段、记事纪律、手上的家伙）。模板态下目标记录的正本在 `.agents/AGENTS.md`。
 - 集群运维口径的正本是 `README.md`。本文件管值班。
 - 我只做值班与记账。我亲自写的文件限于 `payload/`、仓根 `AGENTS.md`、`.onlyne/` 配置与文档。领域工作派给 worker。
-- role 的 ws `AGENTS.md` 是私有记事，我只读。更新账目用 `edit` 工具手写，不用脚本生成。
+- role 的 ws `AGENTS.md` 是私有记事，我只读。账目用 `edit` 工具手写，不用脚本生成。
 
 ## 值班职责
 
@@ -18,6 +22,7 @@
 
 进会话先查 `onlyne server status`、`onlyne ledger`、`payload/`。
 
+- 模板态还没展开：先按仓根 `AGENTS.md` 的自展开规则把工作区立起来。
 - server 不在跑：首行写「server 未运行」，给 README 的起环步骤。
 - server 在跑、ledger 无在途：写「双子 idle，等待第一发注入」，并给：
 
