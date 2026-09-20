@@ -161,11 +161,10 @@ for t in $TABLE_ROLES; do
   printf '%s' " $ROLES " | grep -q " $t " || fail "table EXTRA role '$t' (table has it, spec lacks it)"
 done
 
-# --- check 6: record surface (three layers, first task book, product root) ---
+# --- check 6: record surface (three layers + first task book) ----------------
 [ -f .onlyne/AGENTS.md ] || fail ".onlyne/AGENTS.md MISSING (role behavior canon)"
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING (shared objective record)"
 [ -f payload/first.md ] || fail "payload/first.md MISSING (first injection task book)"
-[ -d runs ] || fail "runs/ MISSING (product root: one directory per task)"
 python3 - <<'PY_RECORDS' || fail "record surface INCOMPLETE (reason above)"
 import re
 def missing_sections(path, names):
@@ -236,12 +235,12 @@ info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
 
 # --- plan ---------------------------------------------------------------
 [ -z "$THEME" ] && THEME="$(basename "$ROOT")"
-RETIRE=( ".agents/AGENTS.md" )
+RETAIN=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
 info "plan:"
 info "  1) git checkout -b theme/$THEME"
-info "  2) cp .agents/AGENTS.md AGENTS.md"
+info "  2) promote .agents/AGENTS.md to AGENTS.md (root objective record)"
 info "  3) write .onlyne/gemini.json (stage=live, theme=$THEME, entry_role=$ENTRY)"
-info "  4) remove assembly material: ${RETIRE[*]}"
+info "  4) keep the pre-promote snapshot: ${RETAIN[*]}"
 info "  5) git add -A && commit"
 info "  6) runtime power-on stays manual (README: 装配与通电 > 通电)"
 if [ "$DRY_RUN" = "1" ]; then
@@ -259,7 +258,7 @@ if git show-ref --verify --quiet "refs/heads/theme/$THEME"; then
 else
   git checkout -qb "theme/$THEME" || fail "create branch theme/$THEME FAILED"
 fi
-cp .agents/AGENTS.md AGENTS.md
+cat .agents/AGENTS.md > AGENTS.md
 TEMPLATE_COMMIT="$(git log --format=%H -1 -- .agents/AGENTS.md README.md 2>/dev/null || echo unknown)"
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ROLES_JSON="$(printf '%s\n' $ROLES | python3 -c "import json,sys;print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")"
@@ -270,7 +269,6 @@ json.dump({"stage":"live","theme":theme,"slug":theme,"template_commit":commit,
            "promoted_at":now,"entry_role":entry,"roles":roles},
           open(".onlyne/gemini.json","w"), indent=2, ensure_ascii=False)
 PY_FLY
-rm -rf "${RETIRE[@]}"
 git add -A
 git commit -qm "feat(promote): promote template to theme $THEME"
 
@@ -285,6 +283,7 @@ Full procedure: README.md "装配与通电".
    onlyne-server start --root .
 3) supervisor: open pi in this directory (the _supervisor admin mount)
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
-5) gemini is idle: empty ledger, empty runs/. To turn the ring:
+5) gemini is idle: empty ledger. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
+The pre-promote snapshot stays in .agents/AGENTS.md; root AGENTS.md is its promoted copy.
 EOF

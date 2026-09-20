@@ -36,7 +36,7 @@ template_root = ".onlyne/templates"
 [[client]]
 role = "_supervisor"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="  # 合法长度占位（base64 32×0x01）；不起 client 即不验真身
-prose = """你是 gemini 双子的 supervisor（admin mount）。你不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+prose = """我是 gemini 双子的 supervisor（admin mount）。我不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
 admin = true
 max_sessions = 1
 allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
@@ -50,7 +50,7 @@ session_command = []
 [[client]]
 role = "castor"                                    # ★ entry role（第一发投递对象）
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 gemini 双子中的 castor。peer 只有 pollux：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回你，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物落 runs/<slug>/，结果一行进 onlyne_complete 的 text。任务书的收束判据满足时只 complete 不 handoff。你写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 gemini 双子中的 castor。我的 peer 只有 pollux：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 text。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
 allowed_senders = ["_supervisor", "pollux"]
@@ -60,7 +60,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "pollux"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 gemini 双子中的 pollux。peer 只有 castor：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回你，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物落 runs/<slug>/，结果一行进 onlyne_complete 的 text。任务书的收束判据满足时只 complete 不 handoff。你写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 gemini 双子中的 pollux。我的 peer 只有 castor：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 text。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
 allowed_senders = ["_supervisor", "castor"]

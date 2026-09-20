@@ -5,7 +5,8 @@
 - `.onlyne/AGENTS.md`（角色行为约定：一跳的生命周期、任务书四段、记事纪律、onlyne 工具面）
 
 期望产物：
-- `runs/<slug>/notes.md`（本轮现场记录，slug 自取）：本跳做了什么、留下哪些文件路径、交给 peer 的任务书全文。
-- 记事三条各归各位：支线状态进仓根 `AGENTS.md`，本 role 的过程条目进自己 ws 的 `AGENTS.md`，产物进 `runs/<slug>/`。
+- 本跳要交出的产物文件，路径自取并写进四段里的「期望产物」。
+- 自己 ws 的记事补一条：这一步做了什么、结论是什么、产物在哪。
+- 仓根 `AGENTS.md` 的支线条目就地更新。
 
 下一跳建议：handoff pollux，任务书四段写全，第二步的动作与验收判据要具体到它能独立执行；pollux 交回后由 castor 验收，判据满足即收束（只 complete 不 handoff）。

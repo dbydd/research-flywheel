@@ -4,7 +4,7 @@
 
 workspace 表示一个 role 的长期工作区，里面有记忆、设定、历史文件。session 表示这个 role 当前手上的一件工作。任务、session、一跳是一回事。
 
-工作按「射后不理」进行：读任务书 → 干活 → 产物写 `runs/` → handoff peer → `onlyne_complete` 交活退出。role 不等下游。投递后立即返回一行 receipt JSON。过程与回执写进 server ledger，结果通过文件返回。
+工作按「射后不理」进行：读任务书 → 干活 → 产物落任务书点名的路径 → handoff peer → `onlyne_complete` 交活退出。role 不等下游。投递后立即返回一行 receipt JSON。过程与回执写进 server ledger，结果通过文件返回。
 
 ## 三层文件
 
@@ -15,6 +15,8 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 |`.onlyne/ws/gemini/<role>/AGENTS.md`|该 role 的私有记事：工作过程条目与索引|只有该 role 自己写|
 
 三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/gemini/<role>/` 目录下。
+
+产物不设统一目录与固定格式：每一跳要交出的文件由该跳的任务书点名路径。工作文件各写各的，或者就地改同一份，由任务性质定。
 
 ## 记事纪律
 
@@ -97,7 +99,7 @@ onlyne --server-root . send --from _supervisor --to castor --file payload/first.
 onlyne tui
 ```
 
-示例按模板默认拓扑写 `--to castor`；实际入口以 `.onlyne/AGENTS.md` 角色表 `★` 行为准。第一发落地后环即成形：每跳的产物落 `runs/`，下一跳任务书交给 peer。
+示例按模板默认拓扑写 `--to castor`；实际入口以 `.onlyne/AGENTS.md` 角色表 `★` 行为准。第一发落地后环即成形：每跳自己定产物路径，下一跳任务书交给 peer。
 
 ## 动力源
 
@@ -115,7 +117,7 @@ AGENTS.md                  共享目标记录：主线、支线 todo、外部索
 .pi/SYSTEM.md              supervisor 值班会话的岗位说明
 scripts/promote.sh         装配器：九检 + 落分支
 onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/gemini/<role>/（role 记事骨架与模型位）
-产物面：runs/（一件任务一个子目录）；第一发任务书：payload/
+第一发任务书：payload/；产物路径由任务书点名，不设统一目录
 role 工作区：.onlyne/ws/gemini/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 ```
 

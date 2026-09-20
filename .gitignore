@@ -16,6 +16,3 @@
 !.onlyne/templates/
 !.onlyne/templates/**
 .onlyne.v0-archive/
-
-# product surface (runs/) stays tracked
-!.gitkeep
