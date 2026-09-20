@@ -1,11 +1,11 @@
-目标：为 AGENTS.md「研究问题与判进标准」一节定下的研究问题做一轮前沿侦察，产出至少一条能过进池硬门的 idea。
+目标：把双子的一环跑通一次：castor 出第一步任务书交给 pollux，pollux 做完交回，castor 验收并收束。
 
 输入：
-- `AGENTS.md` 的「研究问题与判进标准」节（主题、主次度量、阈值、预算、禁区）
-- `AGENTS.md` 的「idea 格式」节（四条进池硬门的字段口径）
-- `research/frontier-notes.md`（已有检索台账，先翻旧账）
-- `research/` 下的本地物料
+- `AGENTS.md`（角色表、一跳的生命周期、任务书四段、文件纪律）
+- `runs/`（产物根，本轮从这里开新目录）
 
-期望产物：`pool/ideas.md` 新增小节，`evidence`、`evaluation.objectives`、`done_when` 三项非空，headroom 预筛行给出暴露缺口的具体数字或台账行；检索记录追加进 `research/frontier-notes.md`。
+期望产物：
+- `runs/<slug>/`（slug 自取，形如 `boot-01`）：本跳的现场记录 `notes.md`，写明本跳做了什么、留下哪些文件路径、交给 peer 的任务书全文。
+- 产物路径进 `onlyne_complete` 的 text。
 
-下一跳建议：按角色表 handoff model，任务书指向新固化的 `runs/<run-id>/idea.json` 与证据路径。
+下一跳建议：handoff pollux，任务书四段写全，第二步的动作与验收判据要具体到它能独立执行；pollux 交回后由 castor 验收，判据满足即收束（只 complete 不 handoff）。

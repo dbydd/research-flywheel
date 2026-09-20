@@ -44,7 +44,7 @@ or, inside a pi session, the `onlyne_complete{outcome, text}` tool.
   The client reads that file once at turn end and deletes it. Missing file keeps the old
   behavior (head from the last streamed line). `hop-done` replaces `out_head`. `hop-failed`
   settles Failed. A file that fails the contract settles Cancelled, with a fault reason
-  opening `acp payload invalid:`. This flywheel template's `session_command` is pi; the
+  opening `acp payload invalid:`. This template's `session_command` is pi; the
   ACP file contract stays dormant until a workspace sets `backend = "acp"`.
 - From onlyne-client 1.2.1, a settled task with no result line still files its
   `completion` receipt, with empty text. The next hop waiting on that receipt proceeds.

@@ -1,29 +1,27 @@
-# Onlyne v1（工具链追 latest，版本闸只设 protocol=1 下限）research-flywheel spec —— 模板版（唯一事实源）
+# Onlyne v1（工具链追 latest，版本闸只设 protocol=1 下限）gemini 双子 spec —— 模板版（唯一事实源）
 #
 # 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
 # 改完用 `onlyne reload --server-root <root>`；预览差异跑只读动词 `onlyne spec_diff --server-root <root>`（reload 无 --dry-run）。
 # 定稿顺序（F1 死锁修法：全量 parse 之下，非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
-#   1) 空根 `onlyne-server init --root .`（产 keys/cert_pin）
+#   1) 空根 `onlyne-server init --root . --listen 127.0.0.1:7812`（产 .onlyne/keys/server.key 与 cert_pin，cert_pin 打到 stdout）
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
-#   3) 各 role key 先播合法 32 字节占位 base64（AWAAAAAAAA...AAA= 形）
-#   4) 逐 role `onlyne-client init --workspace <ws> --role <role> --server-root .` 拿真 key 替换
-#   5) `onlyne server generate` → `onlyne server start`（run 不写 pid，status 的 running 只认 pid 文件，
-#      判活用 socket_present；深路径看 .onlyne/run/socket）→ `onlyne reload`
+#   3) 各 role key 先播合法 32 字节占位 base64（AQEBAQ...AQE= 形）
+#   4) `onlyne-server generate --root .` 渲染 ws 并逐 role 铸 key，stdout 打 [[client]] 行；key 粘回本文件对应行
+#   5) `onlyne server start --root .`（run 不写 pid，status 的 running 只认 pid 文件，判活用 socket_present；
+#      深路径看 .onlyne/run/socket）→ `onlyne reload`
 # 运行期没有任何配置 API：这份文件就是全部。
-#
-# THEME:research-question —— 主题问题与判进标准写进 root AGENTS.md，此处只放拓扑。
 
 [server]
-name = "flywheel"                                  # 集群名；{{cluster}}/{{server_name}} 占位符的源头
+name = "gemini"                                    # 集群名；{{cluster}}/{{server_name}} 占位符的源头
 listen = "127.0.0.1:7812"
 cert_pin = "sha256/REPLACE_ME_after_server_init"
 note_queue = false                                 # note 不排队：目标离线即 recipient_offline
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# pi 插件走 npm。五份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne`。
+# pi 插件走 npm。两份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne`。
 # 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径。
-# 自展开第一次由 supervisor 手动跑 `pi install npm:pi-onlyne`，装渠道 latest（含 relay 守卫与 activity panel）。
+# 首次由人跑一次 `pi install npm:pi-onlyne`，装渠道 latest。
 # 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi` 的绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，并把 settings 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`。
 agent_package = ""
 # 1.1.x 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关）。
@@ -31,77 +29,42 @@ template_root = ".onlyne/templates"
 
 # ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----
 # 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --file <payload>`
-# （落账 admin=true）。角色的 completion 回执自动回流 origin（origin==收件方时免 ACL，
-# 实证：scout 无指向 critic 的边也能把回执排队送达 critic）。_supervisor 收件箱是 ledger
-# 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，环就不进 supervisor。
+# （落账 admin=true）。角色的 completion 回执自动回流 origin（origin==收件方时免 ACL）。
+# _supervisor 收件箱是 ledger 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，
+# 环就不进 supervisor。
 # key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
 [[client]]
 role = "_supervisor"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="  # 合法长度占位（base64 32×0x01）；不起 client 即不验真身
-prose = """你是飞轮的 supervisor（admin mount）。你不进工作环：取 idea 派工、归档 verdict、起新一轮都在 role 手里。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to scout --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+prose = """你是 gemini 双子的 supervisor（admin mount）。你不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
 admin = true
 max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
-allowed_targets = ["scout"]                        # 只保留第一发与人工唤醒 scout 的边
+allowed_targets = ["castor", "pollux"]             # 第一发与人工唤醒；入口 role 见角色表 ★ 行
 session_command = []
 
-# ---- 飞轮五角色。拓扑 = 角色表 = 这里；relay 一律 handoff（parent_task+hop 血缘）。----
+# ---- 双子：两条互指的边，一个二元环。拓扑 = 角色表 = 这里；relay 一律 handoff（parent_task+hop 血缘）。----
 # 共用条款在 root AGENTS.md（pi 沿父目录链进每个 role 会话），prose 只放身份与上报纪律。
+# 两个 role 职责相同、模型位不同；边的方向决定谁是下一跳。
 
 [[client]]
-role = "scout"                                     # ★ entry role（第一发投递对象）
+role = "castor"                                    # ★ entry role（第一发投递对象）
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 research flywheel 的 scout（前沿侦察员）。检索→盘点→按 idea schema 入池；入池后自取一条 queued idea 固化 runs/<run-id>/idea.json（status=running），handoff 给 model 建模任务（任务书指向 idea.json 与 research/ 证据）。失败回传接收口：收到正文首行 `> hop-failed:` 的接力时，把结论记入 runs/ 并从 pool 取下一条 queued 续环。你 handoff 的下游只有 model。不跑实验，不下结论。"""
+prose = """你是 gemini 双子中的 castor。peer 只有 pollux：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回你，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物落 runs/<slug>/，结果一行进 onlyne_complete 的 text。任务书的收束判据满足时只 complete 不 handoff。你写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
-allowed_senders = ["_supervisor", "critic", "model", "bench", "writer"]   # 第一发/新轮/失败回传/补检索
-allowed_targets = ["model"]   # 补检索边 writer→scout 的下游仍是正常建模接力，无新边
+allowed_senders = ["_supervisor", "pollux"]
+allowed_targets = ["pollux"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
-role = "model"
+role = "pollux"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 research flywheel 的 model（建模）。读 idea.json 与证据→derivation.md 推导→关键断言用宿主 lean 形式化→方法与评测器各出一份 spec 落 runs/<run-id>/spec.md。代码与评测器由 bench 按 spec 落地；你对 bench handoff 评测任务、就绪后对 writer handoff 成稿任务（注明待 measured/）。Lean 失败：把失败命令与断言位置写进 derivation.md，handoff scout 失败回传（正文首行 `> hop-failed:`），不再下派。"""
+prose = """你是 gemini 双子中的 pollux。peer 只有 castor：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回你，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物落 runs/<slug>/，结果一行进 onlyne_complete 的 text。任务书的收束判据满足时只 complete 不 handoff。你写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
-allowed_senders = ["scout", "critic"]   # critic→model：revise 触及理论时直补建模
-allowed_targets = ["bench", "writer", "scout"]     # scout 仅失败回传边
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-
-[[client]]
-role = "bench"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 research flywheel 的 bench（跑批与测量）。按 runs/<run-id>/spec.md 落地 experiment/ 与 evaluation/，跑 baseline 与 candidate，原始 stdout/stderr、配置、种子、耗时逐条落 runs/<run-id>/measured/，汇总与 delta 写 measured/summary.md：每个 objective 一个实测值，每个 constraint 一个 pass/fail。命令失败也归档，不伪造数值，不改评测器语义。落盘后 handoff writer 续作（指向 summary.md）；跑不动时 handoff scout 失败回传（正文首行 `> hop-failed:` + 现场路径）。"""
-admin = false
-max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
-allowed_senders = ["model"]
-allowed_targets = ["writer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-
-[[client]]
-role = "writer"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 research flywheel 的 writer（成稿）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete outcome=cancelled 静默交回，等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>.md：结论先行，每个数字标注来源路径，open questions 单独一节。figure 兼职归你：数据图 matplotlib 从 measured/ 重绘、脚本与成图落 papers/figs/<run-id>/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后 handoff critic 送审（稿件+证据+figs 清单路径）。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md；涉理论 handoff model 补推导，涉证据 handoff scout 补检索。"""
-admin = false
-max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
-allowed_senders = ["model", "bench", "critic"]
-allowed_targets = ["critic", "scout"]   # scout→writer→scout：稿中检索缺口回补
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-
-[[client]]
-role = "critic"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 research flywheel 的 critic（审稿）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质 handoff writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 该小节框符改 [x]；failed 记 verdict.md、框符改 [!]），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），handoff scout 新轮派工。"""
-admin = false
-max_sessions = 1
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
-allowed_senders = ["writer"]
-allowed_targets = ["writer", "scout", "model"]   # model=理论级 revise 直达
+allowed_senders = ["_supervisor", "castor"]
+allowed_targets = ["castor"]
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 # 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 idle_ms=60000

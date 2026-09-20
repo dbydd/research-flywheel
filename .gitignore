@@ -16,5 +16,5 @@
 !.onlyne/templates/**
 .onlyne.v0-archive/
 
-# knowledge products (pool/, runs/, research/, papers/) stay tracked
+# product surface (runs/) stays tracked
 !.gitkeep
