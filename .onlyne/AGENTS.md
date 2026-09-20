@@ -24,12 +24,12 @@
 
 ## 角色表
 
-|role|peer|entry|模型位|
-|---|---|---|---|
-|castor|pollux|★|`axonhub/generic-researcher-powerful`，thinking max|
-|pollux|castor||`axonhub/supercheap`，thinking max|
+|role|peer|entry|
+|---|---|---|
+|castor|pollux|★|
+|pollux|castor||
 
-`★` 标第一发的注入对象。拓扑与 ACL 的机器真相在 `.onlyne/spec.toml`；两个 role 职责相同，边的方向决定谁是下一跳。
+`★` 标第一发的注入对象。拓扑与 ACL 的机器真相在 `.onlyne/spec.toml`；两个 role 职责相同，边的方向决定谁是下一跳。模型位在模板目录的 `.pi/settings.json`。
 
 ## 一跳的生命周期
 

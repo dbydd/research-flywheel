@@ -30,7 +30,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 └─ pollux   接任务书干活 → handoff castor                    axonhub/supercheap，thinking max
 ```
 
-两个 role 职责相同，模型位不同；边的方向决定谁是下一跳。角色表、ACL 与模型位都在 `.onlyne/AGENTS.md` 与 `.onlyne/spec.toml`，每个 session 自动继承。调度与值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
+两个 role 职责相同，模型位不同；边的方向决定谁是下一跳。角色表与 ACL 在 `.onlyne/AGENTS.md` 与 `.onlyne/spec.toml`，模型位在 `templates/gemini/<role>/.pi/settings.json`，每个 session 自动继承。调度与值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
 
 ## 前置
 
@@ -78,7 +78,7 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 ### 通电
 
-通电一次性，由人执行，脚本不起任何常驻进程。以下顺序在本机实测过。
+通电一次性，由人执行，脚本不起任何常驻进程。
 
 ```bash
 onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.key；cert_pin 打到 stdout
