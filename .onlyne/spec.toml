@@ -104,6 +104,5 @@ allowed_senders = ["writer"]
 allowed_targets = ["writer", "scout", "model"]   # model=理论级 revise 直达
 session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
-# 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 running_ms=120000 idle_ms=60000
-# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。某个 role 的实验要长跑，就给它
-# 追加一节 [client.timeout] 覆盖 running_ms（每个 [[client]] 块后紧跟一节）。
+# 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 idle_ms=60000
+# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。
