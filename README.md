@@ -106,7 +106,7 @@ Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter
 
 装配把模板填成一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
-1. **定题**。写目标记录 `.agents/AGENTS.md`（主线、判据、支线 todo、索引；它落分支后就是仓根 `AGENTS.md`），再写 `payload/first.md` 的第一发任务书（四段，口径见 `.onlyne/AGENTS.md`）。
+1. **定题**。写目标记录 `.agents/AGENTS.md`（主线、判据、支线 todo、索引；它落分支后就是仓根 `AGENTS.md`）。第一发任务书不落盘，通电时由人当场写进命令，见下面「第一发」。
 2. **模型位**。逐 role 填 `.onlyne/templates/alexandria/<role>/.pi/settings.json` 的三元组。
 3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/alexandria/<role>/`。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与 `.onlyne/AGENTS.md` 的角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。
 4. **装具**。跑上面「前置」的两条安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。
@@ -137,18 +137,23 @@ daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可�
 
 ### 第一发
 
-写 `payload/first.md`（四段），然后：
+任务书不存档，交接是瞬态。第一发由人当场写进命令（四段口径见 `.onlyne/AGENTS.md`）：
 
 ```bash
-onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --file payload/first.md
+onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --text "目标：<一句话，做完算什么>
+输入：<一条一行：路径（这份文件是什么）>
+期望产物：<写到哪里的什么文件，格式要求>
+下一跳建议：<handoff 谁、干什么；没有就写 无>"
 onlyne tui
 ```
+
+任务书长的时候先落到 `tools/scratch/`，用 `--file` 指过去，用完即删。仓里没有任务书存档目录：过程与结论写在各 role 自己的 ws 记事里，`log.md` 只记动作不记任务书全文。
 
 第一发落地后环即成形：每跳自己定产物路径，下一跳任务书交给下一跳的 role。
 
 ## 动力源
 
-第一颗 seed 由人给，写在仓根 `AGENTS.md` 的主线与 `payload/first.md`。之后每一跳自己产生下一跳任务书。
+第一颗 seed 由人给，写在仓根 `AGENTS.md` 的主线与第一发任务书里。之后每一跳自己产生下一跳任务书。
 
 收束判据写在任务书里：判据满足即只 complete 不 handoff，环停在那一跳。人用 `onlyne control cancel --task <id>` 终结任务族，也可以在 TUI 里按终结键。
 
@@ -160,7 +165,7 @@ AGENTS.md                  共享目标记录：主线（目标与判据）、�
 .agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
-第一发任务书：payload/；知识笔记的落点由任务书点名，不设统一目录
+知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
   <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
 papers/   论文层：摘要与精读各占一个目录（papers/abstracts/、papers/readings/），一页一论文

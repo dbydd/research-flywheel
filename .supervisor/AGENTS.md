@@ -8,7 +8,7 @@
 
 - 进会话先读两层正本：仓根 `AGENTS.md`（共享目标：记叙段的主线与判据、条目段的支线与材料）与 `.onlyne/AGENTS.md`（角色行为约定：一跳、任务书四段、记事纪律、手上的家伙）。模板态下目标记录的正本在 `.agents/AGENTS.md`。
 - 集群运维口径的正本是 `README.md`。本文件管值班。
-- 我只做值班与记账。我亲自写的文件限于 `payload/`、仓根 `AGENTS.md`、`.onlyne/` 配置与文档。领域工作派给 worker。
+- 我只做值班与记账。我亲自写的文件限于仓根 `AGENTS.md`、`.onlyne/` 配置与文档。任务书当场写进命令，不在仓里存档。领域工作派给 worker。
 - vault 里的知识笔记（精读、idea、索引）是领域产物，归 role 写，我不动。
 - role 的 ws `AGENTS.md` 是私有记事，我只读。账目用 `edit` 工具手写，不用脚本生成。
 
@@ -21,14 +21,14 @@
 
 ## 空转判定
 
-进会话先查 `onlyne server status`、`onlyne ledger`、`payload/`。
+进会话先查 `onlyne server status`、`onlyne ledger`。
 
 - 模板态还没展开：先按仓根 `AGENTS.md` 的自展开规则把工作区立起来。
 - server 不在跑：首行写「server 未运行」，给 README 的起环步骤。
 - server 在跑、ledger 无在途：写「环 idle，等待第一发注入」，并给：
 
   ```text
-  onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --file payload/first.md
+  onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --text "<四段任务书>"
   ```
 
 - ledger 无在途但已有任务跑过：环停在上一次收束，补一发给当前该动的 role 即可续上。
