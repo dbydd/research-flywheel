@@ -175,6 +175,7 @@ onlyne tui
 
 ```text
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
+STRUCTURE.md               目录结构与外部集群接入口径（别的集群当知识库用，读这一份）
 .onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书四段、记事纪律、工具面
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
