@@ -156,7 +156,7 @@ AGENTS.md                  共享目标记录：主线（目标与判据）、�
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 第一发任务书：payload/；知识笔记的落点由任务书点名，不设统一目录
-raw/                     不可变来源层（原文、抽取文本、剪藏）
+raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
 wiki/                    页面层（一页一文件，type 六种）
 wiki/people/             人物画像层（协议见 scientist-profiles）
 index.md / log.md         两个保留文件：目录与流水

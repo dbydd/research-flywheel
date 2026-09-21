@@ -88,3 +88,14 @@ Hugging Face 每日论文、X、Reddit（`r/MachineLearning` 一类）、Hacker 
 - 拿 Papers with Code 官网当活数据：已关停，只剩冻结归档。
 - 拿聚合页或二手解读当一手证据：写进笔记前必须回到一手渠道。
 - 并发硬刷任一渠道：先看限额表，429 退避，串行推进。
+
+## 落盘（非 md 资料）
+
+论文的 PDF、TeX 源、HTML、补充材料按 `raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/` 落盘，一目录一论文，目录名与它的 `type: source` 页同名。四个段的取值口径见 `wiki-format` 的命名节。
+
+- PDF：Unpaywall 给的 OA 直链、arXiv PDF、CVF、PMLR、NeurIPS proceedings 直取；付费墙后的版本记 URL 与访问状态，不留占位文件。
+- TeX 源：arXiv e-print 包（`arxiv.org/e-print/<id>`），解开取主 tex 与图片，整包留在论文目录里。
+- HTML：`arxiv.org/html/<id>` 或出版方 OA 页，供分节正文、公式、表格、图的阅读。
+- 抽取文本：下载完成后在论文目录产出 `<slug>.extracted.md`，供检索与无 PDF 阅读器的链路使用。
+- 代码不克隆进本仓：仓库 URL 与 commit 记进论文页，需要时临时拉到工作区再读。
+- 零散来源（采集快照、剪藏、对话导出）走 `raw/<YYYY-MM-DD>-<slug>.<ext>`。
