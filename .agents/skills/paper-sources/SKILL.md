@@ -91,7 +91,7 @@ Hugging Face 每日论文、X、Reddit（`r/MachineLearning` 一类）、Hacker 
 
 ## 落盘（非 md 资料）
 
-论文的 PDF、TeX 源、HTML、补充材料按 `raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/` 落盘，一目录一论文，目录名与它的摘要页、精读页同名。四个段的取值口径见 `wiki-format` 的命名节。
+论文的 PDF、TeX 源、HTML、补充材料按 `raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/` 落盘，一目录一论文，目录名与它的摘要页、精读页同名；博客与其他在线文章按 `raw/<YYYY-MM>/<领域>/<站点>/<slug>/` 落盘，存网页快照与抽取正文，同走一目录一资源。四个段的取值口径见 `wiki-format` 的命名节。
 
 - PDF：Unpaywall 给的 OA 直链、arXiv PDF、CVF、PMLR、NeurIPS proceedings 直取；付费墙后的版本记 URL 与访问状态，不留占位文件。
 - TeX 源：arXiv e-print 包（`arxiv.org/e-print/<id>`），解开取主 tex 与图片，整包留在论文目录里。
@@ -100,5 +100,5 @@ Hugging Face 每日论文、X、Reddit（`r/MachineLearning` 一类）、Hacker 
 - 代码不克隆进本仓：仓库 URL 与 commit 记进论文页，需要时临时拉到工作区再读。
 - 从论文里抽取的图与该论文的自绘图都进这个论文目录的 `assets/`，命名与引用口径见 `wiki-format` 的图与媒体一节；页面用 `![[…]]` 按相对仓根路径引用，不复制图。
 - 绘图脚本落 `tools/scripts/`，临时文件落 `tools/scratch/`（不入 git）。
-- 摘要页落 `papers/abstracts/<slug>.md`，精读报告落 `papers/readings/<slug>.md`，slug 与论文目录同名。摘要页与精读页都带 `paper:` 指向论文本体目录，摘要页另链到精读页。两页的形状见 `wiki-format` 的论文层一节。
+- 摘要页落 `papers/abstracts/<slug>.md`（博客层 `blogs/abstracts/<slug>-abstract.md`），精读报告落 `papers/readings/<slug>.md`，slug 与资源目录同名。摘要页与精读页都带 `resource:` 指向本体目录，摘要页另链到精读页。两页的形状见 `wiki-format` 的资源层一节。
 - 零散来源（采集快照、剪藏、对话导出）走 `raw/<YYYY-MM-DD>-<slug>.<ext>`。

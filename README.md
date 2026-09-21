@@ -51,26 +51,27 @@
 
 ## 笔记格式（llmwiki）
 
-本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。四层，零记录文件：
+本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。资源层两棵树加知识层，零记录文件：
 
 ```text
-raw/      不可变来源层：原文 PDF、抽取文本、剪藏，只增不改
+raw/      不可变来源层：原文 PDF、抽取文本、网页快照、剪藏，只增不改
 papers/   论文层：摘要、增强、精读，一页一论文
+blogs/    博客层：与论文层同构，一页一文章
 people/   人物层：一个学者一个文件
 wiki/     role 维护的页面层：一页一文件，子目录按知识层级组织
 （仓根无记录文件：流水归 ledger 与 frontmatter）
 ```
 
 - 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
-- 分层：`raw/` 存论文文件本体——凡检索与引证里过手的每篇论文都归档，一目录一篇，不只任务目标那篇（拉下来的资料本身就是资料，先收进来越滚越厚）；`papers/abstracts/` 与 `papers/readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从论文拆出来的知识点。四层不互相搬内容，层间只放链接。
-- 检索路径：agent 从 `papers/abstracts/` 找到论文，沿摘要页的 `paper:` 取论文本体，沿摘要页的链接取精读页。
+- 分层：`raw/` 存资源本体——凡检索与引证里过手的每篇论文、每篇文章都归档，一目录一资源，不只任务目标那份（拉下来的资料本身就是资料，先收进来越滚越厚）；`papers/` 与 `blogs/` 两棵树同构：`abstracts/` 与 `readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从资源拆出来的知识点。各层不互相搬内容，层间只放链接。
+- 检索路径：agent 从 `papers/abstracts/`（或 `blogs/abstracts/`）找到资源，沿摘要页的 `resource:` 取本体，沿摘要页的链接取精读页。
 - 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
 - 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
 - 每跳写完不记流水：任务书与回执逐帧在 ledger，时刻在页面 frontmatter；导航靠目录层级与图谱，不维护全库目录页（根 `index.md` 会在图谱里造出无用的超级节点）。
-- 论文层页面在论文主 slug 上挂种类后缀：`<paper>-abstract.md`、`<paper>-context.md` 平铺，`<paper>-reading.md` 是唯一例外——路径与 `raw/` 同构（`<YYYY-MM>/<学科>/<刊名>/`），人最终读的是精读报告，不能摊成一堆噪音。frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
-- 图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图；绘图脚本落 `tools/scripts/`。
+- 资源层页面在主 slug 上挂种类后缀：`<slug>-abstract.md`、`<slug>-context.md` 平铺，`<slug>-reading.md` 是唯一例外——路径与 `raw/` 同构（论文 `<YYYY-MM>/<学科>/<刊名>/`，博客 `<YYYY-MM>/<领域>/<站点>/`），人最终读的是精读报告，不能摊成一堆噪音。frontmatter 带 `resource:` 指向本体目录；精读页里的概念另建 `wiki/` 页面。
+- 图与媒体只进资源本体目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图；绘图脚本落 `tools/scripts/`。
 - 引用总律=可擦性：报告是连贯的文章，读者从头到尾不必打开第二个文件——正文记号擦掉不减句义，承载理解的引用在句中兑现（整段嵌入或归纳转述）；剩下的溯源记号须就地可兑现：外指他文冠名（「《DeepSeek-V4》§3.2.1」），内指对得上本页真标题；裸编号、点不开的链接、抽取文本行号一律悬空，禁入正文。图与表格豁免：嵌页图与自绘表格就是页面自身的内容，可存可引。
-- 知识点与论文的错配不建映射表：知识点由论文拆出，链接与 `sources` 就是溯源。
+- 知识点与资源的错配不建映射表：知识点由资源拆出，链接与 `sources` 就是溯源。
 - 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻只写在 frontmatter。
 
 Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter 进属性面板，wikilink 进图谱与反链，callout 直接渲染，`raw/` 与 `wiki/` 是普通文件夹。机器件全在点目录里，不进图谱；`.obsidian/` 的机器态（工作区布局、缓存、插件二进制）留本地不入 git。
@@ -86,10 +87,10 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 |role|职责|产物|
 |---|---|---|
-|scriber ★|入口。原文整理进 `raw/`（文本与图都抽，图进 `assets/`），写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`|
-|librarian|资料搜集，出论文增强信息|`papers/context/<paper>-context.md`|
+|scriber ★|入口。原文整理进 `raw/`（文本与图都抽，图进 `assets/`），写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`（博客资源走 `blogs/`，树同构）|
+|librarian|资料搜集，出资源增强信息|`papers/context/<paper>-context.md`（博客资源走 `blogs/context/`）|
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
-|master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`|
+|master|汇总资料，写精读报告，需要时做 ppt；嵌原文图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`（博客资源走 `blogs/`，树同构）|
 |socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `AGENTS.md` 的本族 todo|`wiki/` 页面|
 
@@ -195,12 +196,13 @@ STRUCTURE.md               目录结构与外部集群接入口径（别的集�
 .supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
 .omp/AGENTS.md             omp 会话的项目上下文：supervisor 指针 + 引入仓根 AGENTS.md
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
-raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
-  <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
-papers/abstracts/<paper>-abstract.md           摘要页（兼论文身份页），平铺
+raw/                     不可变来源层：论文 <年月>/<学科>/<刊名>/<论文名>/、博客 <年月>/<领域>/<站点>/<slug>/，一目录一资源；零散来源平铺
+  <资源目录>/assets/      该资源的图与媒体：抽取的图、自绘的图
+papers/abstracts/<paper>-abstract.md           论文摘要页（兼身份页），平铺
 papers/context/<paper>-context.md              论文增强信息页（librarian），平铺
-papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md  精读报告（master），路径与 raw 同构
+papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md  论文精读报告（master），路径与 raw 同构
 papers/decks/<slug>/        演示产物（master，需要时）
+blogs/    博客层：与论文层同构（abstracts/ context/ readings/ decks/，路径口径见 wiki-format 命名节）
 people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/           脚本与工具（随树跟踪）

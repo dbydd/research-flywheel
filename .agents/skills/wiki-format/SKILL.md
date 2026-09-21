@@ -10,13 +10,19 @@ description: Use when writing, editing, splitting, merging, or linting any markd
 ## 布局
 
 ```text
-raw/      来源文件层，只增不改。论文按 <YYYY-MM>/<学科>/<刊名>/<论文名>/ 落盘，一目录一论文；零散来源平铺
-  <论文名>/assets/   这一篇论文的图与媒体：从论文抽取的图、为它自绘的图
+raw/      来源文件层，只增不改。按资源落盘，一目录一资源；零散来源平铺
+  <YYYY-MM>/<学科>/<刊名>/<论文名>/   论文：原文 PDF/TeX/HTML、抽取文本、assets/ 图与媒体
+  <YYYY-MM>/<领域>/<站点>/<slug>/     博客与其他在线文章：网页快照 HTML/Markdown、抽取正文、assets/
 papers/   论文层：一页一论文一页
   abstracts/<paper>-abstract.md                        摘要页，兼身份页，平铺（检索入口）
   context/<paper>-context.md                           增强信息（librarian 产物），平铺
   readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md   精读报告（master 产物），路径与 raw 同构
   decks/<slug>/        演示产物，一个主题一个目录
+blogs/    博客层：与论文层同构，一页一资源
+  abstracts/<slug>-abstract.md                         摘要页，兼身份页，平铺（检索入口）
+  context/<slug>-context.md                            增强信息，平铺
+  readings/<YYYY-MM>/<领域>/<站点>/<slug>-reading.md    精读报告，路径与 raw 同构
+  decks/<slug>/                                        演示产物
 people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/   脚本与工具，随树跟踪
@@ -25,12 +31,12 @@ tools/scratch/   临时文件，不入 git
 ```
 
 - `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进引用它的页面里。
-- 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文。论文目录名＝主 slug；论文层页面在主 slug 上挂种类后缀（`-abstract`、`-context`、`-reading`），页面 slug 全库唯一；精读报告的路径与 `raw/` 里该论文的层级同构，其余平铺。口径见命名节。
-- 论文不进 `wiki/`。论文层的摘要页与精读页记这一篇论文本身；从论文里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
-- 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
-- 导航不设全库目录页：type 由所在目录区分（`papers/abstracts`、`papers/readings`、`people/`、`wiki/…` 各是一类），找页靠 Obsidian 图谱、反链与搜索，`wiki/overview.md` 是人工维护的活综述。根目录不放 `index.md`，它在图谱里就是个连向一切的无用超级节点。
+- 一份资源的全部资料（论文的 PDF、TeX 源、HTML、补充材料；文章的网页快照、抽取正文）放进同一个目录，一目录一资源。目录名＝主 slug；资源层页面在主 slug 上挂种类后缀（`-abstract`、`-context`、`-reading`），页面 slug 全库唯一；精读报告的路径与 `raw/` 里该资源的层级同构，其余平铺。论文进 `papers/`，博客与其他在线文章进 `blogs/`——两树同构、流程同一套，放哪棵树由任务书点名的资源定。口径见命名节。
+- 资源层不进 `wiki/`。论文层与博客层的摘要页、精读页只记这一份资源本身；从资源里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
+- 各层各写各的，不互相搬内容：`wiki/` 的一页被资源层引用时用 `[[slug]]`，反过来资源层被知识页引用时同样只放链接。
+- 导航不设全库目录页：type 由所在目录区分（`papers/abstracts`、`papers/readings`、`blogs/abstracts`、`blogs/readings`、`people/`、`wiki/…` 各是一类），找页靠 Obsidian 图谱、反链与搜索，`wiki/overview.md` 是人工维护的活综述。根目录不放 `index.md`，它在图谱里就是个连向一切的无用超级节点。
 - 仓根不放任何记录文件。流水归三处：机器账在 onlyne ledger（每跳任务书、回执、残差流逐帧可回放），时刻在页面自身（frontmatter `created`/`updated`），过程在各 role 的 ws 记事。中央追加式账本在几十部文献的规模下必然腐成噪音堆，还会用陈旧流水误导后来者——不留。
-- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`tools/`）不属这四层，本格式不管它们。工具区只放脚本、工具与临时文件，不写知识笔记。
+- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`tools/`）不属知识层，本格式不管它们。工具区只放脚本、工具与临时文件，不写知识笔记。
 - 任务书是瞬态交接面，不落盘不存档；仓里没有任务书目录。过程与结论落在各 role 自己的 ws 记事，机器侧流水在 onlyne ledger。
 
 ## 规则一：拆碎
@@ -62,10 +68,10 @@ type 取值：
 
 | type | 层 | 装什么 |
 |---|---|---|
-| `abstract` | `papers/abstracts/` | 一篇论文的摘要页，兼这篇论文在库里的身份页 |
-| `context` | `papers/context/` | 一篇论文的增强信息页 |
-| `reading` | `papers/readings/` | 一篇论文的精读报告 |
-| `concept` | `wiki/` | 跨论文的概念、方法、术语 |
+| `abstract` | `papers/abstracts/`、`blogs/abstracts/` | 一份资源的摘要页，兼它在库里的身份页 |
+| `context` | `papers/context/`、`blogs/context/` | 一份资源的增强信息页 |
+| `reading` | `papers/readings/`、`blogs/readings/` | 一份资源的精读报告 |
+| `concept` | `wiki/` | 跨资源的概念、方法、术语 |
 | `entity` | `people/`（人）或 `wiki/`（机构、会议、数据集、基准、工具） | 实体页 |
 | `comparison` | `wiki/` | 两个及以上页面的对照 |
 | `overview` | `wiki/overview.md` | 全库的活综述，每篇新论文进来时改写 |
@@ -81,18 +87,18 @@ type 取值：
 | `origin` | 缺口出处的页面 slug，一条 |
 | `test` | 一行：怎么验证它 |
 
-## 论文层与人物层
+## 资源层与人物层
 
-摘要页、精读页、人物页各占一个目录，都不进 `wiki/`。三者的 frontmatter 都用上面的七键，另加本节两个领域键：
+摘要页、精读页、人物页各占一个目录，都不进 `wiki/`。论文层与博客层同构：几层页面都用上面的七键，另加本节两个领域键：
 
 | 键 | 必填 | 说明 |
 |---|---|---|
-| `paper` | 论文层必填 | 论文本体的 raw 目录路径（相对仓根） |
+| `resource` | 资源层必填 | 本体的 raw 目录路径（相对仓根）：论文或文章的目录，目录名＝本页主 slug |
 | `openalex_id` | 人物页必填 | 权威 id |
 
-### 摘要页（`papers/abstracts/<paper>-abstract.md`）
+### 摘要页（`papers/abstracts/<paper>-abstract.md`，博客层同理 `blogs/abstracts/<slug>-abstract.md`）
 
-论文的身份页：属性、官方摘要、一句话判断、去向链接。agent 检索一篇论文从这里进。
+资源的身份页：属性、官方摘要或导语、一句话判断、去向链接。agent 检索一份资源从这里进。
 
 ```md
 # <标题>
@@ -106,13 +112,13 @@ type 取值：
 
 ## 本体与去向
 
-- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
+- 本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`（博客按 `raw/<YYYY-MM>/<领域>/<站点>/<slug>/`）
 - 精读：[[<paper>-reading|<标题>精读]]（还没建就直接留这个未解析链接，它就是待建标记）
 ```
 
-### 精读页（`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`）
+### 精读页（`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`，博客层 `<YYYY-MM>/<领域>/<站点>/<slug>-reading.md`）
 
-精读报告：论文事实与「我的分析」分区。按需建，不是每篇论文都有。
+精读报告：资源事实与「我的分析」分区。按需建，不是每份资源都有。
 
 精读报告必须自足：没读过任何相关文献的读者，只看这一页要能懂个七七八八。概念首次出现就地解释，承重数字写进正文，外部链接只做溯源锚点、承载考证不承载理解——摘掉全部链接，正文仍是一篇连贯完整的文章。把理解外包给「详见 [[…]]」或外链，对质位会打回。
 
@@ -121,7 +127,7 @@ type 取值：
 ```md
 # <标题> 精读
 
-- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<paper>/`
+- 本体：`raw/<YYYY-MM>/<学科>/<刊名>/<paper>/`（博客按 raw 同构路径）
 - 摘要：[[<paper>-abstract|<标题>摘要]]
 
 ## 问题与做法
@@ -143,16 +149,16 @@ type 取值：
 
 精读页里值得独立引用的概念、方法、缺口，另建 `wiki/` 页面，精读页只放链接。抓取与落盘的渠道口径见 `paper-sources`，人物页的采集流程见 `scientist-profiles`。
 
-### 增强信息页（`papers/context/<paper>-context.md`）
+### 增强信息页（`papers/context/<paper>-context.md`，博客层同理 `blogs/context/<slug>-context.md`）
 
-librarian 的产物，回答五个问题：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。落点写 §/Table/Figure/PDF 页码这类人可定位的位置；抽取文本行号只进自己的 ws 对账，不进页面正文。页面只做这一篇论文的脉络，不写精读判断。
+librarian 的产物，回答五个问题：这份资源做了什么、可能是在什么基础上做的、相关引用在哪里、哪个组或谁做的、作者有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。落点写 §/Table/Figure/PDF 页码这类人可定位的位置；抽取文本行号只进自己的 ws 对账，不进页面正文。页面只做这一份资源的脉络，不写精读判断。
 
 ## 图与媒体
 
-图、截图、图表一律放进论文目录的 `assets/`，一处生成，多处引用，不在任何页面旁边复制一份。
+图、截图、图表一律放进资源本体目录的 `assets/`，一处生成，多处引用，不在任何页面旁边复制一份。
 
-- 从论文抽取的图：`assets/<slug>-fig<N>.<ext>`，`N` 取论文的 Figure 编号。
-- 自绘的图：`assets/<引用页 slug>-<n>.<ext>`，`n` 从 1 起。绘图脚本落 `tools/scripts/`，图落论文目录，脚本与图各就各位。
+- 从资源抽取的图：`assets/<slug>-fig<N>.<ext>`，`N` 取原文的 Figure 编号。
+- 自绘的图：`assets/<引用页 slug>-<n>.<ext>`，`n` 从 1 起。绘图脚本落 `tools/scripts/`，图落资源目录，脚本与图各就各位。
 - 页面里用 `![[…]]` 嵌入，路径写相对仓根的完整路径，避免同名歧义：`![[raw/<YYYY-MM>/<学科>/<刊名>/<slug>/assets/<slug>-fig3.png]]`。
 - 图在正文里带锚点：抽取图标论文 Figure 号，自绘图标数据来自哪份 `sources`。
 - 图直接看：环上模型都有视觉，读图就是 read 那张图片文件；只有直接读失败才降级 OCR 或转述。不做图转文字的常态预处理。
@@ -163,7 +169,7 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 知识层级由目录路径表达，不靠标签，不靠枢纽页。
 
 - 页面落点 `wiki/<域>/<子域>/…/<slug>.md`。域与子域按知识点归类决定，归类变化时跟着变。
-- 摘要层、增强层、人物层平铺不分层：`papers/abstracts/`、`papers/context/`、`people/` 各一层摊平；精读报告是例外，按 `<YYYY-MM>/<学科>/<刊名>/` 与 `raw/` 同构落，人最终读的是它，不能摊成一堆噪音。页面 slug 全库唯一。
+- 摘要层、增强层、人物层平铺不分层：`papers/abstracts/`、`papers/context/`、`blogs/abstracts/`、`blogs/context/`、`people/` 各一层摊平；精读报告是例外，按 `<YYYY-MM>/<学科>/<刊名>/`（博客同构成 `<YYYY-MM>/<领域>/<站点>/`）与 `raw/` 同构落，人最终读的是它，不能摊成一堆噪音。页面 slug 全库唯一。
 - 目录改名、合并、拆分是常规动作。目录里只放该层级的页面，不做二次索引。
 - 目录改名或移动时，同一对象全程一个 slug；文件名不动，链接就不动。
 - `overview` 页只留一篇，放 `wiki/overview.md`，写全库综述，不做分类目录。
@@ -193,12 +199,16 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 ## 命名
 
 - 页面文件名＝slug：kebab-case，ASCII，避开 `#`、`|`、`^`、`:`、`/`。全库 slug 唯一。
-- 论文来源：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文；目录名＝论文主 slug。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<paper>.extracted.md`。
+- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文；目录名＝论文主 slug。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<paper>.extracted.md`。
   - `<YYYY-MM>`：官方发表年月；预印本取首次提交年月。
   - `<学科>`：arXiv 主分类（`cs.CV` 一类）；无分类时用小写连字符的领域短语。
   - `<刊名>`：归一化的会议或期刊短名；预印本写 `arXiv`。
   - `<论文短名>`：标题转 kebab-case，超长截断并保持唯一。
-- 论文层页面在主 slug 上挂种类后缀：`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md` 平铺；`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md` 与 `raw/` 同构（年月、学科、刊名沿用该论文在 raw 下的同名层级）。链接一律用页面 slug（含后缀），`paper:` 键指论文本体目录。
+- 博客与其他在线文章本体：`raw/<YYYY-MM>/<领域>/<站点>/<slug>/`，一目录一文章；目录名＝主 slug。目录里放网页快照（HTML/Markdown）、抽取正文、`assets/` 图与媒体。
+  - `<YYYY-MM>`：发布年月。
+  - `<领域>`：小写连字符的领域短语（`llm-eval`、`agent-systems` 一类）。
+  - `<站点>`：归一化的站点短名（域名去 `www.`，或博客专名）。
+- 资源层页面在主 slug 上挂种类后缀：论文层 `papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md` 平铺，`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md` 与 `raw/` 同构；博客层同构：`blogs/abstracts/<slug>-abstract.md`、`blogs/context/<slug>-context.md` 平铺，`blogs/readings/<YYYY-MM>/<领域>/<站点>/<slug>-reading.md` 与 `raw/` 同构（年月、领域、站点沿用该文章在 raw 下的同名层级）。链接一律用页面 slug（含后缀），`resource:` 键指本体目录。
 - 零散来源（采集快照、剪藏、对话导出）：`raw/<YYYY-MM-DD>-<slug>.<ext>`。
 - 人物页：`people/<slug>.md`，slug 取学者名的 kebab-case；重名时加 `-<openalex id>` 后缀。
 - 目录名：该层级的主题短语，可读，不编号。
