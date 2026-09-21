@@ -1,5 +1,6 @@
 {
   "packages": [
-    "npm:context-mode"
+    "npm:context-mode",
+    "npm:@luxusai/pi-hindsight"
   ]
 }

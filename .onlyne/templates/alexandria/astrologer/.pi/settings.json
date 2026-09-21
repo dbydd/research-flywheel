@@ -1,6 +1,7 @@
 {
   "packages": [
-    "npm:pi-onlyne"
+    "npm:pi-onlyne",
+    "npm:@luxusai/pi-hindsight"
   ],
   "defaultProvider": "axonhub",
   "defaultModel": "supercheap",

@@ -1,0 +1,37 @@
+{
+  "setupComplete": true,
+  "scope": {
+    "mode": "isolated-bank",
+    "projectId": "alexandria-shared",
+    "projectIdStrategy": "manual",
+    "includeSharedObservations": false
+  },
+  "hindsight": {
+    "baseUrl": "http://localhost:8888",
+    "timeoutMs": 30000
+  },
+  "banks": {
+    "project": {
+      "enabled": true,
+      "derive": "manual",
+      "bankId": "pi-project-alexandria-shared"
+    },
+    "user": {
+      "enabled": false
+    }
+  },
+  "mentalModels": {
+    "inject": true
+  },
+  "userRetain": {
+    "mode": "explicit-only"
+  },
+  "recall": {
+    "enabled": true,
+    "budget": "mid",
+    "maxTokens": 800
+  },
+  "retain": {
+    "enabled": true
+  }
+}
