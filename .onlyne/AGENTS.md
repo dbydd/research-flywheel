@@ -70,6 +70,8 @@
 
 领域协议两件：`paper-sources`（论文与人物情报的渠道目录、限额、代理前缀）、`scientist-profiles`（人物画像的页面契约、采集流程、覆盖度校验）。建人物页前先读 `scientist-profiles`，取数前先读 `paper-sources`。
 
+图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图。脚本与工具落 `tools/scripts/`，临时文件落 `tools/scratch/`。知识点与论文的错配不建映射表：链接与 `sources` 就是溯源。
+
 写完一跳改动 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。记事与笔记两套互不搬：知识笔记的时刻写进 frontmatter 与 `log.md`，记事里不写时间戳。
 
 ## 手上的家伙

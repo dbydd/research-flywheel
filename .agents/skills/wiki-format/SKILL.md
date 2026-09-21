@@ -11,11 +11,14 @@ description: Use when writing, editing, splitting, merging, or linting any markd
 
 ```text
 raw/      来源文件层，只增不改。论文按 <YYYY-MM>/<学科>/<刊名>/<论文名>/ 落盘，一目录一论文；零散来源平铺
+  <论文名>/assets/   这一篇论文的图与媒体：从论文抽取的图、为它自绘的图
 papers/   论文层：摘要与精读各占一个目录，一页一论文
   abstracts/<slug>.md
   readings/<slug>.md
 people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
+tools/scripts/   脚本与工具，随树跟踪
+tools/scratch/   临时文件，不入 git
 根 index.md / log.md    两个保留文件：目录与流水
 ```
 
@@ -25,7 +28,7 @@ wiki/     知识层：被打碎的知识点，子目录按知识层级组织，�
 - 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
 - `index.md` 面向内容：全库页面的目录，按 type 分组。
 - `log.md` 面向时间：追加式流水，可 grep。
-- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`payload/`、`scripts/`）不属这四层，本格式不管它们。
+- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`payload/`、`tools/`）不属这四层，本格式不管它们。工具区只放脚本、工具与临时文件，不写知识笔记。
 
 ## 规则一：拆碎
 
@@ -131,6 +134,16 @@ type 取值：
 ```
 
 精读页里值得独立引用的概念、方法、缺口，另建 `wiki/` 页面，精读页只放链接。抓取与落盘的渠道口径见 `paper-sources`，人物页的采集流程见 `scientist-profiles`。
+
+## 图与媒体
+
+图、截图、图表一律放进论文目录的 `assets/`，一处生成，多处引用，不在任何页面旁边复制一份。
+
+- 从论文抽取的图：`assets/<slug>-fig<N>.<ext>`，`N` 取论文的 Figure 编号。
+- 自绘的图：`assets/<引用页 slug>-<n>.<ext>`，`n` 从 1 起。绘图脚本落 `tools/scripts/`，图落论文目录，脚本与图各就各位。
+- 页面里用 `![[…]]` 嵌入，路径写相对仓根的完整路径，避免同名歧义：`![[raw/<YYYY-MM>/<学科>/<刊名>/<slug>/assets/<slug>-fig3.png]]`。
+- 图在正文里带锚点：抽取图标论文 Figure 号，自绘图标数据来自哪份 `sources`。
+- 知识点与论文的错配不建映射表。知识点由论文拆出，`[[…]]` 与 `sources` 就是溯源；缺链时补链，不加中间层。
 
 ## 规则三：目录承载层级
 

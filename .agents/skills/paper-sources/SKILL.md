@@ -98,5 +98,7 @@ Hugging Face 每日论文、X、Reddit（`r/MachineLearning` 一类）、Hacker 
 - HTML：`arxiv.org/html/<id>` 或出版方 OA 页，供分节正文、公式、表格、图的阅读。
 - 抽取文本：下载完成后在论文目录产出 `<slug>.extracted.md`，供检索与无 PDF 阅读器的链路使用。
 - 代码不克隆进本仓：仓库 URL 与 commit 记进论文页，需要时临时拉到工作区再读。
+- 从论文里抽取的图与该论文的自绘图都进这个论文目录的 `assets/`，命名与引用口径见 `wiki-format` 的图与媒体一节；页面用 `![[…]]` 按相对仓根路径引用，不复制图。
+- 绘图脚本落 `tools/scripts/`，临时文件落 `tools/scratch/`（不入 git）。
 - 摘要页落 `papers/abstracts/<slug>.md`，精读报告落 `papers/readings/<slug>.md`，slug 与论文目录同名。摘要页与精读页都带 `paper:` 指向论文本体目录，摘要页另链到精读页。两页的形状见 `wiki-format` 的论文层一节。
 - 零散来源（采集快照、剪藏、对话导出）走 `raw/<YYYY-MM-DD>-<slug>.<ext>`。

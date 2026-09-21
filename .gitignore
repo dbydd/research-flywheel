@@ -25,4 +25,6 @@
 .trash/
 
 # 工具落盘
+tools/scratch/*
+!tools/scratch/.gitkeep
 __pycache__/
