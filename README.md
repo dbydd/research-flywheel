@@ -89,28 +89,20 @@ Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter
 - **pi 插件**：`pi install npm:pi-onlyne`。role 模板 `.pi/settings.json` 的 packages 已写 `npm:pi-onlyne`。
 - **会话后端**：`herdr`、`orca` 或 `zellij` 之一。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - 要跟 onlyne 仓 main 上尚未发布的 fix：`git clone https://github.com/dbydd/onlyne && cargo build --release`，五产物放进 PATH。macOS 上 cp 完必做 `codesign --force --sign -`，复制后的二进制签名失效，直接 exec 收 SIGKILL。
-- pi 的 model/provider：`.onlyne/templates/alexandria/<role>/.pi/settings.json` 的三元组按拓扑定案填写。
+- pi 的 model/provider：每个 role 的模型三元组在 `.onlyne/templates/alexandria/<role>/.pi/settings.json`，随部署改，改完 reload。
 
-## 装配与通电
+## 通电与第一发
 
-自展开四步：定题 → 核拓扑与模型位 → 落分支 → 通电与第一发。仓根 `AGENTS.md` 就是那份共享目标记录——记事本写主线，支线开成 todo，材料走索引表；模板态和活态是同一份，装配时就地改它。下面是逐条细节。
+本工作区流程固定：角色、边、目录、笔记格式都定死在仓里，没有装配步骤，没有模板态与活态之分。仓根 `AGENTS.md` 就是那份共享目标记录——记事本写主线，支线开成 todo，材料走索引表，要改就地改。
+
+唯一随部署变化的是 role 参数：每个 role 的 model/provider/thinking 三元组写在 `.onlyne/templates/alexandria/<role>/.pi/settings.json`，改完 `onlyne reload --server-root .` 生效，其余一概不动。
 
 起环的四条引导：
 
-- 值班会话开在 `.supervisor/`，岗位说明在该目录的 `AGENTS.md`。
+- supervisor 会话开在仓根，岗位说明在 `.supervisor/AGENTS.md`；omp 开这个会话时 `.omp/APPEND_SYSTEM.md` 会自动带上这句话。
 - 起环前先报前置缺什么（onlyne 五件套、pi 插件、会话后端），缺的东西由人装。
 - 常驻进程（server、client、tui）一律起在可见 tab，不进 agent 后台。
-- 定题没写完不落分支：让环空转没有意义。
-
-### 装配
-
-装配把模板填成一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
-
-1. **定题**。写目标记录 `.agents/AGENTS.md`（主线、判据、支线 todo、索引；它落分支后就是仓根 `AGENTS.md`）。第一发任务书不落盘，通电时由人当场写进命令，见下面「第一发」。
-2. **模型位**。逐 role 填 `.onlyne/templates/alexandria/<role>/.pi/settings.json` 的三元组。
-3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/alexandria/<role>/`。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与 `.onlyne/AGENTS.md` 的角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。
-4. **装具**。跑上面「前置」的两条安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。
-5. **落分支**。装配器 `tools/scripts/promote.sh`（九检加落分支）与拓扑、spec、模板同批落地；脚本到位前按同一顺序手工走：`git checkout -b theme/<slug>` → 把 `.agents/AGENTS.md` 提升为仓根 `AGENTS.md` → 写 `.onlyne/alexandria.json`（stage=live、theme、entry_role、roles）→ commit。
+- 主线没写完不起环：让环空转没有意义。
 
 ### 通电
 
@@ -122,8 +114,7 @@ onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.
 onlyne-server generate --root .                        # 渲染 .onlyne/ws/alexandria/<role>/，逐 role 铸 key，stdout 打 [[client]] 行
 # 把每行 key 粘回 spec.toml 对应的 [[client]]
 onlyne server start --root .                           # detached+pid；判活看 socket_present
-onlyne-client doctor                                   # 只读：宿主探测结果
-# supervisor：在仓根开一个 agent 会话（pi、omp 都行），先读 .supervisor/AGENTS.md
+# supervisor：在仓根开一个 omp 会话，先读 .supervisor/AGENTS.md（.omp/APPEND_SYSTEM.md 会自动提示）
 onlyne client run --workspace .onlyne/ws/alexandria/<role>   # 每 role 一个 client，各占一个可见 tab
 ```
 
@@ -162,9 +153,9 @@ onlyne tui
 ```text
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、记事纪律、工具面
-.agents/AGENTS.md          共享目标的正本源，落分支的复制起点
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
-.supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
+.supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
+.omp/APPEND_SYSTEM.md      omp supervisor 会话的附加系统提示（指向值班正本）
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
   <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
@@ -175,8 +166,7 @@ tools/scripts/           脚本与工具（随树跟踪）
 tools/scratch/           临时文件（不入 git）
 index.md / log.md         两个保留文件：目录与流水
 role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
-onlyne 侧（随拓扑落地）：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/
-装配器（随拓扑落地）：tools/scripts/promote.sh
+onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/（记事骨架与模型三元组）
 ```
 
 按论文组织精读页、按人组织提问这两类页面骨架随角色设计定案，定案后补进本节。
