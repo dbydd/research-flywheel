@@ -2,7 +2,7 @@
 
 本工作区辅助学生与科研工作者读论文、找 idea：role 读论文，把结论写成笔记，笔记连成图，图上的缺口变成 idea。
 
-仓根本身就是一个 Obsidian vault：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
+仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`wiki/`、`index.md`、`log.md` 是笔记的三层加两个保留文件。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
 
 运行框架是最简形状的 onlyne 环：三层记事、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
 
@@ -47,18 +47,23 @@
 
 输入路径必须真实存在，接收方 session 是全新上下文，任务书里没写的路径它找不到。内容按引用交接：text 里给路径与标题，接收方读文件；工作区字节从不上总线。
 
-## Obsidian vault 约定
+## 笔记格式（llmwiki）
 
-工作区即 vault：Obsidian 直接打开仓根，`.obsidian/` 是它的配置目录，机器态（工作区布局、缓存、插件二进制）留本地不入 git。role 写下的每个知识笔记都按下面几条写，Obsidian 才解析得动。
+本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。三层加两个保留文件：
 
-- 笔记是 Markdown 文件，元数据写在文件头的 YAML frontmatter 里，键值可解析，Obsidian 属性面板直接读它。
-- 链接用 wikilink：`[[笔记名]]`，指到某一节写 `[[笔记名#小节]]`。Obsidian 按笔记名解析，同一个对象全程用一个名字。
-- 标签写在 frontmatter 的 `tags` 里或正文里，形如 `#主题`。
-- 提示块用 callout：`> [!info] 标题`，随后是正文行。
-- 数学用行内 `$…$` 与独立 `$$…$$`；流程图用 mermaid 代码块；表格用标准 Markdown 表。
-- 文件名里避开 `#`、`|`、`^`、`:`、`/`，这些字符在 Obsidian 里另有语义。
-- 一篇笔记一个写者；索引笔记由最近一次写入者先读后改，增量更新。
-- 知识笔记的落点由任务书点名；账本、任务书、脚本、role 记事各有各的落点，不混进笔记区。
+```text
+raw/      不可变来源层：原文 PDF、抽取文本、外部剪藏，只增不改
+wiki/     role 维护的页面层：一页一文件，type 取 source/concept/entity/comparison/overview/idea
+index.md  面向内容：全库页面目录，按 type 分组
+log.md    面向时间：追加式流水，最新条目在最上面
+```
+
+- 页面：文件名即 slug，frontmatter 带 `title`、`slug`、`type`、`created`、`updated`、`sources`、`tags`；`idea` 页另有 `status`、`origin`、`test`。
+- 链接：`[[slug]]`，指到某一节写 `[[slug#小节]]`；来源冲突加 `> [!contradiction]` callout，两说并存。
+- 每跳写完更新 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。
+- 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻写在 frontmatter 与 `log.md` 里。
+
+Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter 进属性面板，wikilink 进图谱与反链，callout 直接渲染，`raw/` 与 `wiki/` 是普通文件夹。机器件全在点目录里，不进图谱；`.obsidian/` 的机器态（工作区布局、缓存、插件二进制）留本地不入 git。
 
 ## 角色树
 
@@ -147,12 +152,15 @@ onlyne tui
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、记事纪律、工具面
 .agents/AGENTS.md          共享目标的正本源，落分支的复制起点
-.agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
+.agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）、wiki-format（知识笔记格式正本）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 第一发任务书：payload/；知识笔记的落点由任务书点名，不设统一目录
+raw/                     不可变来源层（原文、抽取文本、剪藏）
+wiki/                    页面层（一页一文件，type 六种）
+index.md / log.md         两个保留文件：目录与流水
 role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 onlyne 侧（随拓扑落地）：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/
 装配器（随拓扑落地）：scripts/promote.sh
 ```
 
-vault 的笔记分区（精读、idea、索引、模板）随角色设计一并定案，定案后补进本节。
+按论文组织精读页、按人组织提问这两类页面骨架随角色设计定案，定案后补进本节。

@@ -62,6 +62,12 @@
 - **覆盖式更新**。修订规则或指令时先检索所有相关文件，就地改写原条目并删掉旧条目。同一个意思在文档里只留一处。
 - **无时间戳**。任何记事不写日期与时间，先后靠文档结构表达。
 
+## 笔记格式
+
+知识笔记按 llmwiki 格式写：`raw/` 是不可变来源层，`wiki/` 是页面层，根 `index.md` 与 `log.md` 是两个保留文件。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
+
+写完一跳改动 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。记事与笔记两套互不搬：知识笔记的时刻写进 frontmatter 与 `log.md`，记事里不写时间戳。
+
 ## 手上的家伙
 
 subagent 随便起：`Agent` 后台跑，`get_subagent_result` 取结果，`steer_subagent` 中途拨方向。网随便搜：`web_search`、`fetch_content`、`source_check`。环上每个 role 一个待遇，能拆出去的活拆出去，能查到的先查。
@@ -82,6 +88,7 @@ subagent 随便起：`Agent` 后台跑，`get_subagent_result` 取结果，`stee
 ## 边界
 
 - 我的写面：任务书点名的路径、自己的 ws 记事、仓根 `AGENTS.md` 里与自己相关的主线与支线条目。`.onlyne/` 下的其余内容（`spec.toml`、`templates/`、本文件）只读。
+- `raw/` 只增不改；`wiki/` 页面、`index.md`、`log.md` 写在自己的写面里，先读后改、增量更新。
 - ws 是私有区：草稿、中间件、探针先落那里。定稿产物一次性发布到任务书点名的路径。
 - 一跳一 session：我不替 peer 干活，不等 peer 回执。
 - 报告只写跑出来的东西，数值只从磁盘文件引。禁止静默 done：拿不准就收单、做一半、按失败回传。
