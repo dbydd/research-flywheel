@@ -67,7 +67,7 @@ log.md    唯一保留文件：面向时间的追加式流水
 - 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
 - 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
 - 每跳写完在 `log.md` 顶部增量记一行（先读后改）；导航靠目录层级与图谱，不维护全库目录页（根 `index.md` 会在图谱里造出无用的超级节点）。
-- 摘要页与精读页共用论文 slug，frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
+- 论文层页面在论文主 slug 上挂种类后缀：`<paper>-abstract.md`、`<paper>-context.md` 平铺，`<paper>-reading.md` 是唯一例外——路径与 `raw/` 同构（`<YYYY-MM>/<学科>/<刊名>/`），人最终读的是精读报告，不能摊成一堆噪音。frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
 - 图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图；绘图脚本落 `tools/scripts/`。
 - 知识点与论文的错配不建映射表：知识点由论文拆出，链接与 `sources` 就是溯源。
 - 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻写在 frontmatter 与 `log.md` 里。
@@ -85,10 +85,10 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 |role|职责|产物|
 |---|---|---|
-|scriber ★|入口。原文整理进 `raw/`（文本与图都抽，图进 `assets/`），写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<slug>.md`、`papers/context/<slug>.md`|
-|librarian|资料搜集，出论文增强信息|`papers/context/<slug>.md`|
+|scriber ★|入口。原文整理进 `raw/`（文本与图都抽，图进 `assets/`），写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`|
+|librarian|资料搜集，出论文增强信息|`papers/context/<paper>-context.md`|
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
-|master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<slug>.md`、`papers/decks/<slug>/`|
+|master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`|
 |socrates|追根究底地和 master 对质；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`log.md`|
 
@@ -193,9 +193,9 @@ STRUCTURE.md               目录结构与外部集群接入口径（别的集�
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
   <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
-papers/abstracts/<slug>.md  摘要页（兼论文身份页）
-papers/context/<slug>.md    论文增强信息页（librarian）
-papers/readings/<slug>.md   精读报告（master）
+papers/abstracts/<paper>-abstract.md           摘要页（兼论文身份页），平铺
+papers/context/<paper>-context.md              论文增强信息页（librarian），平铺
+papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md  精读报告（master），路径与 raw 同构
 papers/decks/<slug>/        演示产物（master，需要时）
 people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点

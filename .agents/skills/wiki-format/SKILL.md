@@ -12,10 +12,10 @@ description: Use when writing, editing, splitting, merging, or linting any markd
 ```text
 raw/      来源文件层，只增不改。论文按 <YYYY-MM>/<学科>/<刊名>/<论文名>/ 落盘，一目录一论文；零散来源平铺
   <论文名>/assets/   这一篇论文的图与媒体：从论文抽取的图、为它自绘的图
-papers/   论文层：摘要与精读各占一个目录，一页一论文
-  abstracts/<slug>.md
-  readings/<slug>.md
-  context/<slug>.md    论文增强信息（librarian 的产物：做了什么、基础、引用、组、组的特点）
+papers/   论文层：一页一论文一页
+  abstracts/<paper>-abstract.md                        摘要页，兼身份页，平铺（检索入口）
+  context/<paper>-context.md                           增强信息（librarian 产物），平铺
+  readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md   精读报告（master 产物），路径与 raw 同构
   decks/<slug>/        演示产物，一个主题一个目录
 people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
@@ -25,7 +25,7 @@ tools/scratch/   临时文件，不入 git
 ```
 
 - `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进引用它的页面里。
-- 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文。论文目录名、摘要页、精读页共用同一个 slug，口径见命名节。
+- 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文。论文目录名＝主 slug；论文层页面在主 slug 上挂种类后缀（`-abstract`、`-context`、`-reading`），页面 slug 全库唯一；精读报告的路径与 `raw/` 里该论文的层级同构，其余平铺。口径见命名节。
 - 论文不进 `wiki/`。论文层的摘要页与精读页记这一篇论文本身；从论文里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
 - 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
 - 导航不设全库目录页：type 由所在目录区分（`papers/abstracts`、`papers/readings`、`people/`、`wiki/…` 各是一类），找页靠 Obsidian 图谱、反链与搜索，`wiki/overview.md` 是人工维护的活综述。根目录不放 `index.md`，它在图谱里就是个连向一切的无用超级节点。
@@ -90,7 +90,7 @@ type 取值：
 | `paper` | 论文层必填 | 论文本体的 raw 目录路径（相对仓根） |
 | `openalex_id` | 人物页必填 | 权威 id |
 
-### 摘要页（`papers/abstracts/<slug>.md`）
+### 摘要页（`papers/abstracts/<paper>-abstract.md`）
 
 论文的身份页：属性、官方摘要、一句话判断、去向链接。agent 检索一篇论文从这里进。
 
@@ -107,18 +107,18 @@ type 取值：
 ## 本体与去向
 
 - 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
-- 精读：[[<slug>|<标题>精读]]（还没建就直接留这个未解析链接，它就是待建标记）
+- 精读：[[<paper>-reading|<标题>精读]]（还没建就直接留这个未解析链接，它就是待建标记）
 ```
 
-### 精读页（`papers/readings/<slug>.md`）
+### 精读页（`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`）
 
 精读报告：论文事实与「我的分析」分区。按需建，不是每篇论文都有。
 
 ```md
 # <标题> 精读
 
-- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
-- 摘要：[[<slug>|<标题>摘要]]
+- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<paper>/`
+- 摘要：[[<paper>-abstract|<标题>摘要]]
 
 ## 问题与做法
 
@@ -139,7 +139,7 @@ type 取值：
 
 精读页里值得独立引用的概念、方法、缺口，另建 `wiki/` 页面，精读页只放链接。抓取与落盘的渠道口径见 `paper-sources`，人物页的采集流程见 `scientist-profiles`。
 
-### 增强信息页（`papers/context/<slug>.md`）
+### 增强信息页（`papers/context/<paper>-context.md`）
 
 librarian 的产物，回答五个问题：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。页面只做这一篇论文的脉络，不写精读判断。
 
@@ -158,7 +158,7 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 知识层级由目录路径表达，不靠标签，不靠枢纽页。
 
 - 页面落点 `wiki/<域>/<子域>/…/<slug>.md`。域与子域按知识点归类决定，归类变化时跟着变。
-- 论文层、人物层不按知识层级分子目录：`papers/abstracts/`、`papers/readings/`、`people/` 各一层平铺，slug 全库唯一。
+- 摘要层、增强层、人物层平铺不分层：`papers/abstracts/`、`papers/context/`、`people/` 各一层摊平；精读报告是例外，按 `<YYYY-MM>/<学科>/<刊名>/` 与 `raw/` 同构落，人最终读的是它，不能摊成一堆噪音。页面 slug 全库唯一。
 - 目录改名、合并、拆分是常规动作。目录里只放该层级的页面，不做二次索引。
 - 目录改名或移动时，同一对象全程一个 slug；文件名不动，链接就不动。
 - `overview` 页只留一篇，放 `wiki/overview.md`，写全库综述，不做分类目录。
@@ -200,11 +200,12 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 ## 命名
 
 - 页面文件名＝slug：kebab-case，ASCII，避开 `#`、`|`、`^`、`:`、`/`。全库 slug 唯一。
-- 论文来源：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文。目录名、`papers/abstracts/<slug>.md`、`papers/readings/<slug>.md` 三者同一个 slug。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<slug>.extracted.md`。
+- 论文来源：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文；目录名＝论文主 slug。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<paper>.extracted.md`。
   - `<YYYY-MM>`：官方发表年月；预印本取首次提交年月。
   - `<学科>`：arXiv 主分类（`cs.CV` 一类）；无分类时用小写连字符的领域短语。
   - `<刊名>`：归一化的会议或期刊短名；预印本写 `arXiv`。
   - `<论文短名>`：标题转 kebab-case，超长截断并保持唯一。
+- 论文层页面在主 slug 上挂种类后缀：`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md` 平铺；`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md` 与 `raw/` 同构（年月、学科、刊名沿用该论文在 raw 下的同名层级）。链接一律用页面 slug（含后缀），`paper:` 键指论文本体目录。
 - 零散来源（采集快照、剪藏、对话导出）：`raw/<YYYY-MM-DD>-<slug>.<ext>`。
 - 人物页：`people/<slug>.md`，slug 取学者名的 kebab-case；重名时加 `-<openalex id>` 后缀。
 - 目录名：该层级的主题短语，可读，不编号。

@@ -9,17 +9,17 @@ raw/      来源文件层，只增不改
   <YYYY-MM>/<学科>/<刊名>/<论文名>/   一篇论文的全部资料
     <论文名>.pdf / e-print/ / <论文名>.html / <论文名>.extracted.md / assets/
   <YYYY-MM-DD>-<slug>.<ext>          零散来源：采集快照、剪藏、导出
-papers/   论文层，一页一论文
-  abstracts/<slug>.md                摘要页，兼这篇论文在库里的身份页
-  context/<slug>.md                  论文增强信息页（librarian 的产物）
-  readings/<slug>.md                 精读报告（master 的产物）
-  decks/<slug>/                      演示产物（需要时）
+papers/   论文层，一页一论文；页面在论文主 slug 上挂种类后缀
+  abstracts/<paper>-abstract.md          摘要页，兼这篇论文在库里的身份页，平铺
+  context/<paper>-context.md             论文增强信息页（librarian 的产物），平铺
+  readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md  精读报告（master 的产物），路径与 raw 同构
+  decks/<slug>/                          演示产物（需要时）
 people/   人物层，一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织
 log.md    唯一保留文件：追加式流水，最新在最上面
 ```
 
-一篇论文的四个落点共用同一个 slug：`raw/…/<slug>/`、`papers/abstracts/<slug>.md`、`papers/context/<slug>.md`、`papers/readings/<slug>.md`。摘要页与精读页的 frontmatter 带 `paper:` 指向论文本体目录。
+一篇论文的本体目录名＝主 slug；论文层页面在主 slug 挂后缀：`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`、`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`。精读报告的年月、学科、刊名沿用该论文在 `raw/` 下的同名层级。页面 frontmatter 带 `paper:` 指向论文本体目录，全库 slug 唯一。
 
 ## 每层装什么、谁能写
 
