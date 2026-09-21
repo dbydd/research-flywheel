@@ -97,7 +97,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 |role|model|thinking|role|model|thinking|
 |---|---|---|---|---|---|
-|scriber|supercheap|low|master|generic-researcher-powerful|max|
+|scriber|supercheap|low|master|generic-researcher-powerful|medium|
 |librarian|generic-researcher-weak|high|socrates|supercheap|max|
 |astrologer|supercheap|low|scraper|supercheap|medium|
 
