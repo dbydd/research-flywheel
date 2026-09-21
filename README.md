@@ -6,6 +6,10 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 
 飞轮按“射后不理”工作：恢复上下文 → 工作 → `handoff` 激发下游（可选）→ 写文件 → `onlyne_complete` 交活退出。role 不等下游回执。投递后立即返回一行 receipt JSON。过程与回执都写进 server ledger。结果通过文件返回。下一条接力任务会唤醒下一个 role。环路长期打开，由 supervisor 或人来停下。
 
+## 使用方式
+
+使用omp再orca/herdr中打开此仓库，然后问他怎么操作
+
 ## 角色树
 
 ```text
@@ -24,14 +28,13 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 装具与插件各追自己渠道的最新，命令里没有版本号。兼容判据是 `onlyne version` 的 `protocol:1`。
 
 - **onlyne v1 五件套**。发布渠道一行装齐：
-
   ```bash
   cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
   ```
 
   crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名。升级＝同一条命令加 `--force` 重跑。
 - **pi 插件**：`pi install npm:pi-onlyne`。role 模板 `.pi/settings.json` 的 packages 已经写着 `npm:pi-onlyne`。
-- **会话后端**：`herdr`、`orca` 或 `zellij` 之一。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
+- **会话后端**：`herdr`、`orca` 或 `zellij` 之一。选择链是 `ONLYNE_BACKEND`（非空）&gt; 工作区 `config.toml` 的 `backend` &gt; auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - 要跟 onlyne 仓 main 上尚未发布的 fix：`git clone https://github.com/dbydd/onlyne && cargo build --release`，五产物放进 PATH。macOS 上 cp 完必做 `codesign --force --sign -`，复制后的二进制签名失效，直接 exec 收 SIGKILL。
 - pi 的 model/provider。`templates/flywheel/<role>/.pi/settings.json` 的三元组在装配时填 defaultProvider / defaultModel / defaultThinkingLevel。
 
@@ -42,16 +45,15 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 装配把通用骨架填成一个具体研究主题的飞轮，产出一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
 1. **定题**。填 `.agents/AGENTS.md` 的「研究问题与判进标准」「runs/<run-id>/ 目录约定」「评测契约」三节：研究问题一句话加验收它的度量，主度量与次度量各自的阈值，算力与时间预算，禁区。
-3. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。`relay_required` 是完成守卫（session 在 complete 前必须已经 handoff 给列出的角色），本模板未启用。
+2. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `handoff B` 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。`relay_required` 是完成守卫（session 在 complete 前必须已经 handoff 给列出的角色），本模板未启用。
 3. **模型档位**。逐 role 填 `.onlyne/templates/flywheel/<role>/.pi/settings.json` 的三元组。
 4. **种子**。写 `pool/ideas.md`：一条 idea 一个小节，`evidence`、`evaluation.objectives`、`done_when` 三项非空才进池。同时写 `research/` 的领域锚点文件，含 `frontier-notes.md` 表头与至少一条真实来源记录。
 5. **装具**。跑上面「前置」的 onlyne 与 pi 插件两条安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。
 6. **落分支**：
-
-   ```bash
+  ```bash
    ./scripts/promote.sh --dry-run     # 九检零写入
    ./scripts/promote.sh               # 复核清单后执行
-   ```
+  ```
 
    脚本建 `theme/<slug>` 分支、把 `.agents/AGENTS.md` 提升为 root `AGENTS.md`、写 `.onlyne/flywheel.json`、删装配材料、commit。
 
@@ -102,3 +104,4 @@ onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/flywheel/<role>/（�
 知识产物：pool/（idea 池）、runs/（一轮过程件）、papers/（成稿与 figs）、research/（证据）
 领域代码：experiment/、evaluation/；第一发任务书：payload/
 ```
+
