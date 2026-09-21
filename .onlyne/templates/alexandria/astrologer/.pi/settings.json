@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "npm:pi-onlyne"
+  ],
+  "defaultProvider": "axonhub",
+  "defaultModel": "supercheap",
+  "defaultThinkingLevel": "medium"
+}

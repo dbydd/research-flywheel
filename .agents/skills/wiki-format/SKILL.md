@@ -15,6 +15,8 @@ raw/      来源文件层，只增不改。论文按 <YYYY-MM>/<学科>/<刊名>
 papers/   论文层：摘要与精读各占一个目录，一页一论文
   abstracts/<slug>.md
   readings/<slug>.md
+  context/<slug>.md    论文增强信息（librarian 的产物：做了什么、基础、引用、组、组的特点）
+  decks/<slug>/        演示产物，一个主题一个目录
 people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/   脚本与工具，随树跟踪
@@ -61,6 +63,7 @@ type 取值：
 | type | 层 | 装什么 |
 |---|---|---|
 | `abstract` | `papers/abstracts/` | 一篇论文的摘要页，兼这篇论文在库里的身份页 |
+| `context` | `papers/context/` | 一篇论文的增强信息页 |
 | `reading` | `papers/readings/` | 一篇论文的精读报告 |
 | `concept` | `wiki/` | 跨论文的概念、方法、术语 |
 | `entity` | `people/`（人）或 `wiki/`（机构、会议、数据集、基准、工具） | 实体页 |
@@ -135,6 +138,10 @@ type 取值：
 ```
 
 精读页里值得独立引用的概念、方法、缺口，另建 `wiki/` 页面，精读页只放链接。抓取与落盘的渠道口径见 `paper-sources`，人物页的采集流程见 `scientist-profiles`。
+
+### 增强信息页（`papers/context/<slug>.md`）
+
+librarian 的产物，回答五个问题：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。页面只做这一篇论文的脉络，不写精读判断。
 
 ## 图与媒体
 

@@ -73,9 +73,30 @@ log.md    面向时间：追加式流水，最新条目在最上面
 
 Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter 进属性面板，wikilink 进图谱与反链，callout 直接渲染，`raw/` 与 `wiki/` 是普通文件夹。机器件全在点目录里，不进图谱；`.obsidian/` 的机器态（工作区布局、缓存、插件二进制）留本地不入 git。
 
-## 角色树
+## 工作流（deep research 线性链）
 
-拓扑定案后写入本节：role、边的方向、entry、模型位。机器真相是 `.onlyne/spec.toml` 与 `.onlyne/templates/alexandria/<role>/`；值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
+本工作区不成环，一条 deep research 工作流走到底，scraper 收敛：
+
+```text
+supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
+（人机界面，不进环）              └──▶ astrologer ─┴─▶ master ⇄ socrates ──▶ scraper
+```
+
+|role|职责|产物|
+|---|---|---|
+|scriber|入口。原文整理进 `raw/`，写摘要页|`papers/abstracts/<slug>.md`|
+|librarian|资料搜集，出论文增强信息|`papers/context/<slug>.md`|
+|astrologer|人物画像构建，可选路径|`people/<slug>.md`|
+|master|汇总资料，写精读报告，需要时做 ppt|`papers/readings/<slug>.md`、`papers/decks/<slug>/`|
+|socrates|追根究底地和 master 对质；循环的放行者|对质清单、放行决定|
+|scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`index.md`、`log.md`|
+
+- 入口是 scriber，第一发由 supervisor 投递。astrologer 是可选路径，任务书点名才走。
+- master⇄socrates 的放行权在 socrates：报告收束由 socrates 判定并放行给 scraper，master 只回改。
+- 残差流：线性链上后面的人看见前面所有人的产出。每次 handoff 由交出方构造产物索引（本任务族到目前的所有路径，一跳一行），接收方先读残差流再动手。口径见 `.onlyne/AGENTS.md`。
+- scriber 与 master 每任务族单例，librarian、astrologer、socrates、scraper 可多播。单例是软约束，spec 不设并发闸。
+- 缺料自己补：master 与 socrates 发现少材料时自己取（渠道见 `paper-sources`），补完记账，不回环找 scriber。
+- 机器真相是 `.onlyne/spec.toml` 与 `.onlyne/templates/alexandria/<role>/`；值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
 
 ## 前置
 
@@ -154,14 +175,17 @@ onlyne tui
 
 ```text
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
-.onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、记事纪律、工具面
+.onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书四段、记事纪律、工具面
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
 .omp/AGENTS.md             omp 会话的项目上下文：supervisor 指针 + 引入仓根 AGENTS.md
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
   <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
-papers/   论文层：摘要与精读各占一个目录（papers/abstracts/、papers/readings/），一页一论文
+papers/abstracts/<slug>.md  摘要页（兼论文身份页）
+papers/context/<slug>.md    论文增强信息页（librarian）
+papers/readings/<slug>.md   精读报告（master）
+papers/decks/<slug>/        演示产物（master，需要时）
 people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/           脚本与工具（随树跟踪）
@@ -171,4 +195,4 @@ role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role �
 onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/（记事骨架与模型三元组）
 ```
 
-按论文组织精读页、按人组织提问这两类页面骨架随角色设计定案，定案后补进本节。
+角色细则随流程演进：改 prose 与职责时同步改 `.onlyne/spec.toml`、`.onlyne/AGENTS.md` 角色表与本文件工作流节，三处一处不落。
