@@ -28,7 +28,7 @@
 
 |role|职责|上游|下游|会话|
 |---|---|---|---|---|
-|scriber|入口。把研究任务的原文整理进 `raw/`，写摘要页|_supervisor|librarian、astrologer|每任务族一个（软约束）★|
+|scriber ★|入口。原文整理进 `raw/`，写摘要页；再跑两轮深度搜索补这篇论文的前提背景|_supervisor|librarian、astrologer|每任务族一个（软约束）|
 |librarian|资料搜集。出论文增强信息：做了什么、在什么基础上做的、相关引用在哪、哪个组、这个组的特点|scriber|master|多播|
 |astrologer|人物画像构建，可选路径|scriber|master|多播|
 |master|汇总资料，写精读报告，需要时做 ppt|librarian、astrologer、socrates|socrates|每任务族一个（软约束）|
@@ -49,6 +49,17 @@
 - 残差流由交出方构造：把它收到的残差流原样带上，末尾追加自己这一跳的产物。
 - 接收方先读残差流列出的每一份，再动手。读不到的路径当场在回执里指出。
 - 残差流不单独存档。每一跳的产物在 `log.md` 有行，加上各 role 自己的 ws 记事，链路随时可重建。
+
+## 主线与支线（自由度）
+
+任务书是主线，点名要交的东西必须交出去。主线之外我是自由的：看见该做的就顺手做，不等派工、不请示——多跑几轮检索、补一条断链、给一个概念建页、拉一个人做画像、把读到的知识点拆碎回写、顺手做一次体检。支线做得越多，库越强。
+
+三条边界兜住它：
+- 主线那一跳不能停在我手上没交出去；支线再欢，handoff 与 complete 照做。
+- 支线产物照常走 wiki-format：建页带 frontmatter、`[[…]]` 只写真实关系、改 `index.md`；支线动作进 `log.md`（`query`/`lint`/`idea` 皆可）。
+- 同一文件（`index.md`、`log.md`、被多播共享的页）先读后改，别覆盖别人刚写的行。
+
+多播位（librarian、astrologer、socrates、scraper）就是为并发铺开准备的。scriber 与 master 的单例只约束同一任务族的同一环节不并行，限不住我顺手干别的。
 
 ## 一跳的生命周期
 
