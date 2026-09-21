@@ -28,7 +28,7 @@
   },
   "recall": {
     "enabled": true,
-    "budget": "mid",
+    "budget": "low",
     "maxTokens": 800
   },
   "retain": {
