@@ -89,7 +89,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |librarian|资料搜集，出论文增强信息|`papers/context/<paper>-context.md`|
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
 |master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`|
-|socrates|追根究底地和 master 对质；循环的放行者；必要时看图核对|对质清单、放行决定|
+|socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`log.md`|
 
 模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。
@@ -101,7 +101,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |astrologer|supercheap|low|scraper|supercheap|medium|
 
 - 入口是 scriber，第一发由 supervisor 投递。astrologer 是可选路径，任务书点名才走。
-- master⇄socrates 的放行权在 socrates：报告收束由 socrates 判定并放行给 scraper，master 只回改。
+- master⇄socrates 的放行权在 socrates：报告收束由 socrates 判定并放行给 scraper，master 只回改。socrates 不带先验（残差流也不读），当一无所知的普通读者；放行判据=自足性——摘掉全部外链，报告仍连贯、能被没读过相关文献的人看懂个七七八八。
 - 残差流：线性链上后面的人看见前面所有人的产出。每次 handoff 由交出方构造产物索引（本任务族到目前的所有路径，一跳一行），接收方先读残差流再动手。口径见 `.onlyne/AGENTS.md`。
 - scriber 与 master 每任务族单例，librarian、astrologer、socrates、scraper 可多播。单例是软约束，spec 不设并发闸。
 - 主线与支线：任务书是主线，必须交出；主线之外每个 role 自由做支线（多跑检索、补断链、建概念页/人物页、拆碎回写、做体检），支线越多库越强。硬约束只一条——主线那跳别停在手上没 handoff/complete。口径见 `.onlyne/AGENTS.md`。

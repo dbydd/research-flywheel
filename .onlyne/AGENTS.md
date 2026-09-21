@@ -32,14 +32,14 @@
 |librarian|资料搜集。出论文增强信息：做了什么、在什么基础上做的、相关引用在哪、哪个组、这个组的特点|scriber|master|多播|
 |astrologer|人物画像构建，可选路径|scriber|master|多播|
 |master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|librarian、astrologer、socrates|socrates|每任务族一个（软约束）|
-|socrates|追根究底地和 master 对质，完善报告；必要时看图核对|master|master|多播|
+|socrates|以「我一无所知」的视角追根究底对质——只读精读报告本体、不读残差流，验收自足性；必要时看图核对|master|master|多播|
 |scraper|把定稿精读报告里的知识点拆碎，回写进 `wiki/`|master、socrates|无（收敛点）|多播|
 
 `★` 标第一发的注入对象。拓扑与 ACL 的机器真相在 `.onlyne/spec.toml`；模型位在 `.onlyne/templates/<role>/.pi/settings.json`。
 
 单例与多播都是软约束：同一任务族的同一环节不并行，靠任务书与 prose 维持，spec 不设并发闸。需要并行时（librarian 分头查几条线、socrates 分几个角度对质）由交出方发多个任务。
 
-缺料自己补：master 与 socrates 发现少材料时自己取（渠道见 `paper-sources`），补完在产物与 `log.md` 记账，不回环找 scriber。
+缺料自己补：master 发现少材料时自己取（渠道见 `paper-sources`），补完在产物与 `log.md` 记账，不回环找 scriber。socrates 不去外部补料：它以无知读者对质，缺口只点名、打回 master 补。
 
 ## 残差流
 
@@ -47,7 +47,7 @@
 
 - 每次 handoff，交出方在任务书「输入」段之前加一段「残差流」：本任务族到目前为止的全部产物，一跳一行，路径加一句话说明。
 - 残差流由交出方构造：把它收到的残差流原样带上，末尾追加自己这一跳的产物。
-- 接收方先读残差流列出的每一份，再动手。读不到的路径当场在回执里指出。
+- 接收方先读残差流列出的每一份，再动手。读不到的路径当场在回执里指出。socrates 是唯一例外：它只读精读报告本体，不读残差流——先验知识会毁掉「一无所知读者」的对质视角。
 - 残差流不单独存档。每一跳的产物在 `log.md` 有行，加上各 role 自己的 ws 记事，链路随时可重建。
 
 ## 主线与支线（自由度）
