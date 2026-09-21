@@ -52,14 +52,15 @@
 本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。三层加两个保留文件：
 
 ```text
-raw/      不可变来源层：原文 PDF、抽取文本、外部剪藏，只增不改
-wiki/     role 维护的页面层：一页一文件，type 取 source/concept/entity/comparison/overview/idea
+raw/      不可变来源层：原文 PDF、抽取文本、剪藏，只增不改
+wiki/     role 维护的页面层：一页一文件，子目录按知识层级组织
 index.md  面向内容：全库页面目录，按 type 分组
 log.md    面向时间：追加式流水，最新条目在最上面
 ```
 
-- 页面：文件名即 slug，frontmatter 带 `title`、`slug`、`type`、`created`、`updated`、`sources`、`tags`；`idea` 页另有 `status`、`origin`、`test`。
-- 链接：`[[slug]]`，指到某一节写 `[[slug#小节]]`；来源冲突加 `> [!contradiction]` callout，两说并存。
+- 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
+- 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
+- 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
 - 每跳写完更新 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。
 - 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻写在 frontmatter 与 `log.md` 里。
 
