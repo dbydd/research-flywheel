@@ -1,0 +1,22 @@
+# 仓库项目级 omp 设置：只对本 worktree 生效，不改全局 ~/.omp/agent/config.yml。
+# 改后需 `omp` 重载或新 session 生效（memory.backend 在会话启动时解析）。
+#
+# supervisor(omp) 接进 hindsight：
+#   - 本地层（运维信息）= per-project-tagged 把 retain 打上 project:theme-alexandria 标签
+#   - 全局层（问答额外信息）= 同一物理 bank pi-global 里那层无标签的全局记忆
+#   recall 时两层合并（见 omp settings schema 对 per-project-tagged 的定义）。
+memory:
+  backend: hindsight
+
+hindsight:
+  apiUrl: http://localhost:8888   # OrbStack 上的 hindsight:local 容器；不是全局默认那个端口
+  bankId: pi-global               # 全局问答层所在的物理 bank
+  scoping: per-project-tagged     # 共享 bank + 项目标签：全局与本地运维在 recall 时合并
+  autoRecall: true
+  autoRetain: true
+  retainMode: last-turn           # 运维增量记录，别每次重发整段会话
+  recallBudget: low               # 走纯向量：避开 axonhub generic-writer ~90s/次 的 LLM 超时（本会话已诊断出的 recall-failed 根因）
+  retainContext: >-
+    alexandria 集群运维记忆：onlyne server/client 启动状态、cert_pin/端口、
+    任务族流转（scriber→librarian→master⇄socrates→scraper）、ledger/faults、
+    hindsight 与 axonhub 后端的已知故障与取舍、目录结构与格式决策。只记运维事实与决定。
