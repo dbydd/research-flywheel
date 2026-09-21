@@ -1,6 +1,6 @@
 ---
 name: wiki-format
-description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, and naming rules. There are no record files: the flow lives in the onlyne ledger, page frontmatter, and each role's own workspace notes.
+description: "Use when writing, editing, splitting, merging, or linting any markdown note in this workspace (abstract, context, reading, person, concept, entity, comparison, idea pages) or when restructuring the layers. Gives the resource-layer layout (raw source files, papers and blogs trees, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, and naming rules. No record files exist. The flow lives in the onlyne ledger, page frontmatter, and each role workspace notes."
 ---
 
 # wiki-format —— 本仓知识笔记的基本格式
