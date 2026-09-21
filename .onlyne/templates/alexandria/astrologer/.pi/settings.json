@@ -5,5 +5,5 @@
   ],
   "defaultProvider": "axonhub",
   "defaultModel": "supercheap",
-  "defaultThinkingLevel": "medium"
+  "defaultThinkingLevel": "low"
 }
