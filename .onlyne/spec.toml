@@ -4,18 +4,17 @@
 # 改完用 `onlyne reload --server-root .`；预览差异跑只读动词 `onlyne spec_diff --server-root .`（reload 无 --dry-run）。
 # 本仓流程固定，装配层已撤：没有 stage 文件，没有 promote 脚本。改拓扑就改本文件与 templates/，再 reload。
 # 定稿顺序（非法 key 会让全量 parse 连 client init 都跑不动，占位 key 必须合法长度）：
-#   1) 空根 `onlyne-server init --root . --listen 127.0.0.1:7812`（产 .onlyne/keys/server.key 与 cert_pin，cert_pin 打到 stdout）
+#   1) 空根 `onlyne-server init --root . --listen 127.0.0.1:7812`（产 .onlyne/keys/server.key 与 cert_pin，cert_pin 打到 stdout；spec.toml 已就位则 init 拒绝覆盖，先挪开再放回）
 #   2) 回填 [server].cert_pin
 #   3) 各 role key 先播合法 32 字节占位 base64（AQEBAQ...AQE= 形）
-#   4) `onlyne-server generate --root .` 渲染 ws 并逐 role 铸 key，stdout 打 [[client]] 行；key 粘回本文件对应行
-#   5) `onlyne server start --root .`（run 不写 pid，status 的 running 只认 pid 文件，判活用 socket_present；
-#      深路径看 .onlyne/run/socket）→ `onlyne reload`
+#   4) 逐 role 渲染并铸 key：`onlyne-server generate --root . --role <r>`（ClientEntry 无 template 字段，只认 template_root/<role> 平铺；bare generate 会为无模板的 _supervisor 报错，故按 6 个 agent 各跑一次，_supervisor 不渲 ws）。每次 stdout 打 [[client]] 行，key 粘回本文件对应 [[client]]
+#   5) `onlyne server start --root .`（run 不写 pid；判活用 `onlyne status --server-root .` 的 socket_present，status 不认 --root；深路径看 .onlyne/run/socket）→ 改拓扑后 `onlyne reload`
 # 运行期没有任何配置 API：这份文件就是全部。
 
 [server]
 name = "alexandria"                              # 集群名；{{cluster}}/{{server_name}} 占位符的源头
 listen = "127.0.0.1:7812"
-cert_pin = "sha256/REPLACE_ME_after_server_init"
+cert_pin = "sha256/+dovmaOR3HAPhzSLGC0im3CsjnT7JdOqCZTtbVeTUOU="
 note_queue = false                               # note 不排队：目标离线即 recipient_offline
 fault_history_days = 14
 resync_lag = 256
@@ -50,7 +49,7 @@ session_command = []
 
 [[client]]
 role = "scriber"                                   # ★ entry role（第一发投递对象）
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+key = "ed25519/tmMnlUegzBS3yWOfLboH3XDZZ0H2rfa7qhFPjLPt7Io="
 prose = """我是 scriber，deep research 工作流的入口。任务书到我手上：一个链接、一份 PDF 的 URL，或用户已经放在某处的材料。我把原文整理进 `raw/<年月>/<学科>/<刊名>/<论文名>/`，抽取出文本，写 `papers/abstracts/<slug>.md` 摘要页；再按 paper-sources 大批量快扫相关文献补这篇论文的前提背景（它立在什么问题上、依赖哪些先前工作、作者与组的来路），覆盖大部分前提信息靠的是广度与速度，落 `papers/context/` 或摘要页补充段。然后 handoff 给 librarian；任务书点名要人物画像时另发一路给 astrologer。交接时构造残差流：把本任务族到目前的产物列成索引交给下一跳。主线之外我是自由的，看见该做的顺手做，handoff 与 complete 照做。任务书四段是唯一交接面，结果一行进 onlyne_complete 的 text。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
@@ -60,7 +59,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "librarian"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+key = "ed25519/3roE/waKG26qIvGYk3s5Vpv2n1ZJh25i6siXEV0n+Rw="
 prose = """我是 librarian，工作流的资料搜集位。收到论文对象后，我从网上、wiki 与本地其余文献里理出这篇论文的脉络，产出 `papers/context/<slug>.md` 论文增强信息：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。多渠道口径见 `.agents/skills/paper-sources/SKILL.md`，先读它再动手。一条线一个任务，可多播并行；每条线只答自己那一段，结论带来源。做完 handoff master，残差流原样带上并追加自己的产物。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
@@ -70,7 +69,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "astrologer"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+key = "ed25519/JAiJYKRKy6hY/6BEe0V7BoCd1f2MgBDf7uN/jumxn+E="
 prose = """我是 astrologer，工作流里的人物画像位，可选路径。任务书点名要我时，我从论文作者出发采集合作关系与履历，按 `scientist-profiles` 的页面契约落 `people/<slug>.md`，并给出覆盖度读数。采集超参按任务书给的来，任务书没给用该 skill 的默认值。做完 handoff master，残差流原样带上并追加自己的产物。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
@@ -80,7 +79,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "master"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+key = "ed25519/AyTemCwoxlyrcH+FGZTf0Hth0qR0qxjQUa18Ll6NlDo="
 prose = """我是 master，工作流的汇总位。我先读残差流列出的每一份产物，再汇总成 `papers/readings/<slug>.md` 精读报告；任务书要求时做 ppt，演示产物落 `papers/decks/<slug>/`。报告按 `wiki-format` 的精读页形状写，论文事实与「我的分析」分区。写完 handoff socrates 对质；socrates 的意见到我这里时逐条修订，改完再交回去。收束的判定权在 socrates，我等它的放行，不自行 scraper。缺料自己补，不回环找 scriber。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
@@ -90,7 +89,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "socrates"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+key = "ed25519/cYiSaRUTQeJ/e+VBmNPDKoUsZlxE+LnezsxqgubAC98="
 prose = """我是 socrates，工作流的对质位，也是 master⇄socrates 循环的放行者。我追根究底：读残差流与精读报告，逐条追问主张的证据、口径、边界，把答不上来的地方写成对质清单交回 master。我的职责是让报告收敛，不是把它写长。证据齐、口径清、边界明时我放行：handoff scraper 拆知识点。证据不足需要再查时，把缺口写清交给 master 回改。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
@@ -100,8 +99,8 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 
 [[client]]
 role = "scraper"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完更新 `index.md` 与 `log.md`，然后只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
+key = "ed25519/JNsZTXtXe4snI9WSEPF1wsxlhUMVBcykSs0zYUpKvhM="
+prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完在 `log.md` 顶部增量记一行，然后只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
 allowed_senders = ["socrates"]                   # 放行权在 socrates；master 不回 scraper

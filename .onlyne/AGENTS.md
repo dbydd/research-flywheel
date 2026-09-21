@@ -58,8 +58,8 @@
 
 三条边界兜住它：
 - 主线那一跳不能停在我手上没交出去；支线再欢，handoff 与 complete 照做。
-- 支线产物照常走 wiki-format：建页带 frontmatter、`[[…]]` 只写真实关系、改 `index.md`；支线动作进 `log.md`（`query`/`lint`/`idea` 皆可）。
-- 同一文件（`index.md`、`log.md`、被多播共享的页）先读后改，别覆盖别人刚写的行。
+- 支线产物照常走 wiki-format：建页带 frontmatter、`[[…]]` 只写真实关系；支线动作进 `log.md`（`query`/`lint`/`idea` 皆可）。
+- 同一文件（`log.md`、被多播共享的页）先读后改，别覆盖别人刚写的行。
 
 多播位（librarian、astrologer、socrates、scraper）就是为并发铺开准备的。scriber 与 master 的单例只约束同一任务族的同一环节不并行，限不住我顺手干别的。
 
@@ -103,7 +103,7 @@
 
 ## 笔记格式
 
-知识笔记按 llmwiki 格式写，四层分工：`raw/` 存论文文件本体（凡检索与引证里过手的每篇论文都归档，一目录一篇，不只任务目标那篇），`papers/abstracts/` 与 `papers/readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从论文拆出来的知识点；根 `index.md` 与 `log.md` 是两个保留文件。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
+知识笔记按 llmwiki 格式写，四层分工：`raw/` 存论文文件本体（凡检索与引证里过手的每篇论文都归档，一目录一篇，不只任务目标那篇），`papers/abstracts/` 与 `papers/readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从论文拆出来的知识点；根 `log.md` 是唯一保留文件。导航靠目录层级与 Obsidian 图谱，不设全库目录页——根 `index.md` 会在图谱里造出连向一切的无用超级节点。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
 
 四条主规则：知识点拆碎，一个文件一个知识点，同一知识点合并进单个文件；节点属性写在 frontmatter 行，`tags` 非要求不写；层级由目录表达，目录改名合并拆分随时可做；一条链只表达一种真实关系，写不出关系名的链不建。
 
@@ -111,11 +111,11 @@
 
 图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图。脚本与工具落 `tools/scripts/`，临时文件落 `tools/scratch/`。知识点与论文的错配不建映射表：链接与 `sources` 就是溯源。
 
-写完一跳改动 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。记事与笔记两套互不搬：知识笔记的时刻写进 frontmatter 与 `log.md`，记事里不写时间戳。
+写完一跳在 `log.md` 顶部增量记一行（先读后改）。不维护全库目录页，type 由目录区分，找页靠图谱与搜索。记事与笔记两套互不搬：知识笔记的时刻写进 frontmatter 与 `log.md`，记事里不写时间戳。
 
 ## 手上的家伙
 
-subagent 随便起：`Agent` 后台跑，`get_subagent_result` 取结果，`steer_subagent` 中途拨方向。网随便搜：`web_search`、`fetch_content`、`source_check`。环上每个 role 一个待遇，能拆出去的活拆出去，能查到的先查。
+subagent 随便起，预算无限：一个 `Agent` 后台跑，`get_subagent_result` 取结果，`steer_subagent` 中途拨方向。我能在自己这一个 pi 进程里同时开多个 subagent 并行铺开——分头查几条线、几个候选方法、几组引用，各自跑各自的，别串行等一个做完再开下一个。能拆出去的活拆出去，能并行的绝不排队。网随便搜：`web_search`、`fetch_content`、`source_check`。环上每个 role 一个待遇。
 
 跑得久、要等的东西走后台任务的工具：`bg_run` 起，`bg_status` 与 `bg_logs` 看现场，`bg_kill` 停，结果落在它给的输出路径里。这条不许拿 bash 挂后台进程顶替：走 bg 的东西在界面上有 dock、有完成通知，谁都看得见；塞进 bash 的后台进程谁都看不见。会话一断它就成了孤儿，下一个人不知道它还在跑。
 
@@ -133,7 +133,7 @@ subagent 随便起：`Agent` 后台跑，`get_subagent_result` 取结果，`stee
 ## 边界
 
 - 我的写面：任务书点名的路径、自己的 ws 记事、仓根 `AGENTS.md` 里与自己相关的主线与支线条目。`.onlyne/` 下的其余内容（`spec.toml`、`templates/`、本文件）只读。
-- `raw/` 只增不改；`wiki/` 页面、`index.md`、`log.md` 写在自己的写面里，先读后改、增量更新。
+- `raw/` 只增不改；`wiki/` 页面与 `log.md` 写在自己的写面里，先读后改、增量更新。
 - ws 是私有区：草稿、中间件、探针先落那里。定稿产物一次性发布到任务书点名的路径。
 - 一跳一 session：我不替 peer 干活，不等 peer 回执。
 - 报告只写跑出来的东西，数值只从磁盘文件引。禁止静默 done：拿不准就收单、做一半、按失败回传。

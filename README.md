@@ -2,9 +2,9 @@
 
 本工作区辅助学生与科研工作者读论文、找 idea：role 读论文，把结论写成笔记，笔记连成图，图上的缺口变成 idea。
 
-人只和 supervisor 对话。问题由 supervisor 直接答（读 `index.md` 找页、读页、按 `sources` 引数），答完值得留的落成页面并在 `log.md` 记一条 query；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
+人只和 supervisor 对话。问题由 supervisor 直接答（从 `papers/abstracts/`、`wiki/` 与 Obsidian 图谱找页、读页、按 `sources` 引数），答完值得留的落成页面并在 `log.md` 记一条 query；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
 
-仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`wiki/`、`index.md`、`log.md` 是笔记的三层加两个保留文件。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
+仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`papers/`、`people/`、`wiki/` 是笔记的四层，`log.md` 是唯一保留文件。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
 
 运行框架是最简形状的 onlyne 环：三层记事、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
 
@@ -18,9 +18,9 @@
 |---|---|---|
 |仓根 `AGENTS.md`|共享目标记录：记叙段是主线（目标与判据），条目段是支线 todo 与索引表|环上每个 role 都能改|
 |`.onlyne/AGENTS.md`|角色行为约定：一跳、任务书四段、记事纪律、工具面|模板定稿，运行期只读|
-|`.onlyne/ws/alexandria/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引表|只有该 role 自己写|
+|`.onlyne/ws/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引表|只有该 role 自己写|
 
-三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/alexandria/<role>/` 目录下。
+三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/<role>/` 目录下。
 
 产物不设统一目录与固定格式：每一跳要交出的文件由该跳的任务书点名路径。工作文件各写各的，或者就地改同一份，由任务性质定。
 
@@ -51,13 +51,14 @@
 
 ## 笔记格式（llmwiki）
 
-本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。三层加两个保留文件：
+本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。四层加一个保留文件：
 
 ```text
 raw/      不可变来源层：原文 PDF、抽取文本、剪藏，只增不改
+papers/   论文层：摘要、增强、精读，一页一论文
+people/   人物层：一个学者一个文件
 wiki/     role 维护的页面层：一页一文件，子目录按知识层级组织
-index.md  面向内容：全库页面目录，按 type 分组
-log.md    面向时间：追加式流水，最新条目在最上面
+log.md    唯一保留文件：面向时间的追加式流水
 ```
 
 - 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
@@ -65,7 +66,7 @@ log.md    面向时间：追加式流水，最新条目在最上面
 - 检索路径：agent 从 `papers/abstracts/` 找到论文，沿摘要页的 `paper:` 取论文本体，沿摘要页的链接取精读页。
 - 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
 - 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
-- 每跳写完更新 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。
+- 每跳写完在 `log.md` 顶部增量记一行（先读后改）；导航靠目录层级与图谱，不维护全库目录页（根 `index.md` 会在图谱里造出无用的超级节点）。
 - 摘要页与精读页共用论文 slug，frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
 - 图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图；绘图脚本落 `tools/scripts/`。
 - 知识点与论文的错配不建映射表：知识点由论文拆出，链接与 `sources` 就是溯源。
@@ -89,7 +90,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
 |master|汇总资料，写精读报告，需要时做 ppt|`papers/readings/<slug>.md`、`papers/decks/<slug>/`|
 |socrates|追根究底地和 master 对质；循环的放行者|对质清单、放行决定|
-|scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`index.md`、`log.md`|
+|scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`log.md`|
 
 模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。
 
@@ -104,7 +105,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 - 残差流：线性链上后面的人看见前面所有人的产出。每次 handoff 由交出方构造产物索引（本任务族到目前的所有路径，一跳一行），接收方先读残差流再动手。口径见 `.onlyne/AGENTS.md`。
 - scriber 与 master 每任务族单例，librarian、astrologer、socrates、scraper 可多播。单例是软约束，spec 不设并发闸。
 - 主线与支线：任务书是主线，必须交出；主线之外每个 role 自由做支线（多跑检索、补断链、建概念页/人物页、拆碎回写、做体检），支线越多库越强。硬约束只一条——主线那跳别停在手上没 handoff/complete。口径见 `.onlyne/AGENTS.md`。
-- 机器真相是 `.onlyne/spec.toml` 与 `.onlyne/templates/alexandria/<role>/`；值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
+- 机器真相是 `.onlyne/spec.toml` 与 `.onlyne/templates/<role>/`；值班词汇见 `.agents/skills/onlyne-supervisor/SKILL.md`，role 协同纪律见 `.agents/skills/onlyne-role/SKILL.md`。
 
 ## 前置
 
@@ -120,13 +121,13 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 - **pi 插件**：`pi install npm:pi-onlyne`。role 模板 `.pi/settings.json` 的 packages 已写 `npm:pi-onlyne`。
 - **会话后端**：`herdr`、`orca` 或 `zellij` 之一。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - 要跟 onlyne 仓 main 上尚未发布的 fix：`git clone https://github.com/dbydd/onlyne && cargo build --release`，五产物放进 PATH。macOS 上 cp 完必做 `codesign --force --sign -`，复制后的二进制签名失效，直接 exec 收 SIGKILL。
-- pi 的 model/provider：每个 role 的模型三元组在 `.onlyne/templates/alexandria/<role>/.pi/settings.json`，随部署改，改完 reload。
+- pi 的 model/provider：每个 role 的模型三元组在 `.onlyne/templates/<role>/.pi/settings.json`，随部署改，改完 reload。
 
 ## 通电与第一发
 
 本工作区流程固定：角色、边、目录、笔记格式都定死在仓里，没有装配步骤，没有模板态与活态之分。仓根 `AGENTS.md` 就是那份共享目标记录——记事本写主线，支线开成 todo，材料走索引表，要改就地改。
 
-唯一随部署变化的是 role 参数：每个 role 的 model/provider/thinking 三元组写在 `.onlyne/templates/alexandria/<role>/.pi/settings.json`，改完 `onlyne reload --server-root .` 生效，其余一概不动。
+唯一随部署变化的是 role 参数：每个 role 的 model/provider/thinking 三元组写在 `.onlyne/templates/<role>/.pi/settings.json`，改完 `onlyne reload --server-root .` 生效，其余一概不动。模板按 `templates/<role>/` 平铺放（`ClientEntry` 无 `template` 字段，`generate` 只按 `template_root/<role>` 找）。
 
 起环的四条引导：
 
@@ -140,13 +141,14 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 通电一次性，由人执行，脚本不起任何常驻进程。
 
 ```bash
-onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.key；cert_pin 打到 stdout
-# 把本仓的 .onlyne/spec.toml、.onlyne/templates/、.onlyne/AGENTS.md 放回 .onlyne/，回填 [server].cert_pin
-onlyne-server generate --root .                        # 渲染 .onlyne/ws/alexandria/<role>/，逐 role 铸 key，stdout 打 [[client]] 行
-# 把每行 key 粘回 spec.toml 对应的 [[client]]
-onlyne server start --root .                           # detached+pid；判活看 socket_present
-# supervisor：在仓根开一个 omp 会话，先读 .supervisor/AGENTS.md（.omp/AGENTS.md 会自动提示）
-onlyne client run --workspace .onlyne/ws/alexandria/<role>   # 每 role 一个 client，各占一个可见 tab
+onlyne-server init --root . --listen 127.0.0.1:7812    # 产 keys/server.key，cert_pin 打到 stdout；已放 spec.toml 则 init 拒绝覆盖，先挪开再放回并回填 cert_pin
+# 回填 [server].cert_pin；模板须按 templates/<role>/ 平铺
+# 逐 role 渲染并铸 key：bare generate 会为无模板的 _supervisor 报错，用 --role 限定 6 个 agent
+for r in scriber librarian astrologer master socrates scraper; do onlyne-server generate --root . --role "$r"; done
+#   每次 stdout 打 [[client]] 带真 pub key，粘回 spec.toml 对应 [[client]].key
+onlyne server start --root .                            # detached；判活用 onlyne status --server-root .（status 不认 --root）
+# supervisor 在仓根开 omp 会话读 .supervisor/AGENTS.md（.omp/AGENTS.md 自动提示）；运维观察起可见 tab：onlyne tui --server-root <abs>
+ONLYNE_BACKEND=orca onlyne client run --workspace .onlyne/ws/<role>   # 每 role 一个 client，pi 开在可见 orca tab
 ```
 
 渲染进 ws 的 `AGENTS.md` 是模板骨架，之后由该 role 手记维护。重跑 `generate` 不带 `--force` 会拒绝覆盖已有 ws（退 4）；带 `--force` 则把记事换回骨架。
@@ -199,9 +201,9 @@ people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/           脚本与工具（随树跟踪）
 tools/scratch/           临时文件（不入 git）
-index.md / log.md         两个保留文件：目录与流水
-role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
-onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/（记事骨架与模型三元组）
+log.md                      唯一保留文件：追加式流水
+role 工作区：.onlyne/ws/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
+onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/<role>/（记事骨架与模型三元组）
 ```
 
 角色细则随流程演进：改 prose 与职责时同步改 `.onlyne/spec.toml`、`.onlyne/AGENTS.md` 角色表与本文件工作流节，三处一处不落。

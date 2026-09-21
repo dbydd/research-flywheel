@@ -1,6 +1,6 @@
 ---
 name: wiki-format
-description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages, the index, the log — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, naming rules, and the reserved index/log files.
+description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages, the log — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, naming rules, and the reserved log file.
 ---
 
 # wiki-format —— 本仓知识笔记的基本格式
@@ -21,15 +21,15 @@ people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/   脚本与工具，随树跟踪
 tools/scratch/   临时文件，不入 git
-根 index.md / log.md    两个保留文件：目录与流水
+根 log.md               唯一保留文件：追加式流水
 ```
 
 - `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进引用它的页面里。
 - 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文。论文目录名、摘要页、精读页共用同一个 slug，口径见命名节。
 - 论文不进 `wiki/`。论文层的摘要页与精读页记这一篇论文本身；从论文里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
 - 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
-- `index.md` 面向内容：全库页面的目录，按 type 分组。
-- `log.md` 面向时间：追加式流水，可 grep。
+- 导航不设全库目录页：type 由所在目录区分（`papers/abstracts`、`papers/readings`、`people/`、`wiki/…` 各是一类），找页靠 Obsidian 图谱、反链与搜索，`wiki/overview.md` 是人工维护的活综述。根目录不放 `index.md`，它在图谱里就是个连向一切的无用超级节点。
+- `log.md` 面向时间：追加式流水，可 grep，是唯一保留文件。
 - 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`tools/`）不属这四层，本格式不管它们。工具区只放脚本、工具与临时文件，不写知识笔记。
 - 任务书是瞬态交接面，不落盘不存档；仓里没有任务书目录。过程与结论落在各 role 自己的 ws 记事与 `log.md`。
 
@@ -107,7 +107,7 @@ type 取值：
 ## 本体与去向
 
 - 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
-- 精读：[[<slug>|<标题>精读]]（未建时写「待建」，并去 `index.md` 记待建行）
+- 精读：[[<slug>|<标题>精读]]（还没建就直接留这个未解析链接，它就是待建标记）
 ```
 
 ### 精读页（`papers/readings/<slug>.md`）
@@ -169,8 +169,8 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 
 - 一条链只表达一种关系：依赖、对比、反驳、同源、同一机制。写不出关系名的链不建。
 - 链写在正文对应论断旁边，不堆在文末「相关阅读」清单里。
-- 同域相邻的知识点沿真实关系互链。指向 `index.md` 与 `overview` 的链接不算关联。
-- 链接指到真实存在的页面。要建还没建的页面，先在 `index.md` 的待建行记一笔，lint 时补齐。
+- 同域相邻的知识点沿真实关系互链。指向 `overview` 的链接不算关联。
+- 链接指到真实存在的页面。要建还没建的页面，直接写一个未解析的 `[[slug]]` 占位：Obsidian 把它显示成待建页，lint 的「断链」条目就是待建清单，补齐后自然消掉。
 - 同一对象全程一个 slug；改名时改动点一次改齐。
 - 正文断言尽量都能对回 `sources` 里某一份来源；`[[slug]]` 是关联，`sources` 键是账。
 
@@ -183,16 +183,6 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 ```
 
 本页 `sources` 补上新来源。删旧结论要留痕：写清哪份来源推翻了它。断言被取代时加 `> [!warning] 已被 [[slug]] 取代`。
-
-## index.md
-
-分组固定顺序：Abstracts、Readings、People、Concepts、Entities、Comparisons、Ideas、Overviews。组内按标题字母序。条目形状：
-
-```md
-- [[slug|标题]]：一句话说明
-```
-
-每跳写完把新增与改动的页面条目增量更新进对应分组。要建还没建的页面也在这里记一行，标题写清打算写什么。
 
 ## log.md
 

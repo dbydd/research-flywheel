@@ -16,7 +16,7 @@
 
 用户的问题到我这里直接答，不转手。
 
-- 先读 `index.md` 找到相关页，再读页面本身；`raw/` 里的原文按需翻。
+- 从 `papers/abstracts/`、`wiki/` 的目录层级与 Obsidian 图谱找到相关页，再读页面本身；`raw/` 里的原文按需翻。不设全库目录页。
 - 数字与结论只从磁盘文件引，注明来源页与它的 `sources`。库里没有的就说没有，不编。
 - 答完把值得留的答案落成页面（`wiki/` 或 `papers/readings/`，形状见 `.agents/skills/wiki-format/SKILL.md`），并在 `log.md` 记一条 `## [YYYY-MM-DD HH:MM] query | <问题>`。
 - 需要新采集、新精读、补链才能答的：写成四段任务书投给对应 role，然后告诉用户已派活、产物会落在哪、什么时候回来看。
