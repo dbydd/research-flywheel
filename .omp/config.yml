@@ -1,16 +1,16 @@
 # 仓库项目级 omp 设置：只对本 worktree 生效，不改全局 ~/.omp/agent/config.yml。
 # 改后需 `omp` 重载或新 session 生效（memory.backend 在会话启动时解析）。
 #
-# supervisor(omp) 接进 hindsight：
-#   - 本地层（运维信息）= per-project-tagged 把 retain 打上 project:theme-alexandria 标签
-#   - 全局层（问答额外信息）= 同一物理 bank pi-global 里那层无标签的全局记忆
-#   recall 时两层合并（见 omp settings schema 对 per-project-tagged 的定义）。
+# supervisor(omp) 接进 hindsight，两层都局限在本仓：
+#   - 全局层（问答额外信息）= 与 role 共用的 pi-project-alexandria-shared（那层无标签的研究记忆）
+#   - 个人/运维层（本地）= per-project-tagged 自动新建的 project:theme-alexandria 标签分区（我自己的新库，repo 内隔离）
+#   recall 时两层合并（见 omp settings schema 对 per-project-tagged 的定义）。不用 pi-global。
 memory:
   backend: hindsight
 
 hindsight:
   apiUrl: http://localhost:8888   # OrbStack 上的 hindsight:local 容器；不是全局默认那个端口
-  bankId: pi-global               # 全局问答层所在的物理 bank
+  bankId: pi-project-alexandria-shared   # 与 6 个 role 共用的物理 bank：全局问答层；个人运维层是它下面自动建的 project:theme-alexandria 标签
   scoping: per-project-tagged     # 共享 bank + 项目标签：全局与本地运维在 recall 时合并
   autoRecall: true
   autoRetain: true
