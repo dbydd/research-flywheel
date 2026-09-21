@@ -1,6 +1,6 @@
 ---
 name: wiki-format
-description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages, the log — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, naming rules, and the reserved log file.
+description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, and naming rules. There are no record files: the flow lives in the onlyne ledger, page frontmatter, and each role's own workspace notes.
 ---
 
 # wiki-format —— 本仓知识笔记的基本格式
@@ -21,7 +21,7 @@ people/   人物层：一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/   脚本与工具，随树跟踪
 tools/scratch/   临时文件，不入 git
-根 log.md               唯一保留文件：追加式流水
+（仓根无记录文件：流水归机器与 frontmatter）
 ```
 
 - `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进引用它的页面里。
@@ -29,9 +29,9 @@ tools/scratch/   临时文件，不入 git
 - 论文不进 `wiki/`。论文层的摘要页与精读页记这一篇论文本身；从论文里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
 - 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
 - 导航不设全库目录页：type 由所在目录区分（`papers/abstracts`、`papers/readings`、`people/`、`wiki/…` 各是一类），找页靠 Obsidian 图谱、反链与搜索，`wiki/overview.md` 是人工维护的活综述。根目录不放 `index.md`，它在图谱里就是个连向一切的无用超级节点。
-- `log.md` 面向时间：追加式流水，可 grep，是唯一保留文件。
+- 仓根不放任何记录文件。流水归三处：机器账在 onlyne ledger（每跳任务书、回执、残差流逐帧可回放），时刻在页面自身（frontmatter `created`/`updated`），过程在各 role 的 ws 记事。中央追加式账本在几十部文献的规模下必然腐成噪音堆，还会用陈旧流水误导后来者——不留。
 - 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`tools/`）不属这四层，本格式不管它们。工具区只放脚本、工具与临时文件，不写知识笔记。
-- 任务书是瞬态交接面，不落盘不存档；仓里没有任务书目录。过程与结论落在各 role 自己的 ws 记事与 `log.md`。
+- 任务书是瞬态交接面，不落盘不存档；仓里没有任务书目录。过程与结论落在各 role 自己的 ws 记事，机器侧流水在 onlyne ledger。
 
 ## 规则一：拆碎
 
@@ -42,7 +42,7 @@ tools/scratch/   临时文件，不入 git
 - 一个文件承载两个及以上可独立引用的判断时拆开，拆出的各页各写一个知识点。
 - 同一知识点散在多处时合并进单个文件。名字不同内容同一，是同一知识点。
 - 一个主题长大时开成子目录：`wiki/<域>/<主题>/<点>.md`，该主题的知识点归到那一层。层级由目录表达，拆出来的页永远有落点。
-- 拆分、合并、改目录是常规结构动作，随时可做，做完在 `log.md` 记一条 structure 行。
+- 拆分、合并、改目录是常规结构动作，随时可做；落点写进相关页面的 frontmatter 与各自 ws 记事，改动痕迹由 git 历史承载。
 
 ## 规则二：属性写在 frontmatter 行
 
@@ -116,6 +116,8 @@ type 取值：
 
 精读报告必须自足：没读过任何相关文献的读者，只看这一页要能懂个七七八八。概念首次出现就地解释，承重数字写进正文，外部链接只做溯源锚点、承载考证不承载理解——摘掉全部链接，正文仍是一篇连贯完整的文章。把理解外包给「详见 [[…]]」或外链，对质位会打回。
 
+引用纪律：报告是连贯的文章，读者从头到尾不需要打开第二个文件。需要原文为证的段落，整段嵌进报告或归纳转述一次；§ 节号、Table/Figure、公式号、PDF 页码只作稀疏的溯源记号挂在已经自明的论断后（一节内至多一两个），供事后核对，不承载任何理解环节。抽取文本的行号是机器对账坐标，禁入正文。满页的「见行 xxx」「详见 §」是未完成品的形状，对质位打回。
+
 ```md
 # <标题> 精读
 
@@ -126,7 +128,7 @@ type 取值：
 
 ## 关键证据
 
-<每条带 Table/Figure/公式编号锚点>
+<每条证据自明：数字改写成人话陈述，原文为证的整段嵌入或归纳转述；句尾至多挂一个稀疏溯源记号（§/Table/Figure/页码），不写「见行 xxx」「详见」>
 
 ## 局限与缺口
 
@@ -143,7 +145,7 @@ type 取值：
 
 ### 增强信息页（`papers/context/<paper>-context.md`）
 
-librarian 的产物，回答五个问题：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。页面只做这一篇论文的脉络，不写精读判断。
+librarian 的产物，回答五个问题：这篇论文做了什么、可能是在什么基础上做的、相关引用文献引用在哪里、哪个组做的、这个组有什么特点。每条结论带来源（URL 与访问日期），猜想的标明是猜想。落点写 §/Table/Figure/PDF 页码这类人可定位的位置；抽取文本行号只进自己的 ws 对账，不进页面正文。页面只做这一篇论文的脉络，不写精读判断。
 
 ## 图与媒体
 
@@ -175,6 +177,7 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 - 链接指到真实存在的页面。要建还没建的页面，直接写一个未解析的 `[[slug]]` 占位：Obsidian 把它显示成待建页，lint 的「断链」条目就是待建清单，补齐后自然消掉。
 - 同一对象全程一个 slug；改名时改动点一次改齐。
 - 正文断言尽量都能对回 `sources` 里某一份来源；`[[slug]]` 是关联，`sources` 键是账。
+- 锚点最少化：位置记号（§节号、Table/Figure、公式号、PDF 页码）只在已经自明的论断后稀疏出现，作溯源用；读者顺着正文就能读完，一次都不用跳。抽取文本行号永不入正文；引原文就整段嵌入或归纳转述。
 
 ## 矛盾与过期
 
@@ -185,19 +188,6 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 ```
 
 本页 `sources` 补上新来源。删旧结论要留痕：写清哪份来源推翻了它。断言被取代时加 `> [!warning] 已被 [[slug]] 取代`。
-
-## log.md
-
-追加式，最新的写最上面。条目形状：
-
-```md
-## [YYYY-MM-DD HH:MM] <op> | <标题>
-- role: <role>
-- created pages: <slug>, <slug>
-- updated pages: <slug>
-```
-
-`<op>` 词表：`ingest`（进一份来源）、`query`（一次问答）、`lint`（体检）、`idea`（产出 idea 页）。拆分、合并、移动目录时加一行 `- structure: split <slug> -> <a>, <b>` 或 `- structure: merge <a>, <b> -> <slug>`。前缀固定，`grep "^## \[" log.md` 倒着翻流水。
 
 ## 命名
 
@@ -218,7 +208,7 @@ librarian 的产物，回答五个问题：这篇论文做了什么、可能是�
 
 ## 记事的分界
 
-本格式管知识笔记。role 记事（三层 `AGENTS.md`）另有一套纪律：不写时间戳，记叙段加条目段，手记。两套互不搬：知识笔记的时刻写在 frontmatter 与 `log.md` 里，记事里只写过程与指针。
+本格式管知识笔记。role 记事（三层 `AGENTS.md`）另有一套纪律：不写时间戳，记叙段加条目段，手记。两套互不搬：知识笔记的时刻只写在 frontmatter，记事里只写过程与指针。
 
 ## lint 六条
 

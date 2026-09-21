@@ -2,7 +2,7 @@
 
 本仓是一个 Obsidian vault，同时是一个 llmwiki bundle，同时是一条 deep research 工作流的产物库。别的集群要把它当知识库用，读这一份就够：下面说清每层装什么、谁能写、从哪进、怎么引。
 
-## 四层加一个保留文件
+## 四层，零记录文件
 
 ```text
 raw/      来源文件层，只增不改
@@ -16,7 +16,7 @@ papers/   论文层，一页一论文；页面在论文主 slug 上挂种类后�
   decks/<slug>/                          演示产物（需要时）
 people/   人物层，一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织
-log.md    唯一保留文件：追加式流水，最新在最上面
+（仓根无记录文件：流水归 onlyne ledger 与页面 frontmatter，过程在各 role 的 ws 记事）
 ```
 
 一篇论文的本体目录名＝主 slug；论文层页面在主 slug 挂后缀：`papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`、`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`。精读报告的年月、学科、刊名沿用该论文在 `raw/` 下的同名层级。页面 frontmatter 带 `paper:` 指向论文本体目录，全库 slug 唯一。
@@ -32,7 +32,6 @@ log.md    唯一保留文件：追加式流水，最新在最上面
 | `papers/decks/` | 演示产物 | master | 只读 |
 | `people/` | 学者画像 | astrologer | 只读 |
 | `wiki/` | 知识点页面 | scraper、supervisor（答问落页） | 可按规范写 |
-| `log.md` | 追加式流水 | 每个写完产物的 role | 只读 |
 
 ## 页面类型
 
@@ -45,13 +44,13 @@ log.md    唯一保留文件：追加式流水，最新在最上面
 - 找一篇论文：`papers/abstracts/` 里的一句话判断 → 沿 `paper:` 取本体文件 → 沿摘要页的链接取精读页。
 - 找知识点：`wiki/` 子目录按知识层级铺开就是分类，配合 Obsidian 图谱、反链与搜索定位；`wiki/overview.md` 是人工维护的活综述入口。不设全库目录页（根 `index.md` 会在图谱里造出无用超级节点）。
 - 找人：`people/<slug>.md`，`papers` 键列出其代表论文的摘要页。
-- 看流水：`grep "^## \[" log.md`，最新在最上面，每条带 role、增删页面、快照路径。
-- 看一次研究的链路：残差流随 handoff 传递，不单独存档；`log.md` 逐跳有行，各 role 的 ws 记事有过程，两处合起来能重建。
+- 看流水：仓内无流水文件。机器账走 `onlyne ledger/history --server-root .`（每跳任务书、回执、残差流逐帧），时刻看各页 frontmatter，过程看各 role 的 ws 记事。
+- 看一次研究的链路：`onlyne history` 按 task 血缘回放（parent_task 与 hop），各 role 的 ws 记事补过程细节。
 
 ## 外部集群接入口径
 
-- **读**：`raw/`、`papers/`、`people/`、`wiki/`、`log.md` 全部可读，没有访问控制。
-- **写**：默认零。要落页就按 `.agents/skills/wiki-format/SKILL.md` 的规范建：一个知识点一个文件，slug 全库唯一，层级用目录表达，属性只写 frontmatter，`tags` 非要求不写。改 `log.md` 前先读后改、增量更新。
+- **读**：`raw/`、`papers/`、`people/`、`wiki/` 全部可读，没有访问控制。
+- **写**：默认零。要落页就按 `.agents/skills/wiki-format/SKILL.md` 的规范建：一个知识点一个文件，slug 全库唯一，层级用目录表达，属性只写 frontmatter，`tags` 非要求不写。时刻写进被改页面的 `updated`，别处不放流水。
 - **引用**：正文用 `[[slug]]` 或 `[[slug|显示名]]`，指节写 `[[slug#小节]]`；来源写进 frontmatter 的 `sources`，用相对仓根的文件路径。图与媒体只进论文目录的 `assets/`，用 `![[…]]` 按相对仓根路径引用，不复制。
 - **不要**：建枢纽页（合作网络表一类的总表）、按话题乱建链、把论文页塞进 `wiki/`、给知识点建「属于哪篇论文」的映射表、往 `raw/` 改写已有文件。知识点由论文拆出，链接与 `sources` 就是溯源。
 - **取数**：要新拉论文或人物，渠道目录、限额与 macOS 代理前缀见 `.agents/skills/paper-sources/SKILL.md`；人物采集流程见 `.agents/skills/scientist-profiles/SKILL.md`。
@@ -61,7 +60,6 @@ log.md    唯一保留文件：追加式流水，最新在最上面
 ```text
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
 STRUCTURE.md               本文件：目录结构与外部接入口径
-log.md                     追加式流水，最新在最上面
 raw/                       来源文件层（论文资料、零散来源）
 papers/abstracts/          摘要页
 papers/context/            论文增强信息页

@@ -80,7 +80,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "master"
 key = "ed25519/AyTemCwoxlyrcH+FGZTf0Hth0qR0qxjQUa18Ll6NlDo="
-prose = """我是 master，工作流的汇总位。我先读残差流列出的每一份产物，再汇总成 `papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md` 精读报告（年月/学科/刊名与该论文在 raw 下同构）；任务书要求时做 ppt，演示产物落 `papers/decks/<slug>/`。引用论文原图用 `![[…assets/<slug>-fig<N>…]]` 嵌进页面；报告里值得自己画一张图（对数轴、对比图一类）时也可以画，脚本落 `tools/scripts/`，不强制。报告按 `wiki-format` 的精读页形状写，论文事实与「我的分析」分区。报告必须自足：概念首次出现就地解释，承重数字写进正文，外链只做溯源锚点——对质位只读报告本体，假装读者没读过任何相关文献，写「详见某链接」代替解释会被打回。写完 handoff socrates 对质；socrates 的意见到我这里时逐条修订，改完再交回去。收束的判定权在 socrates，我等它的放行，不自行 scraper。缺料自己补，不回环找 scriber。我写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 master，工作流的汇总位。我先读残差流列出的每一份产物，再汇总成 `papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md` 精读报告（年月/学科/刊名与该论文在 raw 下同构）；任务书要求时做 ppt，演示产物落 `papers/decks/<slug>/`。引用论文原图用 `![[…assets/<slug>-fig<N>…]]` 嵌进页面；报告里值得自己画一张图（对数轴、对比图一类）时也可以画，脚本落 `tools/scripts/`，不强制。报告按 `wiki-format` 的精读页形状写，论文事实与「我的分析」分区。报告必须自足且连贯：概念首次出现就地解释，承重数字写进正文，需要原文为证的段落整段嵌入或归纳转述；§/Table/Figure/页码只作稀疏的溯源记号，不承载理解，抽取文本行号不落正文——读者从头到尾不必打开第二个文件。对质位只读报告本体，写「详见某链接」「见行 xxx」代替解释会被打回。写完 handoff socrates 对质；socrates 的意见到我这里时逐条修订，改完再交回去。收束的判定权在 socrates，我等它的放行，不自行 scraper。缺料自己补，不回环找 scriber。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
 allowed_senders = ["librarian", "astrologer", "socrates"]
@@ -100,7 +100,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "scraper"
 key = "ed25519/JNsZTXtXe4snI9WSEPF1wsxlhUMVBcykSs0zYUpKvhM="
-prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完在 `log.md` 顶部增量记一行，然后只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完做收尾清理：把仓根 `AGENTS.md` 支线区里本任务族的 todo 条目逐条删掉——todo 无完成标记，办完即删，产物落点交索引表行承载。清完只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
 allowed_senders = ["socrates"]                   # 放行权在 socrates；master 不回 scraper

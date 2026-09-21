@@ -2,9 +2,9 @@
 
 本工作区辅助学生与科研工作者读论文、找 idea：role 读论文，把结论写成笔记，笔记连成图，图上的缺口变成 idea。
 
-人只和 supervisor 对话。问题由 supervisor 直接答（从 `papers/abstracts/`、`wiki/` 与 Obsidian 图谱找页、读页、按 `sources` 引数），答完值得留的落成页面并在 `log.md` 记一条 query；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
+人只和 supervisor 对话。问题由 supervisor 直接答（从 `papers/abstracts/`、`wiki/` 与 Obsidian 图谱找页、读页、按 `sources` 引数），答完值得留的直接落成页面；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
 
-仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`papers/`、`people/`、`wiki/` 是笔记的四层，`log.md` 是唯一保留文件。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
+仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`papers/`、`people/`、`wiki/` 是笔记的四层。仓根不放任何记录文件——流水归 onlyne ledger 与页面 frontmatter，过程归各 role 的 ws 记事。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
 
 运行框架是最简形状的 onlyne 环：三层记事、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
 
@@ -26,7 +26,7 @@
 
 ## 记事纪律
 
-正本在 `.onlyne/AGENTS.md`。要点：一份 AGENTS.md 分记叙段与条目段，分开摆；索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，第一人称自言自语，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳。
+正本在 `.onlyne/AGENTS.md`。要点：一份 AGENTS.md 分记叙段与条目段，分开摆；索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，第一人称自言自语，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳；todo 即删——列表只登进行中的事，不打完成标记，办完当场删条；任务族收敛时 scraper 兜底清仓根本族条目，各 role 的 ws 手帐同一规矩。
 
 ## 一跳的生命周期
 
@@ -51,14 +51,14 @@
 
 ## 笔记格式（llmwiki）
 
-本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。四层加一个保留文件：
+本仓的 md 笔记按 llmwiki 格式写。正本在 `.agents/skills/wiki-format/SKILL.md`；格式源是 Karpathy 的 LLM Wiki pattern 与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。四层，零记录文件：
 
 ```text
 raw/      不可变来源层：原文 PDF、抽取文本、剪藏，只增不改
 papers/   论文层：摘要、增强、精读，一页一论文
 people/   人物层：一个学者一个文件
 wiki/     role 维护的页面层：一页一文件，子目录按知识层级组织
-log.md    唯一保留文件：面向时间的追加式流水
+（仓根无记录文件：流水归 ledger 与 frontmatter）
 ```
 
 - 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
@@ -66,11 +66,12 @@ log.md    唯一保留文件：面向时间的追加式流水
 - 检索路径：agent 从 `papers/abstracts/` 找到论文，沿摘要页的 `paper:` 取论文本体，沿摘要页的链接取精读页。
 - 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
 - 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
-- 每跳写完在 `log.md` 顶部增量记一行（先读后改）；导航靠目录层级与图谱，不维护全库目录页（根 `index.md` 会在图谱里造出无用的超级节点）。
+- 每跳写完不记流水：任务书与回执逐帧在 ledger，时刻在页面 frontmatter；导航靠目录层级与图谱，不维护全库目录页（根 `index.md` 会在图谱里造出无用的超级节点）。
 - 论文层页面在论文主 slug 上挂种类后缀：`<paper>-abstract.md`、`<paper>-context.md` 平铺，`<paper>-reading.md` 是唯一例外——路径与 `raw/` 同构（`<YYYY-MM>/<学科>/<刊名>/`），人最终读的是精读报告，不能摊成一堆噪音。frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
 - 图与媒体只进论文目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图；绘图脚本落 `tools/scripts/`。
+- 引用：报告是连贯的文章，读者从头到尾不必打开第二个文件——原文为证的段落整段嵌入或归纳转述，§/Table/Figure/页码只作稀疏溯源记号，抽取文本行号不落正文。
 - 知识点与论文的错配不建映射表：知识点由论文拆出，链接与 `sources` 就是溯源。
-- 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻写在 frontmatter 与 `log.md` 里。
+- 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻只写在 frontmatter。
 
 Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter 进属性面板，wikilink 进图谱与反链，callout 直接渲染，`raw/` 与 `wiki/` 是普通文件夹。机器件全在点目录里，不进图谱；`.obsidian/` 的机器态（工作区布局、缓存、插件二进制）留本地不入 git。
 
@@ -90,7 +91,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
 |master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`|
 |socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
-|scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`log.md`|
+|scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `AGENTS.md` 的本族 todo|`wiki/` 页面|
 
 模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。
 
@@ -171,7 +172,7 @@ onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> 
 onlyne tui
 ```
 
-任务书长的时候先落到 `tools/scratch/`，用 `--file` 指过去，用完即删。仓里没有任务书存档目录：过程与结论写在各 role 自己的 ws 记事里，`log.md` 只记动作不记任务书全文。
+任务书长的时候先落到 `tools/scratch/`，用 `--file` 指过去，用完即删。仓里没有任务书存档目录，也没有流水文件：过程与结论写在各 role 自己的 ws 记事里，机器账在 ledger。
 
 第一发落地后环即成形：每跳自己定产物路径，下一跳任务书交给下一跳的 role。
 
@@ -201,7 +202,7 @@ people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/           脚本与工具（随树跟踪）
 tools/scratch/           临时文件（不入 git）
-log.md                      唯一保留文件：追加式流水
+（仓根无记录文件：流水归 ledger 与 frontmatter）
 role 工作区：.onlyne/ws/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/<role>/（记事骨架与模型三元组）
 ```
