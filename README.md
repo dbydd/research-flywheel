@@ -85,11 +85,11 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 |role|职责|产物|
 |---|---|---|
-|scriber ★|入口。原文整理进 `raw/`，写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<slug>.md`、`papers/context/<slug>.md`|
+|scriber ★|入口。原文整理进 `raw/`（文本与图都抽，图进 `assets/`），写摘要页；大批量快扫相关文献补前提背景|`papers/abstracts/<slug>.md`、`papers/context/<slug>.md`|
 |librarian|资料搜集，出论文增强信息|`papers/context/<slug>.md`|
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
-|master|汇总资料，写精读报告，需要时做 ppt|`papers/readings/<slug>.md`、`papers/decks/<slug>/`|
-|socrates|追根究底地和 master 对质；循环的放行者|对质清单、放行决定|
+|master|汇总资料，写精读报告，需要时做 ppt；嵌论文原图，必要时自绘图|`papers/readings/<slug>.md`、`papers/decks/<slug>/`|
+|socrates|追根究底地和 master 对质；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`|`wiki/` 页面、`log.md`|
 
 模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。
