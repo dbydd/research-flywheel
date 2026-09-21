@@ -36,7 +36,7 @@
 4. 下一跳写四段任务书，handoff 交给下一跳的 role（`parent_task` 与 hop+1 血缘自动落账）。
 5. `onlyne_complete`：text 一行放结果与产物路径。
 
-收束判据满足，或任务书写明一跳即止：只 complete 不 handoff，环停在那一步，等下一次注入。
+常态是跑完整条线：一跳干完就 handoff 下一跳，直到 scraper 收束。中途停只有一种合法理由：任务书显式写明「一跳即止」——那时只 complete 不 handoff。收束判定权在 socrates，别的 role 不自断去路。
 
 ## 任务书四段
 
@@ -93,12 +93,12 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `AGENTS.md` 的本族 todo|`wiki/` 页面|
 
-模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。
+模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。socrates 是故意的反配：supercheap/max，大智若愚——读者立场越无知，嘴越便宜，思考给得越满。
 
 |role|model|thinking|role|model|thinking|
 |---|---|---|---|---|---|
 |scriber|supercheap|low|master|generic-researcher-powerful|max|
-|librarian|generic-researcher-weak|high|socrates|generic-researcher-powerful|max|
+|librarian|generic-researcher-weak|high|socrates|supercheap|max|
 |astrologer|supercheap|low|scraper|supercheap|medium|
 
 - 入口是 scriber，第一发由 supervisor 投递。astrologer 是可选路径，任务书点名才走。

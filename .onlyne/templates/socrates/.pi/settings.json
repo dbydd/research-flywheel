@@ -4,6 +4,6 @@
     "npm:@luxusai/pi-hindsight"
   ],
   "defaultProvider": "axonhub",
-  "defaultModel": "generic-researcher-powerful",
+  "defaultModel": "supercheap",
   "defaultThinkingLevel": "max"
 }
