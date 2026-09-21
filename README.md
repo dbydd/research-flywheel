@@ -153,11 +153,12 @@ onlyne tui
 AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、记事纪律、工具面
 .agents/AGENTS.md          共享目标的正本源，落分支的复制起点
-.agents/skills/            onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）、wiki-format（知识笔记格式正本）
+.agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 第一发任务书：payload/；知识笔记的落点由任务书点名，不设统一目录
 raw/                     不可变来源层（原文、抽取文本、剪藏）
 wiki/                    页面层（一页一文件，type 六种）
+wiki/people/             人物画像层（协议见 scientist-profiles）
 index.md / log.md         两个保留文件：目录与流水
 role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 onlyne 侧（随拓扑落地）：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/
