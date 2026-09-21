@@ -160,6 +160,10 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 
 daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可见 tab，不进 agent 后台。`onlyne client run` 从目标 worktree 自己的 tab 起。
 
+### 搬家
+
+仓可以整体 `mv` 到任何位置，机器层路径无关：spec、模板、文档、知识页一律用仓根相对路径（写进仓的绝对路径是缺陷，见 `.onlyne/AGENTS.md` 路径条款）。搬家步骤：`onlyne server stop --server-root .` → 关各 role client 的可见 tab → `mv` → 在新路径按「通电」重起 server 与 client。`cert_pin` 与 role key 绑密钥对不绑路径，零改动。运行时的一次性现场不用管：`.onlyne/run/` 的 socket 文件、ws 缓存里的 pane 记录、`.pi/sessions/` 与 `state.db` 里带旧路径的历史行，重启后各自自愈或留作旧账，都不是真身。
+
 ### 第一发
 
 任务书不存档，交接是瞬态。第一发由人当场写进命令（四段口径见 `.onlyne/AGENTS.md`）：
