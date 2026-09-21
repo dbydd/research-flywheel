@@ -2,6 +2,8 @@
 
 本工作区辅助学生与科研工作者读论文、找 idea：role 读论文，把结论写成笔记，笔记连成图，图上的缺口变成 idea。
 
+人只和 supervisor 对话。问题由 supervisor 直接答（读 `index.md` 找页、读页、按 `sources` 引数），答完值得留的落成页面并在 `log.md` 记一条 query；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
+
 仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`wiki/`、`index.md`、`log.md` 是笔记的三层加两个保留文件。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
 
 运行框架是最简形状的 onlyne 环：三层记事、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
@@ -99,7 +101,7 @@ Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter
 
 起环的四条引导：
 
-- supervisor 会话开在仓根，岗位说明在 `.supervisor/AGENTS.md`；omp 开这个会话时 `.omp/APPEND_SYSTEM.md` 会自动带上这句话。
+- supervisor 会话开在仓根，岗位说明在 `.supervisor/AGENTS.md`；omp 开这个会话时 `.omp/AGENTS.md` 自动带上这句话。
 - 起环前先报前置缺什么（onlyne 五件套、pi 插件、会话后端），缺的东西由人装。
 - 常驻进程（server、client、tui）一律起在可见 tab，不进 agent 后台。
 - 主线没写完不起环：让环空转没有意义。
@@ -114,7 +116,7 @@ onlyne-server init --root . --listen 127.0.0.1:7812   # 产 .onlyne/keys/server.
 onlyne-server generate --root .                        # 渲染 .onlyne/ws/alexandria/<role>/，逐 role 铸 key，stdout 打 [[client]] 行
 # 把每行 key 粘回 spec.toml 对应的 [[client]]
 onlyne server start --root .                           # detached+pid；判活看 socket_present
-# supervisor：在仓根开一个 omp 会话，先读 .supervisor/AGENTS.md（.omp/APPEND_SYSTEM.md 会自动提示）
+# supervisor：在仓根开一个 omp 会话，先读 .supervisor/AGENTS.md（.omp/AGENTS.md 会自动提示）
 onlyne client run --workspace .onlyne/ws/alexandria/<role>   # 每 role 一个 client，各占一个可见 tab
 ```
 
@@ -155,7 +157,7 @@ AGENTS.md                  共享目标记录：主线（目标与判据）、�
 .onlyne/AGENTS.md          角色行为约定：一跳、任务书四段、记事纪律、工具面
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
-.omp/APPEND_SYSTEM.md      omp supervisor 会话的附加系统提示（指向值班正本）
+.omp/AGENTS.md             omp 会话的项目上下文：supervisor 指针 + 引入仓根 AGENTS.md
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
   <论文名>/assets/       该论文的图与媒体：抽取的图、自绘的图
