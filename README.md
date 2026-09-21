@@ -59,9 +59,12 @@ log.md    面向时间：追加式流水，最新条目在最上面
 ```
 
 - 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
+- 分层：`raw/` 存论文文件本体，`papers/abstracts/` 与 `papers/readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从论文拆出来的知识点。四层不互相搬内容，层间只放链接。
+- 检索路径：agent 从 `papers/abstracts/` 找到论文，沿摘要页的 `paper:` 取论文本体，沿摘要页的链接取精读页。
 - 属性：节点属性只写 frontmatter 行（`title`/`slug`/`type`/`created`/`updated`/`sources`，`idea` 页另有 `status`/`origin`/`test`）；`tags` 非要求不写。
 - 关联：一条链只表达一种真实关系（依赖、对比、反驳、同源、同一机制），写不出关系名的链不建；同域相邻知识点沿真实关系互链；来源冲突加 `> [!contradiction]`，两说并存。
 - 每跳写完更新 `index.md` 对应分组与 `log.md` 顶部，两条都是先读后改、增量更新。
+- 摘要页与精读页共用论文 slug，frontmatter 带 `paper:` 指向论文本体目录；精读页里的概念另建 `wiki/` 页面。
 - 记事与笔记互不搬：记事不写时间戳，知识笔记的时刻写在 frontmatter 与 `log.md` 里。
 
 Obsidian 直接打开仓根，这套东西就是它的可视图层：frontmatter 进属性面板，wikilink 进图谱与反链，callout 直接渲染，`raw/` 与 `wiki/` 是普通文件夹。机器件全在点目录里，不进图谱；`.obsidian/` 的机器态（工作区布局、缓存、插件二进制）留本地不入 git。
@@ -157,8 +160,9 @@ AGENTS.md                  共享目标记录：主线（目标与判据）、�
 .supervisor/AGENTS.md      supervisor 值班岗位说明（任意 harness 开在仓根，先读它）
 第一发任务书：payload/；知识笔记的落点由任务书点名，不设统一目录
 raw/                     不可变来源层：论文按 <年月>/<学科>/<刊名>/<论文名>/ 一目录一论文；零散来源平铺
-wiki/                    页面层（一页一文件，type 六种）
-wiki/people/             人物画像层（协议见 scientist-profiles）
+papers/   论文层：摘要与精读各占一个目录（papers/abstracts/、papers/readings/），一页一论文
+people/   人物层：一个学者一个文件（协议见 scientist-profiles）
+wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 index.md / log.md         两个保留文件：目录与流水
 role 工作区：.onlyne/ws/alexandria/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
 onlyne 侧（随拓扑落地）：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/alexandria/<role>/

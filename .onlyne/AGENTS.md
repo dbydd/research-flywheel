@@ -64,7 +64,7 @@
 
 ## 笔记格式
 
-知识笔记按 llmwiki 格式写：`raw/` 是不可变来源层，`wiki/` 是页面层，根 `index.md` 与 `log.md` 是两个保留文件。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
+知识笔记按 llmwiki 格式写，四层分工：`raw/` 存论文文件本体，`papers/abstracts/` 与 `papers/readings/` 存摘要与精读，`people/` 存人物，`wiki/` 只存从论文拆出来的知识点；根 `index.md` 与 `log.md` 是两个保留文件。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
 
 四条主规则：知识点拆碎，一个文件一个知识点，同一知识点合并进单个文件；节点属性写在 frontmatter 行，`tags` 非要求不写；层级由目录表达，目录改名合并拆分随时可做；一条链只表达一种真实关系，写不出关系名的链不建。
 

@@ -1,6 +1,6 @@
 ---
 name: wiki-format
-description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — source pages, concept pages, entity pages, comparison pages, idea pages, the index, the log — or when restructuring the wiki folders. Gives the llmwiki file layout, the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, naming rules, and the reserved index/log files.
+description: Use when writing, editing, splitting, merging, or linting any markdown note in this workspace — abstract pages, reading pages, person pages, concept pages, entity pages, comparison pages, idea pages, the index, the log — or when restructuring the layers. Gives the four-layer layout (raw source files, paper abstracts and readings, people, wiki knowledge points), the atomic-note rule, frontmatter attributes, folder hierarchy, wikilink discipline that keeps the knowledge graph usable, naming rules, and the reserved index/log files.
 ---
 
 # wiki-format —— 本仓知识笔记的基本格式
@@ -10,17 +10,22 @@ description: Use when writing, editing, splitting, merging, or linting any markd
 ## 布局
 
 ```text
-raw/      不可变来源层。论文按 <YYYY-MM>/<学科>/<刊名>/<论文名>/ 落盘，一目录一论文；零散来源平铺
-wiki/     页面层，子目录按知识层级组织，一页一文件
+raw/      来源文件层，只增不改。论文按 <YYYY-MM>/<学科>/<刊名>/<论文名>/ 落盘，一目录一论文；零散来源平铺
+papers/   论文层：摘要与精读各占一个目录，一页一论文
+  abstracts/<slug>.md
+  readings/<slug>.md
+people/   人物层：一个学者一个文件
+wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 根 index.md / log.md    两个保留文件：目录与流水
 ```
 
-- `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进 wiki 层对应页面的证据边界。
-- 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文；目录名与它的 `type: source` 页同名，口径见命名节。
-- `wiki/` 是页面层。role 都往这里写，写法见下面各节。
+- `raw/` 是证据层。文件进来之后不改写；来源有误就补一份新的，订正写进引用它的页面里。
+- 一篇论文的全部资料（PDF、TeX 源、HTML、补充材料、抽取文本）放进同一个论文目录，一目录一论文。论文目录名、摘要页、精读页共用同一个 slug，口径见命名节。
+- 论文不进 `wiki/`。论文层的摘要页与精读页记这一篇论文本身；从论文里拆出来的概念、方法、缺口、人物判断进 `wiki/` 与 `people/`。
+- 四层各写各的，不互相搬内容：`wiki/` 的一页被论文层引用时用 `[[slug]]`，反过来论文层被知识页引用时同样只放链接。
 - `index.md` 面向内容：全库页面的目录，按 type 分组。
 - `log.md` 面向时间：追加式流水，可 grep。
-- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`payload/`、`scripts/`）不属这三层，本格式不管它们。
+- 机器件（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`、`payload/`、`scripts/`）不属这四层，本格式不管它们。
 
 ## 规则一：拆碎
 
@@ -49,14 +54,17 @@ wiki/     页面层，子目录按知识层级组织，一页一文件
 
 type 取值：
 
-| type | 装什么 |
-|---|---|
-| `source` | 一份来源的摘要页，一篇论文一张 |
-| `concept` | 跨来源的概念、方法、术语 |
-| `entity` | 作者、机构、会议、数据集、基准、工具 |
-| `comparison` | 两个及以上页面的对照 |
-| `overview` | 全库的活综述，每份新来源进来时改写 |
-| `idea` | 本仓的领域增补：候选研究想法 |
+| type | 层 | 装什么 |
+|---|---|---|
+| `abstract` | `papers/abstracts/` | 一篇论文的摘要页，兼这篇论文在库里的身份页 |
+| `reading` | `papers/readings/` | 一篇论文的精读报告 |
+| `concept` | `wiki/` | 跨论文的概念、方法、术语 |
+| `entity` | `people/`（人）或 `wiki/`（机构、会议、数据集、基准、工具） | 实体页 |
+| `comparison` | `wiki/` | 两个及以上页面的对照 |
+| `overview` | `wiki/overview.md` | 全库的活综述，每篇新论文进来时改写 |
+| `idea` | `wiki/` | 本仓的领域增补：候选研究想法 |
+
+人落 `people/<slug>.md`，`type` 仍是 `entity`；其余实体按知识层级落 `wiki/`。一篇论文的摘要职责由 `abstract` 页承担，不再设 `source` 类型。
 
 `idea` 页在三层键之外另加三个：
 
@@ -66,11 +74,70 @@ type 取值：
 | `origin` | 缺口出处的页面 slug，一条 |
 | `test` | 一行：怎么验证它 |
 
+## 论文层与人物层
+
+摘要页、精读页、人物页各占一个目录，都不进 `wiki/`。三者的 frontmatter 都用上面的七键，另加本节两个领域键：
+
+| 键 | 必填 | 说明 |
+|---|---|---|
+| `paper` | 论文层必填 | 论文本体的 raw 目录路径（相对仓根） |
+| `openalex_id` | 人物页必填 | 权威 id |
+
+### 摘要页（`papers/abstracts/<slug>.md`）
+
+论文的身份页：属性、官方摘要、一句话判断、去向链接。agent 检索一篇论文从这里进。
+
+```md
+# <标题>
+
+> [!quote] 官方摘要
+> <逐字摘录，不改写>
+
+## 一句话判断
+
+<三到六句：做了什么、核心机制、最关键数字（带 Table/Figure/公式锚点）、影响读数的条件>
+
+## 本体与去向
+
+- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
+- 精读：[[<slug>|<标题>精读]]（未建时写「待建」，并去 `index.md` 记待建行）
+```
+
+### 精读页（`papers/readings/<slug>.md`）
+
+精读报告：论文事实与「我的分析」分区。按需建，不是每篇论文都有。
+
+```md
+# <标题> 精读
+
+- 论文本体：`raw/<YYYY-MM>/<学科>/<刊名>/<slug>/`
+- 摘要：[[<slug>|<标题>摘要]]
+
+## 问题与做法
+
+## 关键证据
+
+<每条带 Table/Figure/公式编号锚点>
+
+## 局限与缺口
+
+## 我的分析
+
+<机制直觉、跨论文联系、可延伸实验；标明「我的分析」，不冒充论文事实>
+
+## 关联
+
+- [[<slug>]]：<关系名>
+```
+
+精读页里值得独立引用的概念、方法、缺口，另建 `wiki/` 页面，精读页只放链接。抓取与落盘的渠道口径见 `paper-sources`，人物页的采集流程见 `scientist-profiles`。
+
 ## 规则三：目录承载层级
 
 知识层级由目录路径表达，不靠标签，不靠枢纽页。
 
 - 页面落点 `wiki/<域>/<子域>/…/<slug>.md`。域与子域按知识点归类决定，归类变化时跟着变。
+- 论文层、人物层不按知识层级分子目录：`papers/abstracts/`、`papers/readings/`、`people/` 各一层平铺，slug 全库唯一。
 - 目录改名、合并、拆分是常规动作。目录里只放该层级的页面，不做二次索引。
 - 目录改名或移动时，同一对象全程一个 slug；文件名不动，链接就不动。
 - `overview` 页只留一篇，放 `wiki/overview.md`，写全库综述，不做分类目录。
@@ -98,7 +165,7 @@ type 取值：
 
 ## index.md
 
-分组固定顺序：Overviews、Sources、Concepts、Entities、Comparisons、Ideas。组内按标题字母序。条目形状：
+分组固定顺序：Abstracts、Readings、People、Concepts、Entities、Comparisons、Ideas、Overviews。组内按标题字母序。条目形状：
 
 ```md
 - [[slug|标题]]：一句话说明
@@ -122,12 +189,13 @@ type 取值：
 ## 命名
 
 - 页面文件名＝slug：kebab-case，ASCII，避开 `#`、`|`、`^`、`:`、`/`。全库 slug 唯一。
-- 论文来源：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文。目录名就是该论文的 slug，与它的 `type: source` 页同名。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<slug>.extracted.md`。
+- 论文来源：`raw/<YYYY-MM>/<学科>/<刊名>/<论文短名>/`，一目录一论文。目录名、`papers/abstracts/<slug>.md`、`papers/readings/<slug>.md` 三者同一个 slug。目录里放这一篇的全部资料：原文 PDF、TeX 源、HTML、补充材料、抽取文本 `<slug>.extracted.md`。
   - `<YYYY-MM>`：官方发表年月；预印本取首次提交年月。
   - `<学科>`：arXiv 主分类（`cs.CV` 一类）；无分类时用小写连字符的领域短语。
   - `<刊名>`：归一化的会议或期刊短名；预印本写 `arXiv`。
   - `<论文短名>`：标题转 kebab-case，超长截断并保持唯一。
 - 零散来源（采集快照、剪藏、对话导出）：`raw/<YYYY-MM-DD>-<slug>.<ext>`。
+- 人物页：`people/<slug>.md`，slug 取学者名的 kebab-case；重名时加 `-<openalex id>` 后缀。
 - 目录名：该层级的主题短语，可读，不编号。
 
 ## Obsidian 兼容

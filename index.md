@@ -2,9 +2,11 @@
 
 分组顺序与条目形状见 `.agents/skills/wiki-format/SKILL.md`。
 
-## Overviews
+## Abstracts
 
-## Sources
+## Readings
+
+## People
 
 ## Concepts
 
@@ -13,3 +15,5 @@
 ## Comparisons
 
 ## Ideas
+
+## Overviews

@@ -11,7 +11,7 @@ description: Use when building or updating a person page in this wiki — collec
 
 ## 页面契约
 
-落点 `wiki/people/<slug>.md`。一个学者一个页面，同一学者全库一个 slug。
+落点 `people/<slug>.md`。人物层与论文层、知识层平级，都不进 `wiki/`。一个学者一个页面，同一学者全库一个 slug。
 
 frontmatter（规则二的领域增补，属性只留这一处）：
 
@@ -30,7 +30,7 @@ frontmatter（规则二的领域增补，属性只留这一处）：
 | `h_index` / `i10_index` | 否 | 影响力指标 |
 | `depth` | 是 | 采集层级，种子作者为 0 |
 | `role` | 是 | 层级角色：核心作者 / 关联作者 / 外围 |
-| `papers` | 是 | 该学者的代表论文页 slug 数组，没有写 `[]` |
+| `papers` | 是 | 该学者的代表论文摘要页 slug 数组（`papers/abstracts/` 下同名页），没有写 `[]` |
 
 正文四节，指标不再在正文重复一遍（frontmatter 已有一份）：
 
@@ -58,7 +58,7 @@ frontmatter（规则二的领域增补，属性只留这一处）：
 - [[<人物页 slug>|<姓名>]]（合作 N 次）
 ```
 
-`代表论文` 与 `主要合作者` 的链接指向 `type: source` 页与其他人物页；目标页还没建时在 `index.md` 记待建行，本页照写链，lint 时补页。
+`代表论文` 链接指向 `papers/abstracts/` 下的摘要页，`主要合作者` 链接指向其他人物页；目标页还没建时在 `index.md` 记待建行，本页照写链，lint 时补页。
 
 ## 采集流程
 
