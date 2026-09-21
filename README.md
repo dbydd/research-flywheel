@@ -93,13 +93,12 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
 |scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `AGENTS.md` 的本族 todo|`wiki/` 页面|
 
-模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub，成本压在模型档）：只分析位吃 powerful，深度检索降 weak，大批量快扫与粗判用 supercheap（generic-researcher 全系列对快扫都太慢）。socrates 是故意的反配：supercheap/max，大智若愚——读者立场越无知，嘴越便宜，思考给得越满。
+模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub）按预设整批切换：`python3 tools/scripts/model-mode.py [preset]`，预设表在 `tools/scripts/model-modes.json`（双写模板与活 ws，新 session 生效，在飞会话不动）。现有两档：
 
-|role|model|thinking|role|model|thinking|
-|---|---|---|---|---|---|
-|scriber|supercheap|low|master|generic-researcher-powerful|medium|
-|librarian|generic-researcher-weak|high|socrates|supercheap|max|
-|astrologer|supercheap|low|scraper|supercheap|medium|
+- **balanced**（分析位吃 powerful、检索降 weak、快扫与粗判 supercheap）：scriber supercheap/low｜librarian weak/high｜astrologer supercheap/low｜master powerful/medium｜socrates supercheap/max｜scraper supercheap/medium。socrates 是故意的反配：supercheap/max，大智若愚——读者立场越无知，嘴越便宜，思考给得越满。
+- **fast**（速度优先：全员 supercheap，思考等级只按任务需要给）：scriber low｜librarian medium｜astrologer low｜master medium｜socrates max｜scraper low。
+
+要加新档（如质量档）只改 JSON，脚本不用动。
 
 - 入口是 scriber，第一发由 supervisor 投递。astrologer 是可选路径，任务书点名才走。
 - master⇄socrates 的放行权在 socrates：报告收束由 socrates 判定并放行给 scraper，master 只回改。socrates 不带先验（残差流也不读），当一无所知的普通读者；放行判据=自足性——摘掉全部外链，报告仍连贯、能被没读过相关文献的人看懂个七七八八。

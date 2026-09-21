@@ -1,0 +1,18 @@
+{
+  "balanced": {
+    "scriber": ["supercheap", "low"],
+    "librarian": ["generic-researcher-weak", "high"],
+    "astrologer": ["supercheap", "low"],
+    "master": ["generic-researcher-powerful", "medium"],
+    "socrates": ["supercheap", "max"],
+    "scraper": ["supercheap", "medium"]
+  },
+  "fast": {
+    "scriber": ["supercheap", "low"],
+    "librarian": ["supercheap", "medium"],
+    "astrologer": ["supercheap", "low"],
+    "master": ["supercheap", "medium"],
+    "socrates": ["supercheap", "max"],
+    "scraper": ["supercheap", "low"]
+  }
+}
