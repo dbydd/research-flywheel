@@ -28,7 +28,7 @@
 
 |role|职责|上游|下游|会话|
 |---|---|---|---|---|
-|scriber ★|入口。原文整理进 `raw/`，写摘要页；再跑两轮深度搜索补这篇论文的前提背景|_supervisor|librarian、astrologer|每任务族一个（软约束）|
+|scriber ★|入口。原文整理进 `raw/`，写摘要页；再大批量快扫相关文献补这篇论文的前提背景|_supervisor|librarian、astrologer|每任务族一个（软约束）|
 |librarian|资料搜集。出论文增强信息：做了什么、在什么基础上做的、相关引用在哪、哪个组、这个组的特点|scriber|master|多播|
 |astrologer|人物画像构建，可选路径|scriber|master|多播|
 |master|汇总资料，写精读报告，需要时做 ppt|librarian、astrologer、socrates|socrates|每任务族一个（软约束）|
