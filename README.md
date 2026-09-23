@@ -112,6 +112,8 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 装具与插件各追自己渠道的最新，命令里没有版本号。兼容判据是 `onlyne version` 的 `protocol:1`。
 
+升级破坏性版本是一次换血：server 与全部 client 必须同一 build 重启（新旧混搭互相读不懂状态帧）；server 的 `.onlyne/state.db` 与各 ws 的客户端库不跨 schema 迁移，停机后删掉重来，`keys/server.key` 与 `cert_pin` 保留；ws 重渲走「通电」的 generate 循环，role key 重铸后回贴 spec 对应 `[[client]]`。仓内两份 onlyne 手册（`onlyne-role`、`onlyne-supervisor`）用新 build 的 `onlyne skill export` 产物刷新，另外三份技能是本仓正本，随仓库走。
+
 - **onlyne v1 五件套**。发布渠道一行装齐：
 
   ```bash
