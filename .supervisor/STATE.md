@@ -69,7 +69,7 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 
 ## 挂账
 
-1. **解牌三件已结两件半**：发布版在位（五进制 18:18:57、`cargo install --list` 六个 1.4.0 包）；手册重导回 unchanged；`README.md` §前置 与 §1.4.0 运行时检查 已是 1.4.0 口径（`cfc414e`/`ddf019a` 做的），本轮零改动；形状读数已交（见 §复压十三）。
+1. **解牌三件已结**：发布版在位（五进制 18:18:57）；手册重导回 unchanged；形状读数已交（见 §复压十三）。**更正我先前一句**：`README.md`/`.onlyne/AGENTS.md`/`.supervisor/AGENTS.md` 的 1.4.0 口径当时是**隔壁会话改的未提交工作树内容**（HEAD `ddf019a` 里还是「各追自己渠道的最新」），不是「已提交零改动」；现随本次布局变更一并提交。
 2. 本仓已推：`f229291`（文档面与手帐进跟踪）、`f01e8fba`（内容层 177 文件）、`513ecf08`（复压十三读数），ahead 0。工作树只剩 `.obsidian/`、`.omp/PLAN.md`、`.agents/skills/onlyne-role-payload-v2/`（第三条现为导出器的合法目标，留跟踪与否待人判）。
 3. **等 dev 回两问**：(a) 请他重判 (i) —— requeue 是否该排掉「session 已因完成而退出」这条触发；(b) `scriber/client.db` 损坏的定性与他是否要在 operations 写「集群 root 别放同步盘」。在他回之前我不修库。
 4. **现场归属待处置**：scriber + librarian 两 client 在隔壁会话手里；`f44c890e` 停在 `queued`（`requeued=1`）；我起的 server pid 11907 归我收。
@@ -99,3 +99,15 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 **上游机制读数（请他重判 (i)）**：本批 8 个 task 信封**无一进过 `acked`**，同 role 的 completion 全 `in_flight→acked`（0.2–0.3 秒）；全库历史对照 `task=acked` 9 条后端全 **orca**、`rejected/session_dead` 6 条后端全 **exec**（第 7 条 `e1989855` 拒因是 orca `terminal create` 失败、会话行却 `backend=exec` —— 谁回落到 exec 待他判）。投影侧：exec 会话 `delivery` **恒 `none`**，orca 起来后写 `delivery=accepted`。⇒ 形状是「**exec 不 ack task 信封 → 60 秒重排到点 → 重投刚退休 slot → 写 `session_dead`**」，活其实已干完（6/6，非竞态）；`requeued` 到 1–2 而 `attempt` 始终 0。另：13/13 信封「事件末态 == 账行现态」，账本无物化滞后（排除一条）。
 
 **待处置**：搬 root 需要 client/server 全停且无进程持库，而那两 client 在隔壁会话手里 ⇒ 等人拍板：让那个会话收工后我全停搬到本地 FS，或就地由我停它起的 client。在他回 (i)/(ii) 之前我不修库。
+
+## 运行时出盘（2026-09-24 20:0x，人判「停那两个 client 并搬」+「mv 后建软链」）
+
+**动作**：现场已自然腾空（我发 SIGTERM 前两 client 与 server 都已退，`lsof` 报无进程持库）。按 dev 的处置「原样搬、只查副本、原库零写入」执行，脚本 `/tmp/onlyne-bug-141/round13/move_runtime{,2}.py`（v1 有两处我的错：`shutil.move` 后又 stat 原路径 → 崩在半路留下「文件走了、链接没建」的空位，v2 改成每步先 mv 立刻补链；v1 还把整个 `ws/` 做目录级软链，导致 git 把六份已跟踪的 ws `STATE.md` 报成删除，v2 退回真目录）。
+
+**最终布局**：真身仍在 `/Users/dbydd/…/OneDrive-个人/new_document/Alexandria`（orca 路径的软链不动，worktree 指针不受影响）；**onlyne 运行时全部落在本地 `~/onlyne-runtime/alexandria/`**，原位留 21 个软链：`state.db{,-wal,-shm}`、`ws/<role>/client.db{,-wal,-shm}` ×6、`run/`、`logs/`、`keys/`、`cache/`。SQLite 顺链解析、边文件落在真身旁边，OneDrive 再摸不到库字节；那 21 条路径全在 gitignore 内，git 完全无感（脏项从 16 回到 10）。损坏的 scriber 主文件与 WAL **成对搬走、未动一刀**。
+
+**功能验证（最小一发）**：`onlyne server start --root .` → pid 96125，`wait-ready` rc 0，`status` 回 `cluster=alexandria`、`event_head=564`（与搬迁前同一库、水位接上）、`role_count=7`；真身 `integrity_check` = ok、`sessions=28`；`server.log` 已落在本地 `~/onlyne-runtime/alexandria/logs/`；`server stop` 干净、停后无 socket 无持库进程。
+
+**dev 的根因确认（`a91c853` 已推 main）**：本地 `onlyne complete` 走 adapter socket 的 `ClientOp::Report(Report::Complete)`，旧代码用 `dispatch.request` 把 raw report 直发 server，**绕过 client 的 `on_plugin_report → on_out`** ⇒ task 行永远 `in_flight`；completion 回执独立 acked 后，session exit 触发 server `release_exited_delivery` 自动 requeue，退休 slot 再写 `session_dead`。focused regression 1 passed（断言本地 task=Done、原 task msg accepted ack、server-facing 只剩投影心跳、无 raw Complete）。operations + supervisor handbook + 两份副本同步，新增五条口径：task/completion 行语义、per-writer seq、terminal `session_dead` 要走新 task、Orca 单实例宿主约束、SQLite 禁放同步盘。**我这轮的执行链读数被他逐条采信。**
+
+**待处置两条**：(1) **scriber 坏库怎么落地**——两条路摆着：从 `~/.local/share/onlyne-forensics/round13v2-*/scriber/client.db.mainonly`（昨天 17 行、干净）恢复，或把坏对改名留证、让 client 首开时按 schema DDL 重建（服务侧账本才是权威，本机库是每 role 缓存）。dev 说「确认后再决定」，我没动。(2) 隔壁会话若再压形状，orca 后端在「Orca 已运行」下仍会撞单实例墙 —— 他那条 `e1989855` 的会话行 `backend=exec` 而拒因是 orca `terminal create` 失败，回落是谁做的仍待 dev 判。
