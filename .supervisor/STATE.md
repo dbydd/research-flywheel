@@ -127,3 +127,11 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 **由此定的两条硬规矩**：其一，**这个仓不能再同时「无 git」且「住在 `~/orca/workspaces/**`」** —— 要么保留 git 注册，要么搬到 Orca 树外（现已在树外，git 我留着：今天两次丢失里唯一把东西捞回来的就是它）。其二，**密钥与运行时与手帐分家存**：手帐与文档进 git，运行时进本地 FS 且已离开同步盘，取证快照另放 `~/.local/share/onlyne-forensics/`（这次的救命稻草，别清）。
 
 **待办一条（起环前必做）**：**密钥重铸**。`cert_pin` 在 `spec.toml` 里活着（跟踪过），但服务端私钥与六份 client 私钥全丢 ⇒ 按 README §通电：`onlyne-server init --root . --listen 127.0.0.1:7812` 取新 `cert_pin` 回填 → 逐 role `onlyne-server generate --root . --role <r>`（ws 存在需 `--force`，会把注入面换回骨架，跑完 `git checkout -- .onlyne/ws/*/AGENTS.md .onlyne/ws/*/STATE.md` 找回手记）→ 六条 `[[client]].key` 粘回 spec → `onlyne reload` + `spec_diff` 回 no changes。这一步要不要现在做，等人一句。
+
+## 密钥重铸完成（2026-09-24 20:4x，环已可用）
+
+脚本 `/tmp/onlyne-bug-141/round13/recast_keys.py`，spec 前态备份 `/tmp/onlyne-bug-141/round13/spec.toml.pre-recast`。按 README §通电走通：`init` 前先把 `spec.toml` 挪开（就位即拒覆盖）→ 新 `cert_pin = sha256/sUsHVxjMb3QgespbCZpdlB6JIvNGbUM1JMZVD1nroi4=`、`.onlyne/keys/server.key` 763B 新生 → 逐 role `generate --force` 六条公钥按 `[[client]].role` 块定位回填（`_supervisor` 的合法占位照旧不动）→ `git checkout -- .onlyne/ws` 找回被 `--force` 换掉的六份手帐（STATE/AGENTS 全在位）。
+
+**验证**：`server start` pid 44485 → `wait-ready` rc 0 → `roles` 7 条（`_supervisor` + 六 agent）→ **`spec_diff` 回 `spec: no changes`** → `status` `cluster=alexandria`、`event_head=564`（与恢复后的同一库）→ `stop` 干净。dev 通报里那句「sessions 28→29」不是这个仓（本机恢复后停在 28、无进程写入），已回他以免他把读数引到 Alexandria 头上。
+
+**当前可跑状态**：密钥、spec、账本、六份 ws 齐；起环只差往各 role 的可见 tab 发 `ONLYNE_BACKEND=orca onlyne client run --workspace <abs>/.onlyne/ws/<role>`。注意 orca 后端在「Orca 已运行」下会撞单实例墙（复压十三②），要压真形状先解决宿主那层，或换 `exec`/fake 后端做投递面验证（代价：exec 不 ack task 信封，那条已被 dev 在 `a91c853` 修掉，可复验）。
