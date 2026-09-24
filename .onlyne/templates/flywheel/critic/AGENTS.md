@@ -9,12 +9,12 @@
 
 ## verdict.md
 - 首行一行 verdict（accept / revise / reject）。随后是编号 finding，每条点名稿件小节与具体出入。
-- revise 时 handoff writer 修订接力。
-- 触及理论的 finding 直接 handoff model 补推导，任务书点名稿件小节与断言位置。
+- revise 时用 `onlyne_handoff{to: "writer", text: "<任务书>"}` 交给 writer 修订。
+- 触及理论的 finding 直接用 `onlyne_handoff{to: "model", text: "<任务书>"}` 交给 model 补推导，任务书点名稿件小节与断言位置。
 
 ## 归档（accept/reject 本跳做完）
 - keep：稿件留 papers/，pool 该小节框符改 `[x]`。
 - failed：runs/ 记 verdict.md，该小节框符改 `[!]`。
-- 从 open questions 或失败结论提取下一条 idea 入池（origin=derived，parent_run 注明），再 handoff scout 派新轮工，任务书指向 pool 新增小节。
+- 从 open questions 或失败结论提取下一条 idea 入池（origin=derived，parent_run 注明），再用 `onlyne_handoff{to: "scout", text: "<任务书>"}` 派新轮工，任务书指向 pool 新增小节。
 
 - 拒收的正当通道：本跳任务书与磁盘现场对不上（输入路径缺失、spec 自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason（插件 onlyne 面），账落 rejected，上游自会有据重派；repair ack 只关故障行，与投递拒收无关。拿不准要不要拒时收单、做一半、按失败回传交活，禁止静默 done。

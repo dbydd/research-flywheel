@@ -12,7 +12,7 @@
 
 ## 固化与派发
 - 从 pool 按文件顺序取第一个 `## [ ]` 小节，写 `runs/<run-id>/idea.json`（全字段快照），并把该小节标题框符改 `[>]`。
-- 然后 handoff model：`onlyne handoff --to model --task <当前task> --text "<四段任务书>"`。
+- 然后用 `onlyne_handoff{to: "model", text: "<四段任务书>"}` 交给 model。
 - 失败回传接收：收到正文首行 `> hop-failed:` 的接力时，把失败结论追加到对应 runs/，再从 pool 取下一个 `[ ]` 小节续环。
 
 ## 上报

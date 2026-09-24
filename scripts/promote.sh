@@ -279,13 +279,13 @@ git commit -qm "feat(promote): promote template to theme $THEME"
 cat <<EOF
 promoted to theme/$THEME. Power-on is manual and is not running yet.
 Full procedure: README.md "装配与通电".
-1) toolchain (once, latest): cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+1) toolchain (once, latest): cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui onlyne-testkit
    && pi install npm:pi-onlyne
 2) server:   onlyne server init --root . --listen <port>   # then fill spec.toml cert_pin and per-role keys
    onlyne server generate --root . && onlyne server start --root .
 3) supervisor: open pi in this directory (the _supervisor admin mount)
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) flywheel is idle: empty ledger, empty runs/, seeds only in pool. To turn the ring:
-   onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md
+   onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md --force --yes-i-am-supervisor-not-other-role
 EOF
 

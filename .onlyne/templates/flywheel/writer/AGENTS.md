@@ -13,7 +13,7 @@
 - 图内数字与正文共用一条追溯口径，每个数字都能指到 measured/ 的具体文件。送审任务书附 figs 清单，列出脚本↔图的对应关系。
 
 ## 派发
-- 成稿后 handoff critic，任务书带稿件、证据、figs 清单路径。
-- revise 接力里，理论层 finding handoff model 补推导，证据层 finding handoff scout 补检索，任务书点名 verdict.md 的 finding 编号。
+- 成稿后用 `onlyne_handoff{to: "critic", text: "<任务书>"}` 交给 critic，任务书带稿件、证据、figs 清单路径。
+- revise 接力里，理论层 finding 用 `onlyne_handoff{to: "model", text: "<任务书>"}` 交给 model 补推导，证据层 finding 用 `onlyne_handoff{to: "scout", text: "<任务书>"}` 交给 scout 补检索，任务书点名 verdict.md 的 finding 编号。
 
 - 拒收的正当通道：本跳任务书与磁盘现场对不上（输入路径缺失、spec 自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason（插件 onlyne 面），账落 rejected，上游自会有据重派；repair ack 只关故障行，与投递拒收无关。拿不准要不要拒时收单、做一半、按失败回传交活，禁止静默 done。

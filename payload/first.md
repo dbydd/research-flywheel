@@ -8,4 +8,4 @@
 
 期望产物：`pool/ideas.md` 新增小节，`evidence`、`evaluation.objectives`、`done_when` 三项非空，headroom 预筛行给出暴露缺口的具体数字或台账行；检索记录追加进 `research/frontier-notes.md`。
 
-下一跳建议：按角色表 handoff model，任务书指向新固化的 `runs/<run-id>/idea.json` 与证据路径。
+下一跳建议：按角色表用 `onlyne_handoff` 交给 model，任务书指向新固化的 `runs/<run-id>/idea.json` 与证据路径。

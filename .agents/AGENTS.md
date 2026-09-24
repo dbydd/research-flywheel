@@ -14,7 +14,7 @@ workspace 就是一个 role，内容有记忆、设定、历史文件。session 
 
 ## 工作模型（射后不理）
 
-每个 session 的生命周期：恢复上下文 → 工作 → 激发下游（handoff，可选若干）→ `onlyne_complete` 交活退出。
+每个 session 的生命周期：恢复上下文 → 工作 → 用 `onlyne_handoff` 激发下游（可选若干）→ `onlyne_complete` 交活退出。
 
 session 不等下游。投递后立即返回一行 receipt JSON。后续进展都在 ledger 与 client intent 里。下游成果经文件与 ledger 呈现。接力任务唤醒合适的单位继续。
 
@@ -51,23 +51,28 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 
 idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不进池。
 
-## onlyne 工具（v1 pi 插件在 role 会话提供）
+## onlyne 工具（pi 插件在 role 会话提供）
 
-- `onlyne_send {to, text, kind}`：激发新任务族用 kind:"task"。给在飞任务追加 note 用 kind:"note"，这也是默认值。note 不建 session：目标离线、或者在线但手头没有 working session，都直接得 `recipient_offline`（server 侧 `note_queue = true` 才排队，排队后到 `ttl_ms` 记 expired）。to 必须在本 role 的 `allowed_targets` 里，否则返回 `acl_denied`，行都不落。
-- `onlyne_complete {outcome, text}`：交活结项。`outcome: done|failed|cancelled`（`cancelled` 表示这一跳体面交回、产物未齐）。CLI 同面：`onlyne complete --task <id> --outcome <o> --head-from local --text "..."`（`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head）。text 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就指产物路径。同一 task 第二次 complete 会被拒，只喊一次。onlyne-client 1.2.1 起，结清时没有结果行也会落一条正文为空的 `completion` 收据，等这张收据的下一跳能继续。ACP 结项报告（往 `<ws>/.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:` 一行）只在 `backend = "acp"` 时生效；本模板 `session_command` 是 pi 插件路径，结项走 `onlyne_complete`。
-- CLI 同面（shell 里跑）：`onlyne handoff --to <role> --task <id> --text "..."` 表示转派新任务，并记 `parent_task` 与 hop+1 血缘。`onlyne send --to <role> --text|--file ...` 开新任务族。`onlyne reply --to <msg-id> --text "..."` 回执。`onlyne control recycle|probe|snapshot|cancel|focus --task <id>` 管任务（`--from`/`--task` 全局，子命令前后都认）。
-- 接力一律用 handoff。ledger 顺 `parent_task` 链能查出整条科研链路，追溯成本为零。
-- 失败交活：handoff/complete 的 text 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
+mounted pi role 的工具面按职责分开：`onlyne_handoff{to, text}` 接力并延续当前任务族；`onlyne_send{to, text, kind, image}` 开新任务族（`kind:"task"`）或在飞任务追加 note（`kind:"note"`，默认值）；`onlyne_complete{outcome, text}` 交活结项，`outcome` 为 `done|failed|cancelled`。note 不建 session：目标离线、或者在线但手头没有 working session，都直接得 `recipient_offline`（server 侧 `note_queue = true` 才排队，排队后到 `ttl_ms` 记 expired）。to 必须在本 role 的 `allowed_targets` 里，否则返回 `acl_denied`，行都不落。
+
+mounted pi 的接力是唯一适合 role 会话的下一步：`onlyne_handoff` 记录 `parent_task` 与 hop+1 血缘，ledger 顺 `parent_task` 链能查出整条科研链路。每一次 handoff 继承任务族的 family root、hop budget、origin、RFC3339 deadline 和最多 8 个 labels；任务到达 hop budget 时，当前 hop 停止继续 handoff，保留并完成手上的工作。
+
+shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个动词都要求同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`。mounted pi role 不走这条 shell 接口；它用上面的插件工具，交接记录由插件 session 维护。
+
+`onlyne_complete{outcome, text}` 的 text 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就指产物路径。同一 task 第二次 complete 会被拒，只喊一次。ACP 结项报告（往 `<ws>/.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:` 一行）只在 `backend = "acp"` 时生效；本模板 `session_command` 是 pi 插件路径，结项走 `onlyne_complete`。
+
+server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并在结算原因写 `requeue_ttl`；`repair retry` 绕过这道 TTL gate。
+- 失败交活：`onlyne_handoff` / `onlyne_complete` 的 text 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
 - 重试纪律：同一 `op_id` 换内容重发得到 `conflict`。重试时原帧重发。断线期照常干活：outgoing receipt 落 intent，重连后按序补投。
 - role 会话查现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。pi 内用 `/onlyne` 命令看连接与 task 统计。
 
-## 任务书四段（send/handoff 的 text）
+## 任务书四段（`onlyne_send` / `onlyne_handoff` 的 text）
 
 ```text
 目标：<一句话，做完算什么>
 输入：<必须读的文件路径，runs/ 与 research/ 为准>
 期望产物：<写到哪里的什么文件，格式要求>
-下一跳建议：<完成后 handoff 谁、干什么；没有就写 无>
+下一跳建议：<完成后用 onlyne_handoff 交给谁、干什么；没有就写 无>
 ```
 
 输入路径必须真实存在。接收方 session 是全新上下文。任务书里没写的路径它找不到。
@@ -105,13 +110,13 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 
 ## 飞轮宏观流（接力闭环）
 
-1. scout：产出入池后自取一条 queued idea，把 `runs/<run-id>/idea.json` 固化（status 改 running），再 `handoff model` 交建模任务。supervisor 不进环。
-2. 每个 role：完成后按角色表自己那行的 `下游` 发 `handoff` 接力任务书，然后 `onlyne_complete {outcome:"done"}` 交活退出。
-3. 产物未齐的跳：用 `onlyne_complete {outcome:"cancelled", text:"等待条件说明"}` 体面交回，也可以静默终止，由 idle 回收兜底。等接力唤醒再动，不写无依据产物。
-4. 闭环回到 scout：critic 的 accept/reject 本跳自归档，keep 的稿件留 papers/，pool 该行改 keep；failed 的记 verdict.md，pool 改 failed。随后提取下一条 idea 入池（origin=derived），`handoff scout` 开新一轮。
+1. scout：产出入池后自取一条 queued idea，把 `runs/<run-id>/idea.json` 固化（status 改 running），再用 `onlyne_handoff` 交建模任务。supervisor 不进环。
+2. 每个 role：完成后按角色表自己那行的 `下游` 用 `onlyne_handoff` 发接力任务书，然后 `onlyne_complete{outcome:"done"}` 交活退出。
+3. 产物未齐的跳：用 `onlyne_complete{outcome: "cancelled", text: "等待条件说明"}` 体面交回，也可以静默终止，由 idle 回收兜底。等接力唤醒再动，不写无依据产物。
+4. 闭环回到 scout：critic 的 accept/reject 本跳自归档，keep 的稿件留 papers/，pool 该行改 keep；failed 的记 verdict.md，pool 改 failed。随后提取下一条 idea 入池（origin=derived），用 `onlyne_handoff` 开新一轮。
 5. 回执自动回 origin，离线也排队。role 的 `allowed_targets` 从不含 `_supervisor`，上行零常驻边。
 
-环路全在 role 之间自转：scout→model→{bench,writer}→writer→critic→{writer 修订、model 理论级修订、scout 换题}。人通过 supervisor 或 TUI 观察现场。自激发有账：ledger 每跳一行，`onlyne ledger --task <id>` 顺链可查。终结靠人跑 `onlyne control cancel --task <id>`，或者用 TUI。
+环路全在 role 之间自转：scout→model→{bench,writer}→writer→critic→{writer 修订、model 理论级修订、scout 换题}。人通过 supervisor 或 TUI 观察现场。自激发有账：ledger 每跳一行，`onlyne ledger --task <id>` 顺链可查。终结靠人跑带 gate 的 `onlyne control cancel --task <id> --from _supervisor --reason "..." --force --yes-i-am-supervisor-not-other-role`，或者用 TUI。
 
 ## 运行面指针
 
@@ -125,5 +130,5 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 
 - 改 `experiment/`、`evaluation/` 前先读 runs/ 里上一轮记录。改动在任务产物里写明。
 - 数值只从 measured/ 引。报告只写跑出来的东西。
-- 失败也交活：跑不动的结论写进 runs/，用 `onlyne_complete {outcome:"failed"}` 交失败报告。text 首行写 `> hop-failed: <原因>` 加现场路径，让下游有据可依。
+- 失败也交活：跑不动的结论写进 runs/，用 `onlyne_complete{outcome: "failed", text: "> hop-failed: <原因> <现场路径>"}` 交失败报告，让下游有据可依。
 - 发布面/工作面边界：草稿、中间件、探针、staged 代码先落 role 自己的 ws（私有区）。定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。追加式台账（pool/ideas.md、frontier-notes.md、run-log.md、measured/ 流件）直写 root，接力唤醒要求实时。peer 的 ws 可以只读翻看。交接与审稿判据仍是任务书与 root 发布物。
