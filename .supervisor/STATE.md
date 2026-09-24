@@ -111,3 +111,19 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 **dev 的根因确认（`a91c853` 已推 main）**：本地 `onlyne complete` 走 adapter socket 的 `ClientOp::Report(Report::Complete)`，旧代码用 `dispatch.request` 把 raw report 直发 server，**绕过 client 的 `on_plugin_report → on_out`** ⇒ task 行永远 `in_flight`；completion 回执独立 acked 后，session exit 触发 server `release_exited_delivery` 自动 requeue，退休 slot 再写 `session_dead`。focused regression 1 passed（断言本地 task=Done、原 task msg accepted ack、server-facing 只剩投影心跳、无 raw Complete）。operations + supervisor handbook + 两份副本同步，新增五条口径：task/completion 行语义、per-writer seq、terminal `session_dead` 要走新 task、Orca 单实例宿主约束、SQLite 禁放同步盘。**我这轮的执行链读数被他逐条采信。**
 
 **待处置两条**：(1) **scriber 坏库怎么落地**——两条路摆着：从 `~/.local/share/onlyne-forensics/round13v2-*/scriber/client.db.mainonly`（昨天 17 行、干净）恢复，或把坏对改名留证、让 client 首开时按 schema DDL 重建（服务侧账本才是权威，本机库是每 role 缓存）。dev 说「确认后再决定」，我没动。(2) 隔壁会话若再压形状，orca 后端在「Orca 已运行」下仍会撞单实例墙 —— 他那条 `e1989855` 的会话行 `backend=exec` 而拒因是 orca `terminal create` 失败，回落是谁做的仍待 dev 判。
+
+## 事故：本地目录被 Orca 清掉（2026-09-24 20:2x–20:3x）
+
+**经过**：按人的判语做「整仓落本地 + 五项笔记本体留网盘 + overlay 软链」时，我把真身开在 `~/orca/workspaces/research-flywheel/theme-Alexandria`（原为指向网盘的软链），并在同一步**摘掉 git**（删 `.git` 指针 + 把主仓 worktree 注册改名 `.decommissioned`）。几秒后 Orca 的 worktree 清理逻辑把这个「不再是有效 git worktree」的入口整个删除，`.orca-worktree-trash` 空、`~/.Trash` 里只剩一条自指死链 ⇒ **目录被直删，无回收**。我的搬运动作本身没问题，**是我把「无 git」和「住在 Orca 管辖树里」这两件事凑在一起，才让删除无声发生**。
+
+**恢复（已完成，全部有据）**：
+- 已跟踪内容自分支 `theme/Alexandria@fd856d9` 全量回来：注册目录改名复原 → 新路径写 `.git` 指针 → `git worktree repair` → `git reset --hard` ⇒ 脏项 0，文档/模板/skills/十一份手帐/`.gitignore` 一字不缺。
+- 真身落在 **Orca 树之外**：`~/workspaces/research-flywheel/theme-Alexandria`。
+- 运行时自 10:55Z 取证快照恢复：`state.db` 用 SQLite `backup()` 一致快照（`integrity ok`、events 564、sessions 28）；六份 `client.db` 同样用 `.backup`，scriber 用 dev 批准的 `mainonly` 昨天基线（17 行、ok），坏三件套归档在 `.onlyne/archive/scriber-corrupt-20260924T123221Z/`（附 integrity 报告与 PROVENANCE）。dev 那条「恢复后观察新 client.db 写入」在他回信前已实测过一次（当时 18 行、wal 226KB），那一拍的状态随目录一起没了，属可重做。
+- 布局终态：网盘 `new_document/Alexandria/` 只放 `blogs papers people raw wiki` 五棵真身（180 文件与 git 副本逐文件 sha256 比对，零差异后才换链）；本地这五棵是软链，并从 git 索引移除 + 写进 `.gitignore`（最后一版快照留在 `fd856d9` 历史里，`origin` 上有）。提交 `1e9af59` 已推。
+
+**净损失（未跟踪、云端也没有，找不回）**：`.obsidian/` 全套配置（图谱、快捷键、主题、插件开关）、`.obsidian_manual_added_resources/` 附件（已核：笔记里无引用，不伤内容）、`.onlyne/keys/` 与六份 ws `.onlyne/keys/` 密钥对、`.onlyne/logs/`、`.onlyne/run/`、各 ws `.pi/sessions/*.jsonl` 角色会话记录、`.omp/PLAN.md`、`.agents/skills/onlyne-role-payload-v2/`（导出器认的目标，重导即回）。
+
+**由此定的两条硬规矩**：其一，**这个仓不能再同时「无 git」且「住在 `~/orca/workspaces/**`」** —— 要么保留 git 注册，要么搬到 Orca 树外（现已在树外，git 我留着：今天两次丢失里唯一把东西捞回来的就是它）。其二，**密钥与运行时与手帐分家存**：手帐与文档进 git，运行时进本地 FS 且已离开同步盘，取证快照另放 `~/.local/share/onlyne-forensics/`（这次的救命稻草，别清）。
+
+**待办一条（起环前必做）**：**密钥重铸**。`cert_pin` 在 `spec.toml` 里活着（跟踪过），但服务端私钥与六份 client 私钥全丢 ⇒ 按 README §通电：`onlyne-server init --root . --listen 127.0.0.1:7812` 取新 `cert_pin` 回填 → 逐 role `onlyne-server generate --root . --role <r>`（ws 存在需 `--force`，会把注入面换回骨架，跑完 `git checkout -- .onlyne/ws/*/AGENTS.md .onlyne/ws/*/STATE.md` 找回手记）→ 六条 `[[client]].key` 粘回 spec → `onlyne reload` + `spec_diff` 回 no changes。这一步要不要现在做，等人一句。
