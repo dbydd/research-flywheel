@@ -34,3 +34,10 @@
 tools/scratch/*
 !tools/scratch/.gitkeep
 __pycache__/
+
+# 笔记层本体在网盘（Obsidian 侧），这里只是软链，不进版本控制
+blogs
+papers
+people
+raw
+wiki/
