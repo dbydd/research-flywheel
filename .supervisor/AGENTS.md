@@ -9,6 +9,8 @@
 - 我是人机界面：用户只和我直接对话。答问、派工、值班、记账四样都是我的活。
 - 进会话先读两层正本：仓根 `AGENTS.md`（目标与判据、持久索引表）与 `.onlyne/AGENTS.md`（角色行为约定：注入面与手帐面、一跳、任务书四段、记事纪律、手上的家伙）。要看此刻的进度与未完成的事，读两份手帐：仓根 `STATE.md`（环上内容族）与本文件同目录的 `STATE.md`（集群运维）。omp 会话开起来时 `.omp/AGENTS.md` 已经把你指到本文件，并把仓根 `AGENTS.md` 一并带进项目上下文。
 - 集群运维口径的正本是 `README.md`。本文件管值班与答问。
+- onlyne 1.4.0 已发布：十九个 Rust crate 统一为 crates.io 1.4.0，pi 适配器为 npm `pi-onlyne` 1.2.0。安装命令使用 `cargo install --locked --version 1.4.0 onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui onlyne-testkit`；`onlyne version` 读取 CLI 包、协议和 sibling binary 路径。
+- 手册按安装版本导出：`onlyne skill export --set role --set supervisor --force`。导出手册必须与安装 binary 的字节一致。
 - 我的写面：仓根 `AGENTS.md` 的索引表、两份 `STATE.md`、我答问落成的页面。答问的痕迹就是落成的页面本身；任务书当场写进命令，不在仓里存档。采集、精读、批量建链这类活派给 role。
 - role 的 ws `STATE.md` 是它的手帐、ws `AGENTS.md` 是它的岗位口径，两份我都只读。账目用 `edit` 工具手写，不用脚本生成。
 - **手帐不是流水**。仓里仍然不放逐跳流水：每一跳的任务书、回执、残差流逐帧在 onlyne ledger（`onlyne history --server-root .` 回放），时刻在页面 frontmatter。`STATE.md` 只写两样——此刻未完成的事、一句话能说完的现状，办完即删，长史不进仓。
@@ -31,6 +33,15 @@
 - 终结：`onlyne control cancel --task <id> --reason <原因> --from _supervisor --force --yes-i-am-supervisor-not-other-role` 收一个任务族（`recycle` 同形：换会话、结局记 failed）。1.4.0 起 `--to` 可省：缺省寻址按任务所属 role 落到它的 client，缺省落到发送者自己、行永远 queued 那个老毛病已修（复验二负例 + 复压七两条形状都走缺省）。admin 面的动词都带 `--from _supervisor`。收口时序（1.4.0 实测，两条形状各一遍）：命令落地约 2 秒内投递行记 `rejected: operator cancel|recycle`、会话镜像当场 `exited` 且 outcome 暂空，30 秒兜底把结局补进镜像（cancel→`cancelled`、recycle→`failed`），补齐沿用已存版本、水位 `seq` 不前进，`onlyne ghosts` 不留新行。目标会话已不存在（cancel 落在会话起步之前）时插件无从结账，仍用 `onlyne repair close --task <id> --reason <原因>` 按 cancelled 收尾（repair 族不吃两 flag）。spec.toml 与 templates 的改动经 `onlyne spec_diff --server-root .` 看差异，再 `onlyne reload --server-root .`。
 - 维护面门禁：`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个动词从命令行调用必须同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`，缺一个在碰 socket 之前就拒。`repair` 族与只读查询（`ledger`、`sessions`、`faults`、`ghosts`）不受影响。
 - 对人报告：把任意一轮的现场如实报给用户，现场含 task_id、ledger 行、产物路径、TUI 状态。
+- 1.4.0 活体验收形状：完成、handoff、精确杀 client。验收读取 task ledger、session 投影、两侧 seq 和 ghosts 审计；期望 task `acked`、session `exited`、两侧 seq 相等、该 task 无新 ghost 行。
+
+## 1.4.0 值班补充
+
+- 发布基线：Git tag `v1.4.0`；crates.io 的 `onlyne-cli`、`onlyne-server`、`onlyne-client`、`onlyne-gateway`、`onlyne-tui` 为 `1.4.0`；npm `pi-onlyne` 为 `1.2.0`。
+- 家族任务用插件 `onlyne_handoff` 续接。家族字段为 `family`、`hop_budget`、`origin`、`deadline`、`labels`；值班报告同时读账本行与这些字段。
+- 无 client 的 queued 行由 `[server].requeue_ttl_secs` 计龄。默认 `0` 保持排队；正数到期落 `expired`，`reason=requeue_ttl`。
+- 一次性 TUI 读帧：`onlyne-tui --server-root <root> --once --page 2 --state active|all`。`active` 保持默认活动过滤，`all` 读取结算行。
+- 活体验收收口读数：账本 task 落 `acked` 或预期终态，session 投影为 `exited`，server 镜像 seq 与 client 本机 seq 差 0，`onlyne ghosts` 对该 task 无新增行。
 
 ## 空转判定
 

@@ -161,9 +161,18 @@ subagent 随便起，预算无限：一个 `Agent` 后台跑，`get_subagent_res
 - 失败交活：text 首行 `> hop-failed: <环节> <一句话>`，outcome=failed，产物与现场照写。
 - 拒绝的正当通道：任务书与磁盘现场对不上（输入路径缺失、判据自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason，账落 rejected，上游自有据重派。
 - 重试纪律：同一 `op_id` 换内容重发得 `conflict`，重试时原帧重发。断线期照常干活，outgoing receipt 落 intent，重连后按序补投。
-- 现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` &gt; `ONLYNE_SOCKET` &gt; cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。
+- 现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` \> `ONLYNE_SOCKET` \> cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。
 - bash 面的同名动词（`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control`）是 supervisor 维护指令，命令行调用要显式声明身份，role 不碰：bash 交接不落进插件自己的投递记录，`onlyne_complete` 的守卫据此判你没交接。上行与交接只走上面两个插件工具。
 - 细节在 `.agents/skills/onlyne-role/SKILL.md`；值班级词汇在 `.agents/skills/onlyne-supervisor/SKILL.md`。
+
+## 1.4.0 运行口径
+
+- 版本真值为 `1.4.0`。tag、crates.io 五个安装包与本机 `~/.cargo/bin` 保持同版；npm 插件为 `pi-onlyne 1.2.0`。
+- 角色会话内使用 `onlyne_handoff` 延续任务家族。家族元信息包含 `family`、`hop_budget`、`origin`、`deadline`、`labels`；下一跳读取这些字段决定继续与收束。
+- 七个 shell 维护动词 `send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 需要同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`。缺任一 flag 在 socket 解析前退出 2。role 会话使用插件工具。
+- `[server].requeue_ttl_secs` 约束无 client 的 queued 行；默认 `0` 保持既有行为，正数到期后行落 `expired`，`reason=requeue_ttl`。
+- TUI 一次性读账使用 `onlyne-tui --server-root <root> --once --page 2 --state active|all`。`active` 是默认过滤，`all` 展开已结算行。
+- 关闭形状的验收读数：task 账落终态，session 投影落 `exited`，server 镜像与 client 本机的 `seq` 差为 0，`onlyne ghosts` 对该 task 无新增审计行。
 
 ## 边界
 

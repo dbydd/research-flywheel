@@ -112,12 +112,12 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 ## 前置
 
-装具与插件各追自己渠道的最新，命令里没有版本号。兼容判据是 `onlyne version` 的 `protocol:1`。
+Onlyne 发布基线为 `1.4.0`。兼容判据是 `onlyne version` 的 `protocol:1`；npm 插件基线为 `pi-onlyne 1.2.0`。
 
 - **onlyne v1 五件套**。发布渠道一行装齐：
 
   ```bash
-  cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+  cargo install --locked --version 1.4.0 onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
   ```
 
   crate `onlyne-cli` 装出的 bin 叫 `onlyne`，其余同名。升级＝同一条命令加 `--force` 重跑。
@@ -125,6 +125,14 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 - **会话后端**：`herdr`、`orca` 或 `zellij` 之一。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto。auto 探测序 herdr→orca→zellij。`exec`/`fake` 只在显式写出其名时启用。全无匹配时 `onlyne client run` 退 5。`onlyne-client doctor` 打印宿主判定。
 - 要跟 onlyne 仓 main 上尚未发布的 fix：`git clone https://github.com/dbydd/onlyne && cargo build --release`，五产物放进 PATH。macOS 上 cp 完必做 `codesign --force --sign -`，复制后的二进制签名失效，直接 exec 收 SIGKILL。
 - pi 的 model/provider：每个 role 的模型三元组在 `.onlyne/templates/<role>/.pi/settings.json`，随部署改，改完 reload。
+
+### 1.4.0 运行时检查
+
+- 角色续家族使用插件 `onlyne_handoff`；家族元信息为 `family`、`hop_budget`、`origin`、`deadline`、`labels`。
+- `send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个 shell 动词需要 `--force --yes-i-am-supervisor-not-other-role`。缺 flag 时退出码为 2，socket 不会被打开。
+- `[server].requeue_ttl_secs` 为 `0` 时保持默认排队；正数会让无 client 的 queued 行到期落 `expired`，`reason=requeue_ttl`。
+- TUI 读账使用 `onlyne-tui --server-root <root> --once --page 2 --state active|all`。
+- 完成与关闭形状的验收读数包含：task 账终态、session 投影 `exited`、server/client 两侧 seq 差 0、`ghosts` 无该 task 新行。
 
 ## 通电与第一发
 
