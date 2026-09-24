@@ -19,7 +19,7 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 - **包名事实**：crates.io = `onlyne-cli`（装出 `onlyne` 二进制）+ `onlyne-server` / `onlyne-client` / `onlyne-gateway` / `onlyne-tui` / `onlyne-testkit` + 其余 workspace crates，统一 **1.4.0**；npm = `pi-onlyne` **1.2.0**。
 - **本机核验**：`onlyne version` 返回 `onlyne-cli` 1.4.0、protocol 1 和 `~/.cargo/bin` sibling 路径；`cargo install --list` 列出六个 1.4.0 package。`onlyne skill export --set role --set supervisor --force` 返回 3 个 `unchanged`、0 个 `written`。
 
-**我这边另两条核验**：`~/.cargo/registry/cache` 里 19 个 `onlyne-*-1.4.0.crate` 齐；五进制 + `onlyne-testkit`/`onlyne-gateway-fake` 时间戳 18:14:20、签名在。`onlyne-cli` 这个包会同时装出 `onlyne` 与 `onlyne-cli` 两个同尺寸入口，已问 dev 是否有意留的别名。`onlyne-role-payload-v2/` 是**导出器认的第三个目标**（它也报 unchanged），我先前判它「旧残留可清」判错，已撤回。
+**我这边三条核验（含两处自我撤回）**：`~/.cargo/registry/cache` 里 19 个 `onlyne-*-1.4.0.crate` 齐。`~/.cargo/bin` 实有七个 onlyne 系文件：五进制 mtime **18:18:57**（隔壁会话照 dev 命令又跑一次 `cargo install`），`onlyne-agent-fake`/`onlyne-gateway-fake` 是 18:14:20、出自 `onlyne-testkit` 的 `src/bin`。**我先前报「装出 `onlyne` 与 `onlyne-cli` 两个入口」作废** —— 该文件不存在，我把 `onlyne version` 的 JSON 键名当成文件名，发布 crate `onlyne-cli-1.4.0` 的 `[[bin]]` 只有 `name = "onlyne"`，dev 的 (iv) 对。`onlyne-role-payload-v2/` 是导出器认的第三个目标（报 unchanged），「旧残留可清」那条同样作废。
 
 ## 复压十三（dev 要的形状已由隔壁会话打出；我只侧向采样）
 
@@ -69,10 +69,12 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 
 ## 挂账
 
-1. **解牌后三件**：走正常渠道装 1.4.0（`cargo install onlyne-cli …` 还是 brew，等他给最终命令）→ `onlyne skill export --set role --set supervisor --force` 重导手册 → 收 TUI 7912 后压「完成 + handoff + 杀 client」形状并报读数；再把 1.4.0 口径（七动词裸调用 exit 2 且不碰 socket、`onlyne_handoff` 插件、家族元信息 family/hop_budget/origin/deadline/labels、`requeue_ttl_secs`、`--once --state active|all`）落进 README / 值班文档。
-2. 本仓 push：已 commit 到位（见 §OneDrive 回滚事件的处置），**push 等解牌或人一句话**；工作树里内容族产物（`blogs/`、`papers/`、`wiki/`、`raw/`）与文档面分开提交。
-3. 待人拍板的设计项三条：无 client 的 `queued` 回执要不要就地结掉（`39408cb` 已给出可选预算那半）、claim 语义收成哪一种、操作者能否强制重投已结算任务（dev 依据：现在没有任何入口能造出第二份 verdict，若要即属新增有意能力）。done 判定维持不加第二道闸、只加证据。
-4. role 侧 recall-failed 未治；知识层 `.obsidian/` 勿动且**不进提交**；隔壁 lora2/lt formal 集群勿混。
+1. **解牌三件已结两件半**：发布版在位（五进制 18:18:57、`cargo install --list` 六个 1.4.0 包）；手册重导回 unchanged；`README.md` §前置 与 §1.4.0 运行时检查 已是 1.4.0 口径（`cfc414e`/`ddf019a` 做的），本轮零改动；形状读数已交（见 §复压十三）。
+2. 本仓已推：`f229291`（文档面与手帐进跟踪）、`f01e8fba`（内容层 177 文件）、`513ecf08`（复压十三读数），ahead 0。工作树只剩 `.obsidian/`、`.omp/PLAN.md`、`.agents/skills/onlyne-role-payload-v2/`（第三条现为导出器的合法目标，留跟踪与否待人判）。
+3. **等 dev 回两问**：(a) 请他重判 (i) —— requeue 是否该排掉「session 已因完成而退出」这条触发；(b) `scriber/client.db` 损坏的定性与他是否要在 operations 写「集群 root 别放同步盘」。在他回之前我不修库。
+4. **现场归属待处置**：scriber + librarian 两 client 在隔壁会话手里；`f44c890e` 停在 `queued`（`requeued=1`）；我起的 server pid 11907 归我收。
+5. 待人拍板的设计项三条：无 client 的 `queued` 回执要不要就地结掉（`39408cb` 已给出可选预算那半）、claim 语义收成哪一种、操作者能否强制重投已结算任务（dev 依据：现在没有任何入口能造出第二份 verdict，若要即属新增有意能力）。done 判定维持不加第二道闸、只加证据。
+6. role 侧 recall-failed 未治；知识层 `.obsidian/` 勿动且**不进提交**；隔壁 lora2/lt formal 集群勿混。
 
 ## 口径提醒
 
@@ -80,3 +82,20 @@ crates.io 真实 publish 已完成。十九个 crate 首次上传成功，Git ta
 - 同步盘上的手帐**必须 git 跟踪**：OneDrive 会用云版本静默换掉本地文件（mtime 一起回退），未跟踪即无痕丢失。
 - `onlyne send` 无 `--reason`；`--state` 取值只有 `active`/`all`。
 - 脚本一律先 `write` 成文件 + `python3 -m py_compile` 再跑；有界循环写上界，禁 `while True`；`orca terminal read` 的缓冲会留着同一 tab 前一个实例的行，别拿它判 role。
+
+## 取证层（scriber 库损坏，dev 定的处置：只查副本、原库零写入）
+
+副本与 sha256 manifest：`~/.local/share/onlyne-forensics/round13v2-20260924T105536Z/`；脚本 `/tmp/onlyne-bug-141/round13/scene_copy2.py`（首版 `scene_copy.py` 有 bug：六份 `client.db` 同名互相覆盖，那排 ok 作废）。三态对照：
+
+- **A 整套**（主+wal+shm，校验和与原文件一致）→ `integrity_check` **损坏 100 行**（首条 `Tree 21 page 841: btreeInitPage() returns error code 11`），`sessions` 数出 32 行。
+- **B 只主文件**（丢 WAL）→ **ok**，17 行，内容止于 `2026-09-23T18:19:14.331Z`、全 `backend=orca`、seq 1003–1024；文件 mtime 却是 09-24 13:47:01。
+- **C `backup()` 一致快照**（SQLite 自己回放 WAL）→ **同样损坏 100 行** ⇒ 排除复制撕裂，损坏在**主文件 + WAL 这一对**里，活库读到的就是它。
+- 其余六库三态全 ok：`state.db` 整套 28 行 / 只主 22 行；librarian 5/3；astrologer 0、master 3、socrates 2、scraper 1，WAL 皆 0 字节。
+
+两条顺带事实：(1) 今日 8 条会话行 seq 是 **1–4**，主文件昨天的 17 行是 **1003–1024** ⇒ 本机 watermark 今天从 1 重启，**跨天比 seq 无意义**，只有「同 task 镜像行 vs 本机行」可比（正合 dev 的 per-writer 判据）。(2) 今日全部写入都在 WAL、主文件自昨天 18:19 未落盘。**因判我不写死**：网盘换主文件与「13:47 重建那次以 cp 动过 ws 下的库」效果相同，谁在 13:47 碰过这文件我测不出。
+
+**dev 的 SQLite 判定（入档）**：open 只做 `Connection::open` + WAL + foreign_keys + schema marker/DDL，**不跑 quick_check/integrity_check、不修复不隔离**；损坏会在首个 WAL/schema 读写以 sqlite error 让 client/server 启动失败。**操作结论：集群 root 属部署约束，应移出 OneDrive/网盘**（不是「可恢复状态」）。
+
+**上游机制读数（请他重判 (i)）**：本批 8 个 task 信封**无一进过 `acked`**，同 role 的 completion 全 `in_flight→acked`（0.2–0.3 秒）；全库历史对照 `task=acked` 9 条后端全 **orca**、`rejected/session_dead` 6 条后端全 **exec**（第 7 条 `e1989855` 拒因是 orca `terminal create` 失败、会话行却 `backend=exec` —— 谁回落到 exec 待他判）。投影侧：exec 会话 `delivery` **恒 `none`**，orca 起来后写 `delivery=accepted`。⇒ 形状是「**exec 不 ack task 信封 → 60 秒重排到点 → 重投刚退休 slot → 写 `session_dead`**」，活其实已干完（6/6，非竞态）；`requeued` 到 1–2 而 `attempt` 始终 0。另：13/13 信封「事件末态 == 账行现态」，账本无物化滞后（排除一条）。
+
+**待处置**：搬 root 需要 client/server 全停且无进程持库，而那两 client 在隔壁会话手里 ⇒ 等人拍板：让那个会话收工后我全停搬到本地 FS，或就地由我停它起的 client。在他回 (i)/(ii) 之前我不修库。
