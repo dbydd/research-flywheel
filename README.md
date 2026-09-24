@@ -4,29 +4,31 @@
 
 人只和 supervisor 对话。问题由 supervisor 直接答（从 `papers/abstracts/`、`wiki/` 与 Obsidian 图谱找页、读页、按 `sources` 引数），答完值得留的直接落成页面；需要新采集、新精读、补链的，写成四段任务书派给 role。岗位说明在 `.supervisor/AGENTS.md`。
 
-仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`papers/`、`people/`、`wiki/` 是笔记的四层。仓根不放任何记录文件——流水归 onlyne ledger 与页面 frontmatter，过程归各 role 的 ws 记事。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
+仓根本身就是一个 Obsidian vault，同时是一个 llmwiki bundle：Obsidian 打开仓根，role 写下的知识笔记就是 vault 里的笔记，`raw/`、`papers/`、`people/`、`wiki/` 是笔记的四层。仓根不放知识记录文件——流水归 onlyne ledger 与页面 frontmatter，过程归各 role 的 ws `STATE.md`。机器件都在点目录里（`.onlyne/`、`.pi/`、`.agents/`、`.supervisor/`），Obsidian 不进点目录，图谱与搜索里只有笔记。
 
-运行框架是最简形状的 onlyne 环：三层记事、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
+运行框架是最简形状的 onlyne 环：注入面与手帐面、任务书四段、射后不理、ledger 记账。角色与边的设计在下一步，落点见下面「角色树」一节。
 
 两个词先说清：workspace 表示一个 role 的长期工作区，里面有记忆、设定、历史文件；session 表示这个 role 当前手上的一件工作。任务、session、一跳是一回事。
 
 工作按「射后不理」进行：读任务书 → 干活 → 产物落任务书点名的路径 → handoff 下一跳 → `onlyne_complete` 交活退出。role 不等下游。投递后立即返回一行 receipt JSON。过程与回执写进 server ledger，结果通过文件返回。
 
-## 三层文件
+## 注入面与手帐面
 
-|文件|装什么|谁能改|
-|---|---|---|
-|仓根 `AGENTS.md`|共享目标记录：记叙段是主线（目标与判据），条目段是支线 todo 与索引表|环上每个 role 都能改|
-|`.onlyne/AGENTS.md`|角色行为约定：一跳、任务书四段、记事纪律、工具面|模板定稿，运行期只读|
-|`.onlyne/ws/<role>/AGENTS.md`|该 role 的私有记事：记叙段写过程，条目段写索引表|只有该 role 自己写|
+|文件|面|装什么|谁能改|
+|---|---|---|---|
+|仓根 `AGENTS.md`|注入面|目标与判据、持久索引表、指向 `STATE.md` 的指针|环上每个 role 都能改|
+|仓根 `STATE.md`|手帐面|主线进度、支线 todo|环上每个 role 与 supervisor 都能改|
+|`.onlyne/AGENTS.md`|注入面|角色行为约定：一跳、任务书四段、记事纪律、工具面|模板定稿，运行期只读|
+|`.onlyne/ws/<role>/AGENTS.md`|注入面|该 role 的岗位口径与自检清单、指向 ws `STATE.md` 的指针|只有该 role 自己写|
+|`.onlyne/ws/<role>/STATE.md`|手帐面|该 role 的过程记录与本 role 索引|只有该 role 自己写|
 
-三层都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。role 的工作区固定在自己的 `.onlyne/ws/<role>/` 目录下。
+三份 `AGENTS.md` 都在 role 工作区的父目录链上，pi 在每个 session 启动时按外层到内层自动叠加：全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 该 role 的 ws `AGENTS.md`。`STATE.md` 不在这条链上，谁要用谁 read。role 的工作区固定在自己的 `.onlyne/ws/<role>/` 目录下。
 
 产物不设统一目录与固定格式：每一跳要交出的文件由该跳的任务书点名路径。工作文件各写各的，或者就地改同一份，由任务性质定。
 
 ## 记事纪律
 
-正本在 `.onlyne/AGENTS.md`。要点：一份 AGENTS.md 分记叙段与条目段，分开摆；索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，第一人称自言自语，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳；todo 即删——列表只登进行中的事，不打完成标记，办完当场删条；任务族收敛时 scraper 兜底清仓根本族条目，各 role 的 ws 手帐同一规矩。
+正本在 `.onlyne/AGENTS.md`。要点：注入面不留手帐，`AGENTS.md` 链每轮整份进 prompt，一改就打掉前缀缓存；一份 `STATE.md` 分记叙段与条目段，分开摆；索引条目原位写标题（讲清这件事是什么）；索引不递归；不用字母加数字的缩记号指代条目；记事与账目用 `edit` 工具手记，第一人称自言自语，禁止脚本生成；修订规则时就地覆盖原条目，同一个意思只留一处；不写时间戳；todo 即删——列表只登进行中的事，不打完成标记，办完当场删条；任务族收敛时 scraper 兜底清仓根 `STATE.md` 的本族 todo，各 role 的 ws `STATE.md` 同一规矩。
 
 ## 一跳的生命周期
 
@@ -59,7 +61,7 @@ papers/   论文层：摘要、增强、精读，一页一论文
 blogs/    博客层：与论文层同构，一页一文章
 people/   人物层：一个学者一个文件
 wiki/     role 维护的页面层：一页一文件，子目录按知识层级组织
-（仓根无记录文件：流水归 ledger 与 frontmatter）
+（仓根无知识记录文件：流水归 ledger 与 frontmatter）
 ```
 
 - 拆碎：一个知识点一个文件；同一知识点合并进单个文件；主题长大开成子目录，层级由目录路径表达，目录改名合并拆分随时可做。
@@ -92,7 +94,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 |astrologer|人物画像构建，可选路径|`people/<slug>.md`|
 |master|汇总资料，写精读报告，需要时做 ppt；嵌原文图，必要时自绘图|`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`、`papers/decks/<slug>/`（博客资源走 `blogs/`，树同构）|
 |socrates|以「我一无所知」的视角对质——只读精读报告本体、不读残差流，验收自足性；循环的放行者；必要时看图核对|对质清单、放行决定|
-|scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `AGENTS.md` 的本族 todo|`wiki/` 页面|
+|scraper|把定稿报告里的知识点拆碎回写 `wiki/`；收敛时清仓根 `STATE.md` 的本族 todo，落点登进仓根 `AGENTS.md` 索引表|`wiki/` 页面|
 
 模型位（`<role>/.pi/settings.json` 三元组，provider 全 axonhub）按预设整批切换：`python3 tools/scripts/model-mode.py [preset]`，预设表在 `tools/scripts/model-modes.json`（双写模板与活 ws，新 session 生效，在飞会话不动）。现有两档：
 
@@ -126,7 +128,7 @@ supervisor ──第一发──▶ scriber ──┬──▶ librarian ─┐
 
 ## 通电与第一发
 
-本工作区流程固定：角色、边、目录、笔记格式都定死在仓里，没有装配步骤，没有模板态与活态之分。仓根 `AGENTS.md` 就是那份共享目标记录——记事本写主线，支线开成 todo，材料走索引表，要改就地改。
+本工作区流程固定：角色、边、目录、笔记格式都定死在仓里，没有装配步骤，没有模板态与活态之分。目标与判据、持久索引表留在仓根 `AGENTS.md`；主线进度与支线 todo 写进仓根 `STATE.md`，要改就地改。
 
 唯一随部署变化的是 role 参数：每个 role 的 model/provider/thinking 三元组写在 `.onlyne/templates/<role>/.pi/settings.json`，改完 `onlyne reload --server-root .` 生效，其余一概不动。模板按 `templates/<role>/` 平铺放（`ClientEntry` 无 `template` 字段，`generate` 只按 `template_root/<role>` 找）。
 
@@ -152,7 +154,7 @@ onlyne server start --root .                            # detached；判活用 o
 ONLYNE_BACKEND=orca onlyne client run --workspace .onlyne/ws/<role>   # 每 role 一个 client，pi 开在可见 orca tab
 ```
 
-渲染进 ws 的 `AGENTS.md` 是模板骨架，之后由该 role 手记维护。重跑 `generate` 不带 `--force` 会拒绝覆盖已有 ws（退 4）；带 `--force` 则把记事换回骨架。
+渲染进 ws 的 `AGENTS.md` 是模板骨架，只含岗位口径与指向 ws `STATE.md` 的指针行。重跑 `generate` 不带 `--force` 会拒绝覆盖已有 ws（退 4）；带 `--force` 则把注入面换回骨架。
 
 key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）。非法 key 会让全量 parse 连 `onlyne client init` 都跑不动。`[server].cert_pin` 在 `onlyne-server init` 之前保持字符串形态。
 
@@ -169,31 +171,35 @@ daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可�
 任务书不存档，交接是瞬态。第一发由人当场写进命令（四段口径见 `.onlyne/AGENTS.md`）：
 
 ```bash
-onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --text "目标：<一句话，做完算什么>
+onlyne --server-root . send --from _supervisor --to <角色表 ★ 行的 role> --force --yes-i-am-supervisor-not-other-role --text "目标：<一句话，做完算什么>
 输入：<一条一行：路径（这份文件是什么）>
 期望产物：<写到哪里的什么文件，格式要求>
 下一跳建议：<handoff 谁、干什么；没有就写 无>"
 onlyne tui
 ```
 
-任务书长的时候先落到 `tools/scratch/`，用 `--file` 指过去，用完即删。仓里没有任务书存档目录，也没有流水文件：过程与结论写在各 role 自己的 ws 记事里，机器账在 ledger。
+任务书长的时候先落到 `tools/scratch/`，用 `--file` 指过去，用完即删。仓里没有任务书存档目录，也没有流水文件：过程与结论写在各 role 自己的 ws `STATE.md` 里，机器账在 ledger。
+
+`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 这七个动词是 supervisor 维护面：命令行调用必须同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`，缺一个即拒，提示指向 role 该走的插件工具（`onlyne_send` / `onlyne_complete`）。role 在会话内一律走插件，不走 bash。
 
 第一发落地后环即成形：每跳自己定产物路径，下一跳任务书交给下一跳的 role。
 
 ## 动力源
 
-第一颗 seed 由人给，写在仓根 `AGENTS.md` 的主线与第一发任务书里。之后每一跳自己产生下一跳任务书。
+第一颗 seed 由人给，主线目标写在仓根 `AGENTS.md`，第一发任务书当场传给角色。之后每一跳自己产生下一跳任务书。
 
-收束判据写在任务书里：判据满足即只 complete 不 handoff，环停在那一跳。人用 `onlyne control cancel --task <id>` 终结任务族，也可以在 TUI 里按终结键。
+收束判据写在任务书里：判据满足即只 complete 不 handoff，环停在那一跳。人用 `onlyne control cancel --task <id> --reason <原因> --from _supervisor --force --yes-i-am-supervisor-not-other-role` 终结任务族，也可以在 TUI 里按终结键（admin 面的动词都要 `--from _supervisor`，control 与 send 一样）。
 
 ## 目录
 
 ```text
-AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
+AGENTS.md                  注入面：目标与判据、持久索引表、指向 STATE.md 的指针
+STATE.md                   手帐面：主线进度、支线 todo
 STRUCTURE.md               目录结构与外部集群接入口径（别的集群当知识库用，读这一份）
 .onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书四段、记事纪律、工具面
 .agents/skills/            wiki-format（知识笔记格式正本）、paper-sources（论文与人物情报渠道目录）、scientist-profiles（人物画像协议）、onlyne-role（role 协同纪律）、onlyne-supervisor（值班词汇）
 .supervisor/AGENTS.md      supervisor 值班岗位说明（omp 开在仓根，先读它）
+.supervisor/STATE.md       supervisor 手帐面：值班过程记录
 .omp/AGENTS.md             omp 会话的项目上下文：supervisor 指针 + 引入仓根 AGENTS.md
 知识笔记的落点由任务书点名，不设统一目录；任务书本身不存档
 raw/                     不可变来源层：论文 <年月>/<学科>/<刊名>/<论文名>/、博客 <年月>/<领域>/<站点>/<slug>/，一目录一资源；零散来源平铺
@@ -207,9 +213,9 @@ people/   人物层：一个学者一个文件（协议见 scientist-profiles）
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织，一页一知识点
 tools/scripts/           脚本与工具（随树跟踪）
 tools/scratch/           临时文件（不入 git）
-（仓根无记录文件：流水归 ledger 与 frontmatter）
-role 工作区：.onlyne/ws/<role>/（运行时渲染，含该 role 的记事 AGENTS.md）
-onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/<role>/（记事骨架与模型三元组）
+（仓根无知识记录文件：流水归 ledger 与 frontmatter）
+role 工作区：.onlyne/ws/<role>/（运行时渲染，含 AGENTS.md 岗位口径与 STATE.md 手帐）
+onlyne 侧：.onlyne/spec.toml（拓扑真相）+ .onlyne/templates/<role>/（岗位骨架与模型三元组）
 ```
 
 角色细则随流程演进：改 prose 与职责时同步改 `.onlyne/spec.toml`、`.onlyne/AGENTS.md` 角色表与本文件工作流节，三处一处不落。

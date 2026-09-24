@@ -28,7 +28,7 @@ agent_package = ""
 template_root = ".onlyne/templates"
 
 # ---- supervisor：管理者节点就是仓根本身，不起 client 进程；签发名 _supervisor。----
-# 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --text "<四段>"`（落账 admin=true）。
+# 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --force --yes-i-am-supervisor-not-other-role --text "<四段>"`（落账 admin=true）。这七个维护动词（send/reply/handoff/complete/ack/reject/control）从命令行调用都要求这两个 flag。
 # 角色的 completion 回执自动回流 origin（origin==收件方时免 ACL）。角色侧零指向 _supervisor 的上行边，环就不进 supervisor。
 # key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
 [[client]]
@@ -45,6 +45,7 @@ session_command = []
 # master⇄socrates 的放行权在 socrates：报告收束由 socrates 判定并放行给 scraper，master 只回改。
 # relay 一律 handoff（parent_task+hop 血缘）。残差流随 handoff 传递，口径见 .onlyne/AGENTS.md。
 # 共用条款在仓根 AGENTS.md（omp/pi 沿父目录链进每个 role 会话），prose 只放身份与上报纪律。
+# 那条链每轮整份进 prompt：AGENTS.md 只放固定物，进度与 todo 写 STATE.md（口径见 .onlyne/AGENTS.md §注入面与手帐面）。
 # 单例（scriber/master 每任务族一个）是软约束，靠任务书维持；spec 不设并发闸。
 
 [[client]]
@@ -100,7 +101,7 @@ session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sess
 [[client]]
 role = "scraper"
 key = "ed25519/3nR9lmi9hXDrt7NL0U9HHpEeio9g+7lRFL5qTSzYhq8="
-prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完做收尾清理：把仓根 `AGENTS.md` 支线区里本任务族的 todo 条目逐条删掉——todo 无完成标记，办完即删，产物落点交索引表行承载。清完只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 scraper，工作流的收敛点。定稿的精读报告到我手上：我按拆碎规则把里面的知识点拆成 `wiki/` 页面（concept、entity、comparison、idea 各就各位），同一知识点合并进单个文件，目录层级随知识点归类调整，链接只写真实关系。拆完做收尾清理：把仓根 `STATE.md` 支线区里本任务族的 todo 条目逐条删掉——todo 无完成标记，办完即删，产物落点交仓根 `AGENTS.md` 的索引表行承载。清完只 complete 不 handoff，工作流在这一跳收敛。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 4
 allowed_senders = ["socrates"]                   # 放行权在 socrates；master 不回 scraper

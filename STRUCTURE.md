@@ -2,7 +2,7 @@
 
 本仓是一个 Obsidian vault，同时是一个 llmwiki bundle，同时是一条 deep research 工作流的产物库。别的集群要把它当知识库用，读这一份就够：下面说清每层装什么、谁能写、从哪进、怎么引。
 
-## 资源层与知识层，零记录文件
+## 资源层与知识层，零知识记录文件
 
 ```text
 raw/      来源文件层，只增不改
@@ -22,7 +22,7 @@ blogs/   博客层，与论文层同构，一页一资源
   decks/<slug>/                          演示产物（需要时）
 people/   人物层，一个学者一个文件
 wiki/     知识层：被打碎的知识点，子目录按知识层级组织
-（仓根无记录文件：流水归 onlyne ledger 与页面 frontmatter，过程在各 role 的 ws 记事）
+（仓根无知识记录文件：流水归 onlyne ledger 与页面 frontmatter，过程在各 role 的 ws STATE.md）
 ```
 
 一份资源的本体目录名＝主 slug；资源层页面在主 slug 挂后缀：论文层 `papers/abstracts/<paper>-abstract.md`、`papers/context/<paper>-context.md`、`papers/readings/<YYYY-MM>/<学科>/<刊名>/<paper>-reading.md`；博客层同构：`blogs/abstracts/<slug>-abstract.md`、`blogs/context/<slug>-context.md`、`blogs/readings/<YYYY-MM>/<领域>/<站点>/<slug>-reading.md`。精读报告的年月等段沿用该资源在 `raw/` 下的同名层级。页面 frontmatter 带 `resource:` 指向本体目录，全库 slug 唯一。
@@ -55,8 +55,8 @@ wiki/     知识层：被打碎的知识点，子目录按知识层级组织
 - 找一篇文章：`blogs/abstracts/` 同口径。
 - 找知识点：`wiki/` 子目录按知识层级铺开就是分类，配合 Obsidian 图谱、反链与搜索定位；`wiki/overview.md` 是人工维护的活综述入口。不设全库目录页（根 `index.md` 会在图谱里造出无用超级节点）。
 - 找人：`people/<slug>.md`，`papers` 键列出其代表论文的摘要页。
-- 看流水：仓内无流水文件。机器账走 `onlyne ledger/history --server-root .`（每跳任务书、回执、残差流逐帧），时刻看各页 frontmatter，过程看各 role 的 ws 记事。
-- 看一次研究的链路：`onlyne history` 按 task 血缘回放（parent_task 与 hop），各 role 的 ws 记事补过程细节。
+- 看流水：仓内无流水文件。机器账走 `onlyne ledger/history --server-root .`（每跳任务书、回执、残差流逐帧），时刻看各页 frontmatter，过程看各 role 的 ws `STATE.md`。
+- 看一次研究的链路：`onlyne history` 按 task 血缘回放（parent_task 与 hop），各 role 的 ws `STATE.md` 补过程细节。
 
 ## 外部集群接入口径
 
@@ -69,7 +69,8 @@ wiki/     知识层：被打碎的知识点，子目录按知识层级组织
 ## 目录清单
 
 ```text
-AGENTS.md                  共享目标记录：主线（目标与判据）、支线 todo、索引表
+AGENTS.md                  注入面：目标与判据、持久索引表、指向 STATE.md 的指针
+STATE.md                   手帐面：主线进度、支线 todo
 STRUCTURE.md               本文件：目录结构与外部接入口径
 raw/                       来源文件层（论文资料、零散来源）
 blogs/abstracts/           文章摘要页
@@ -86,11 +87,12 @@ tools/scripts/             脚本与工具
 tools/scratch/             临时文件（不入 git）
 .onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书四段、记事纪律
 .onlyne/spec.toml          集群拓扑与 ACL 的机器真相
-.onlyne/templates/<role>/   role 记事骨架与模型三元组
-.onlyne/ws/<role>/          运行时渲染的 role 工作区（含各自私有记事）
+.onlyne/templates/<role>/   role 岗位骨架与模型三元组
+.onlyne/ws/<role>/          运行时渲染的 role 工作区（含 AGENTS.md 岗位口径与 STATE.md 手帐）
 .agents/skills/            wiki-format、paper-sources、scientist-profiles、onlyne-role、onlyne-supervisor
 .supervisor/AGENTS.md      supervisor 岗位说明：答问、派工、值班、记账
-.omp/AGENTS.md             omp 会话项目上下文：supervisor 指针 + 引入仓根 AGENTS.md
+.supervisor/STATE.md       supervisor 手帐面：值班过程记录
+.omp/AGENTS.md             omp 会话项目上下文：supervisor 指针与仓根 AGENTS.md
 .pi/                       role 会话的 pi 配置
 ```
 
