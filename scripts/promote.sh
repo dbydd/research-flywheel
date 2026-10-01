@@ -47,7 +47,7 @@ esac
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
 ROLE_SURFACE=( ".agents/AGENTS.md" )
 while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
-OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne (server|client) (init|generate|stop|start)|/Users/|/home/|codesign'
+OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne(-server|-client)? (server |client )?(init|generate|run)([^[:alnum:]-]|$)|/Users/|/home/|codesign'
 # The two platform manuals are the documents 2.0.0 itself ships
 # (`onlyne skill export`), and they are reference material: they name install
 # and lifecycle commands on purpose. Authored canon and role templates may not.
@@ -85,7 +85,7 @@ fi
 SPEC=".onlyne/spec.toml"
 TOPO="${TOPO:-flywheel}"
 TPLDIR=".onlyne/templates/$TOPO"
-[ -f "$SPEC" ] || fail "$SPEC MISSING (v1 central truth)"
+[ -f "$SPEC" ] || fail "$SPEC MISSING (topology truth)"
 [ -d "$TPLDIR" ] || fail "$TPLDIR MISSING (role content templates)"
 ROLES="$(python3 - "$SPEC" <<'PY_ROLES'
 import tomllib, sys
@@ -127,7 +127,7 @@ PY_ENTRY
 [ -n "$ENTRY" ] || fail "entry_role EMPTY (star row parse FAILED)"
 printf '%s' " $ROLES " | grep -q " $ENTRY " || fail "entry_role '$ENTRY' not a spec [[client]] role"
 
-# --- check 4: spec==templates, supervisor admin, relay edges closed ---------
+# --- check 4: spec==templates, supervisor admin, handoff/ACL edges closed -----
 python3 - "$SPEC" "$TPLDIR" <<'PY_SPEC' || fail "spec/templates MISMATCH (reason above)"
 import tomllib, sys, os
 spec = tomllib.load(open(sys.argv[1], "rb"))

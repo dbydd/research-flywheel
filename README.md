@@ -76,7 +76,7 @@ pi install npm:pi-onlyne@2.0.0
 ```
 
 - Onlyne 工具链来自 Rust crates（crates.io 已有 2.0.0），先装 cargo。升级＝同一条命令加 `--force` 重跑。
-- `onlyne-gateway`、`onlyne-tui` 两个独立二进制在 2.0.0 已经没有：gateway 线冻结在 v1 分支，TUI 是 `onlyne` 本体的一个动词。
+- `onlyne-gateway`、`onlyne-tui` 两个独立二进制在 2.0.0 已经没有，两个能力都收成 `onlyne` 本体的动词：TUI 是 `onlyne tui`，gateway 是 `onlyne gateway status`（报 server 知道的 gateway mount 与各自能力）。
 - `pi` 是角色会话的 agent 后端，`npm:pi-onlyne@2.0.0` 是它的 onlyne 插件。v2 的协议面变了，旧版插件对 v2 client 不兼容，版本号必须钉住；role 模板 `.pi/settings.json` 的 packages 已经写着它。
 - 手册按 role 与 supervisor 两种席位导出：
 
