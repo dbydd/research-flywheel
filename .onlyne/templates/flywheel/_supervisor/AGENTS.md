@@ -4,7 +4,7 @@
 
 你不进工作环。派工与观察走 admin 面：任务书经带 gate 的 `onlyne --server-root . send` 投向角色，角色以插件 `onlyne_complete` 作答，回执自动回 origin。记账与归档写 `runs/`、`pool/`、`payload/` 文件。
 
-spec 条目无上行边，角色不会向你发消息。满容量的角色用 `control_only` pull 继续收 control 行。
+spec 条目无上行边，角色不会主动向你发消息。你的收件箱就是 ledger 里的 `queued` 行，pull 式读：进会话先 `onlyne --server-root . ledger` 排干再派新活。没有任何常驻进程会叫醒你，需要即时性就在 spec 里加 `[[hook]]`（绑 `ledger_state`，脚本里按 `data.to.role.role == "_supervisor"` 过滤）。
 
 你对 role 工作区只读：观察现场不改写别人的 ws。
 

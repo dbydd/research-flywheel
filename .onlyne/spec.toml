@@ -1,15 +1,16 @@
-# Onlyne v1（工具链追 latest，版本闸只设 protocol=1 下限）research-flywheel spec —— 模板版（唯一事实源）
+# Onlyne 2.0.0 research-flywheel spec —— 模板版（唯一事实源）
 #
 # 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
 # 改完用 `onlyne reload --server-root <root>`；预览差异跑只读动词 `onlyne spec_diff --server-root <root>`（reload 无 --dry-run）。
-# 定稿顺序（F1 死锁修法：全量 parse 之下，非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
-#   1) 空根 `onlyne-server init --root .`（产 keys/cert_pin）
+# 定稿顺序（全量 parse 之下，非法 key 连 client init 都跑不动，占位 key 必须合法长度）：
+#   1) 空根 `onlyne server init --root . --listen 127.0.0.1:7812`（产 keys/cert_pin；--listen 是必填）
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
 #   3) 各 role key 先播合法 32 字节占位 base64（AWAAAAAAAA...AAA= 形）
 #   4) 逐 role `onlyne-client init --workspace <ws> --role <role> --server-root .` 拿真 key 替换
-#   5) `onlyne server generate` → `onlyne server start`（run 不写 pid，status 的 running 只认 pid 文件，
-#      判活用 socket_present；深路径看 .onlyne/run/socket）→ `onlyne reload`
-# 运行期没有任何配置 API：这份文件就是全部。
+#   5) `onlyne server generate` → 可见 tab 里 `onlyne-server run --root .`（前台常驻；v2 无 start/stop，
+#      判活用 `onlyne status --server-root .` 与机器级 `onlyne ls`；socket 固定在
+#      /tmp/onlyne-<uid>/<digest>.sock，树内 .onlyne/run/s 只是打印拼写）→ `onlyne reload --server-root .`
+# 运行期没有任何配置 API，也没有 migrate：这份文件就是全部。
 #
 # THEME:research-question —— 主题问题与判进标准写进 root AGENTS.md，此处只放拓扑。
 
@@ -21,9 +22,10 @@ note_queue = false                                 # note 不排队：目标离�
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# pi 插件走 npm。五份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne`。
+# pi 插件走 npm。五份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne@2.0.0`
+# （v2 的协议面变了，旧版插件对 v2 client 不兼容）。
 # 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径。
-# 自展开第一次由 supervisor 手动跑 `pi install npm:pi-onlyne`，装渠道 latest（含 relay 守卫与 activity panel）。
+# 自展开第一次由 supervisor 手动跑 `pi install npm:pi-onlyne@2.0.0`。
 # 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi` 的绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，并把 settings 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`。
 agent_package = ""
 # 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关闭）。
@@ -43,7 +45,10 @@ admin = true
 max_sessions = 1
 allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
 allowed_targets = ["scout"]                        # 只保留第一发与人工唤醒 scout 的边
-session_command = []
+
+[client.runtime]
+drive = "plugin"                                   # plugin | acp | exec；drive 是运行时的属性，spec 面
+command = []                                       # admin mount 不起 client，留空即无 session
 
 # ---- 飞轮五角色。拓扑 = 角色表 = 这里；relay 一律使用 onlyne_handoff（parent_task+hop 血缘）。----
 # 共用条款在 root AGENTS.md（pi 沿父目录链进每个 role 会话），prose 只放身份与上报纪律。
@@ -56,7 +61,10 @@ admin = false
 max_sessions = 1
 allowed_senders = ["_supervisor", "critic", "model", "bench", "writer"]   # 第一发/新轮/失败回传/补检索
 allowed_targets = ["model"]   # 补检索边 writer→scout 的下游仍是正常建模接力，无新边
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "model"
@@ -66,7 +74,10 @@ admin = false
 max_sessions = 1
 allowed_senders = ["scout", "critic"]   # critic→model：revise 触及理论时直补建模
 allowed_targets = ["bench", "writer", "scout"]     # scout 仅失败回传边
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "bench"
@@ -76,7 +87,10 @@ admin = false
 max_sessions = 1
 allowed_senders = ["model"]
 allowed_targets = ["writer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "writer"
@@ -86,7 +100,10 @@ admin = false
 max_sessions = 1
 allowed_senders = ["model", "bench", "critic"]
 allowed_targets = ["critic", "scout"]   # scout→writer→scout：稿中检索缺口回补
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "critic"
@@ -96,7 +113,15 @@ admin = false
 max_sessions = 1
 allowed_senders = ["writer"]
 allowed_targets = ["writer", "scout", "model"]   # model=理论级 revise 直达
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
-# 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 idle_ms=60000
-# [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+# 超时与重试都有默认值，可以省：每个 [[client]] 条目下的
+# `timeout = { ready_ms = 30000, idle_ms = 60000 }` 与
+# `intent = { attempts = 3, backoff_ms = [1000, 2000, 4000] }`。
+# placement（orca | zellij | headless | external）是机器属性，不在这份 spec 里：
+# 它落在每个 role workspace 的 `.onlyne/config.toml` 的 `placement` 键上，
+# `onlyne-client run` 读它，缺失时依次探测 orca、zellij，再退回 headless；
+# 非空的 `ONLYNE_BACKEND` 优先。`drive = "acp"` 要求 `placement = "headless"`。

@@ -28,16 +28,16 @@ workspace 表示一个 role 的长期工作区，里面有记忆、设定、历�
 5. 按我的主题改写 payload/first.md 四段：目标、输入、期望产物、下一跳建议。
 6. ./scripts/promote.sh --dry-run 跑到 9/9 PASS，再执行 ./scripts/promote.sh。
 7. onlyne server init --root . --listen <我选的端口>，把产出的 cert_pin 回填 .onlyne/spec.toml 的 [server].cert_pin。
-8. 对 scout model bench writer critic 逐 role 跑 onlyne client init --workspace .onlyne/ws/flywheel/<role> --role <role> --server-root .。
-9. onlyne server generate --root . && onlyne server start --root . && onlyne reload --server-root . && onlyne-client doctor。
-10. 把 onlyne server status 的 socket_present 报给我。
+8. 对 scout model bench writer critic 逐 role 跑 onlyne-client init --workspace .onlyne/ws/flywheel/<role> --role <role> --server-root .。
+9. onlyne server generate --root . && onlyne reload --server-root . && onlyne-client doctor。
+10. 在一个可见 tab 里起 onlyne-server run --root .（前台常驻，v2 没有 start/stop），把 onlyne status --server-root . 的结果和 onlyne ls 里本树那行报给我。
 11. 把下面五行原样给我，我在五个可见 tab 里各粘一行（daemon 一律起在可见 tab）：
 
-    onlyne client run --workspace .onlyne/ws/flywheel/scout
-    onlyne client run --workspace .onlyne/ws/flywheel/model
-    onlyne client run --workspace .onlyne/ws/flywheel/bench
-    onlyne client run --workspace .onlyne/ws/flywheel/writer
-    onlyne client run --workspace .onlyne/ws/flywheel/critic
+    onlyne-client run --workspace .onlyne/ws/flywheel/scout
+    onlyne-client run --workspace .onlyne/ws/flywheel/model
+    onlyne-client run --workspace .onlyne/ws/flywheel/bench
+    onlyne-client run --workspace .onlyne/ws/flywheel/writer
+    onlyne-client run --workspace .onlyne/ws/flywheel/critic
 
 我跑完五个 client 后告诉你，你再执行第一发并只读报现场：
 
@@ -46,7 +46,7 @@ onlyne --server-root . send --from _supervisor --to scout --file payload/first.m
 onlyne ledger
 ```
 
-验收清单（agent 报完你核对）：`onlyne server status` 的 `socket_present` 为真；`onlyne roles` 五个角色全 connected；第一发后 `onlyne ledger` 出现 scout 的在途行；`runs/` 下新生出 `<run-id>/idea.json`。
+验收清单（agent 报完你核对）：`onlyne status --server-root .` 答 ok 且 `onlyne ls` 里本树的 SOCKET/ALIVE 都是 yes；`onlyne roles` 五个角色全 connected；第一发后 `onlyne ledger` 出现 scout 的在途行；`runs/` 下新生出 `<run-id>/idea.json`。
 
 ## 环长什么样
 
@@ -71,12 +71,13 @@ flowchart LR
 ### 第 0 步：装工具（一次性）
 
 ```bash
-cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui onlyne-testkit
-pi install npm:pi-onlyne
+cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit
+pi install npm:pi-onlyne@2.0.0
 ```
 
-- Onlyne 工具链来自 Rust crates，先装 cargo。升级＝同一条命令加 `--force` 重跑。
-- `pi` 是角色会话的 agent 后端，`npm:pi-onlyne` 是它的 onlyne 插件。role 模板 `.pi/settings.json` 的 packages 已经写着它。
+- Onlyne 工具链来自 Rust crates（crates.io 已有 2.0.0），先装 cargo。升级＝同一条命令加 `--force` 重跑。
+- `onlyne-gateway`、`onlyne-tui` 两个独立二进制在 2.0.0 已经没有：gateway 线冻结在 v1 分支，TUI 是 `onlyne` 本体的一个动词。
+- `pi` 是角色会话的 agent 后端，`npm:pi-onlyne@2.0.0` 是它的 onlyne 插件。v2 的协议面变了，旧版插件对 v2 client 不兼容，版本号必须钉住；role 模板 `.pi/settings.json` 的 packages 已经写着它。
 - 手册按 role 与 supervisor 两种席位导出：
 
   ```bash
@@ -84,8 +85,11 @@ pi install npm:pi-onlyne
   onlyne skill export --dest .agents/skills --set supervisor
   ```
 
-- 会话宿主三者有其一：`herdr`、`orca`、`zellij`。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `config.toml` 的 `backend` > auto；auto 探测序 herdr→orca→zellij。
-- 验收：`onlyne version` 输出 `protocol:1`；`pi list` 里有 `npm:pi-onlyne`。
+- 会话宿主：2.0.0 起这件事叫 placement，值域只有 `orca | zellij | headless | external`（`fake` 是测试运行时），v1 的 `herdr` 不在其中。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `.onlyne/config.toml` 的 `placement` 键 > auto；auto 探测序 orca→zellij，都没有就退回 headless（client 在后台起运行时）。
+- 驱动（drive）是另一件事，属于运行时、写进 spec 的 `[client.runtime] drive`（`plugin | acp | exec`）；`acp` 要求 `placement = "headless"`。v1 那个把两者混在一起的 `backend` 键在 2.0.0 会被点名拒绝。
+- 一个 session 服务几跳，是工作区 `.onlyne/config.toml` 的 `[client.session] scope`：`oneshot`（默认，一跳一 session，该跳结算就关）、`task`（一个任务族共用）、`role`（常驻池，至多 `max_sessions` 个）；`idle_close` 管空闲多久释放。本模板用默认 `oneshot`。
+- 验收：`onlyne version` 报 `2.0.0`；`pi list` 里有 `npm:pi-onlyne@2.0.0`。
+- 可选的图形前端是 `onlyne-web`（`onlyne-web --server-root <dir>`，自带 token），本模板不用它。
 
 要跟 onlyne 仓 main 上尚未发布的 fix：`git clone https://github.com/dbydd/onlyne && cargo build --release`，工具链产物放进 PATH。macOS 上 cp 完必做 `codesign --force --sign -`，复制后的二进制签名失效，直接 exec 收 SIGKILL。
 
@@ -107,7 +111,7 @@ pi install npm:pi-onlyne
 
 ```json
 {
-  "packages": ["npm:pi-onlyne"],
+  "packages": ["npm:pi-onlyne@2.0.0"],
   "defaultProvider": "axonhub",
   "defaultModel": "<你的模型 id>",
   "defaultThinkingLevel": "high"
@@ -137,23 +141,28 @@ onlyne server init --root . --listen 127.0.0.1:7812   # 产 keys 与 cert_pin；
 
 ```bash
 for r in scout model bench writer critic; do
-  onlyne client init --workspace .onlyne/ws/flywheel/$r --role $r --server-root .
+  onlyne-client init --workspace .onlyne/ws/flywheel/$r --role $r --server-root .
 done
 onlyne server generate --root .                       # 渲染 .onlyne/ws/flywheel/<role>/
-onlyne server start --root .                          # detached+pid；判活看 socket_present
 onlyne reload --server-root .                         # 改了 spec.toml 之后也要跑一次
 onlyne-client doctor                                  # 只读：宿主探测结果
 ```
 
-判活口径：`onlyne server status` 的 `socket_present` 是 server 死活真相（`run` 不写 pid，`status.running` 只认 pid 文件；深层工作区再看 `.onlyne/run/socket`）；每个启用 role 在 `onlyne roles` 显示 connected 才算连上。
+server 自己在一个可见 tab 里起，前台常驻；2.0.0 没有 `start`/`stop`，也没有 pid 文件：
+
+```bash
+onlyne-server run --root .                            # 前台；停它就在这个 tab 里 Ctrl-C
+```
+
+判活口径：`onlyne status --server-root .` 答 ok 是 server 活着的真相；机器级清单用 `onlyne ls`（列出本机全部 server/client 注册），SOCKET 与 ALIVE 两列分开报，要一起读——被杀掉的 daemon 会留下 SOCKET=yes/ALIVE=no，被回收的 pid 会让 ALIVE 报 yes 而进程早已不是当初那个。socket 固定在 `/tmp/onlyne-<uid>/<digest>.sock` 加同名 `.json` 注册文件（`$ONLYNE_RUNTIME_DIR` 可改目录），树里的 `.onlyne/run/s` 只是操作员读的拼写，没有任何代码会创建它。每个启用 role 在 `onlyne roles` 显示 connected 才算连上。
 
 然后每 role 开一个可见 tab，各起一个 client：
 
 ```bash
-onlyne client run --workspace .onlyne/ws/flywheel/scout
+onlyne-client run --workspace .onlyne/ws/flywheel/scout
 ```
 
-五个 role 五条命令五个 tab。`onlyne-client` 从目标 worktree 自己的 tab 起。daemon 类（`onlyne-server`、`onlyne-client`、`onlyne tui`）一律起在可见 tab，不进 agent 后台。
+五个 role 五条命令五个 tab。`onlyne-client` 从目标 worktree 自己的 tab 起。daemon 类（`onlyne-server`、`onlyne-client`、TUI）一律起在可见 tab，不进 agent 后台。退出码 5＝三个宿主都不在 PATH 且 `ONLYNE_BACKEND` 未设。
 
 再在仓库根目录开一个 agent 会话（omp 或 pi）当 supervisor 值班面，它的岗位说明在 `.pi/SYSTEM.md`。
 
@@ -167,15 +176,15 @@ onlyne tui
 
 示例按模板默认拓扑写 `--to scout`；实际入口以角色表 `★` 行为准，换主题时同步这一行。第一发落地后环即成形：entry role 产出入池并自取 queued 派给下游，后续每轮靠接力任务推进。supervisor 不进环。
 
-第一发可以带任务族元数据：`--hop-budget <n>` 设定可用的跳数，`--label <key=value>` 最多重复八次，`--deadline <RFC3339>` 设定整族截止时间。每次 `onlyne_handoff` 继承 family root、hop budget、origin、deadline 与 labels；达到 hop budget 的那一跳停止继续 handoff，保留并完成当前工作。
+第一发可以带任务族元数据：`--hop-budget <n>` 设定可用的跳数，`--label <key=value>` 最多重复八次，`--deadline <RFC3339>` 设定整族截止时间。每次 `onlyne_handoff` 继承 family root、hop budget、origin、deadline 与 labels；计数由 client 机械检查——越过 hop budget 的那一跳 `handoff` 直接被拒，报错点名它要破的那个预算，该跳保留并完成当前工作。v1 的 `relay_required*` 三个键在 2.0.0 已被点名拒绝，完成守卫改由 `allowed_targets` 承担。
 
 ### 第 5 步：旁观与收摊
 
-- 看现场：`onlyne roles`、`onlyne sessions`、`onlyne ledger`、`onlyne faults --open-only`、`onlyne ghosts --limit 20`（ghost sweep 审计）。TUI 交互面是 `onlyne tui --server-root <root>`；一次性快照用 `onlyne tui --server-root <root> --once --page 1 --state active`（默认 active）或 `--page 2 --state all`，后者包含 settled 行与 reason。
+- 看现场：`onlyne roles`、`onlyne sessions`、`onlyne ledger`、`onlyne faults --open-only`、`onlyne ghosts --limit 20`（ghost sweep 审计）、`onlyne history`、`onlyne watch --follow`（持续事件流，`--since <cursor>` 续）。TUI 是 `onlyne` 本体的动词：`onlyne tui --server-root <root>` 开三页看板（cluster / task / faults，`1`/`2`/`3` 切页、`Enter` 展开、`s` 发任务、`f` focus、`r` 报结项、repair 各键），一次性快照用 `onlyne tui --server-root <root> --once`。
 - 看产物：`runs/<run-id>/`（idea.json、derivation.md、lean/、measured/、verdict.md）、`papers/`（成稿与 figs）、`pool/ideas.md`（状态机）。
 - 终结一个任务族：`onlyne --server-root . control cancel --task <id> --from _supervisor --reason "operator stop" --force --yes-i-am-supervisor-not-other-role`，或在 TUI 里按终结键。
 - 探活一个任务：`onlyne --server-root . control probe --task <id> --from _supervisor --force --yes-i-am-supervisor-not-other-role`；`probe` 不带 `--reason`。
-- 停 server：`onlyne server stop --root .`。
+- 停 server：去起它的那个 tab 里 Ctrl-C。2.0.0 没有 stop 动词。停 client 同理（每个 role 一个 tab）。
 
 `[server].requeue_ttl_secs` 默认是 `0`（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并以 `requeue_ttl` 作为结算原因；`repair retry` 绕过这道 TTL gate。
 
@@ -186,19 +195,21 @@ onlyne tui
 装配把通用骨架填成一个具体研究主题的飞轮，产出一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
 1. **定题**。填 `.agents/AGENTS.md` 的「研究问题与判进标准」「runs/<run-id>/ 目录约定」「评测契约」三节：研究问题一句话加验收它的度量，主度量与次度量各自的阈值，算力与时间预算，禁区。
-2. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `onlyne_handoff` 到 B 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。`relay_required` 是完成守卫（session 在 complete 前必须已经 handoff 给列出的角色），本模板未启用。
+2. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `onlyne_handoff` 到 B 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。同一个 `allowed_targets` 还是完成守卫：session 报终态前必须已经把活交给它列出的每个下游角色，还欠着的 `onlyne_complete` 被拒并点名欠谁。v1 的 `relay_required*` 三键在 2.0.0 会被点名拒绝，就是被这一条并进来的。
 3. **模型档位**。逐 role 填 `.onlyne/templates/flywheel/<role>/.pi/settings.json` 的三元组。
 4. **种子**。写 `pool/ideas.md`：一条 idea 一个小节，`evidence`、`evaluation.objectives`、`done_when` 三项非空才进池。同时写 `research/` 的领域锚点文件，含 `frontier-notes.md` 表头与至少一条真实来源记录。
-5. **装具**。跑「第 0 步」的 Onlyne、onlyne-testkit 与 pi 插件安装命令；缺 `npm:pi-onlyne` 时 `pi list` 会点出来。手册用 `onlyne skill export --dest .agents/skills --set role` 与 `onlyne skill export --dest .agents/skills --set supervisor` 导出。
+5. **装具**。跑「第 0 步」的 Onlyne、onlyne-testkit 与 pi 插件安装命令；缺 `npm:pi-onlyne@2.0.0` 时 `pi list` 会点出来。手册用 `onlyne skill export --dest .agents/skills --set role` 与 `onlyne skill export --dest .agents/skills --set supervisor` 导出——它们从二进制里读，装好的 onlyne 自带自己版本的手册，不需要源码 checkout。
 6. **落分支**：跑「第 2 步」两条命令。
 
 ### 通电
 
 通电一次性，由人执行，脚本不起任何常驻进程。命令序列见「第 3 步」。
 
-key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）。非法 key 会让全量 parse 连 `onlyne client init` 都跑不动。`[server].cert_pin` 在 `onlyne server init` 之前保持字符串形态。
+key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）。非法 key 会让全量 parse 连 `onlyne-client init` 都跑不动。`[server].cert_pin` 在 `onlyne server init` 之前保持字符串形态。
 
-三个断电口径：`onlyne server status` 的 `socket_present` 是 server 死活真相；每个启用 role 在 `onlyne roles` 显示 connected 才算连上；ws 内 `.pi/settings.json` 的 packages 保持 `npm:pi-onlyne`。
+三个断电口径：`onlyne status --server-root .` 答 ok 是 server 死活真相；每个启用 role 在 `onlyne roles` 显示 connected 才算连上；ws 内 `.pi/settings.json` 的 packages 保持 `npm:pi-onlyne@2.0.0`。
+
+**账本没有迁移**。server 的账本是 `.onlyne/server.db`（schema marker 6），client 的是 `.onlyne/client.db`（marker 3），v1 的 `state.db` 在 2.0.0 不再被读。marker 对不上时 daemon 停下来报一句它找到的 revision，遗留布局直接 exit 6；没有 `migrate` 动词，换版本的动作是排干集群、把旧文件手工移到旁边、再让 v2 全新起账。想看 v2 的键集全貌，跑 `onlyne schema spec`（和 `onlyne schema client` 看工作区那份 `config.toml`）——键、类型、哪些必填都从编译产物里出来。
 
 ### 第一发
 
@@ -228,7 +239,9 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 | role | 一个固定职能的长期身份，跑在自己的 workspace 里（scout、model、bench、writer、critic） |
 | session | role 当前手上的一件工作，一跳即结 |
 | hop / 接力 | 一次任务交付；role 会话用 `onlyne_handoff`，ledger 顺 `parent_task` 链可查整条科研链 |
-| ledger | server 侧的二进制账本（`.onlyne/state.db`），用 CLI 读，禁止递归读 `.onlyne/` |
+| ledger | server 侧的二进制账本（`.onlyne/server.db`，marker 6），用 CLI 读，禁止递归读 `.onlyne/` |
+| drive / placement | drive 是运行时属性，写在 spec 的 `[client.runtime] drive`（`plugin｜acp｜exec`）；placement 是机器属性，写在 role workspace 的 `.onlyne/config.toml` 的 `placement`（`orca｜zellij｜headless｜external`）。v1 那个混体的 `backend` 键 2.0.0 点名拒绝 |
+| hook | `[[hook]]`：事件落盘后跑操作员脚本，at-least-once，按 `seq` 续。`on` 取闭合集合里的类名，`run` 是 argv，`timeout` 必填。改 hook 要重启 server |
 | idea 池 | `pool/ideas.md`，唯一队列，checkbox 状态机：queued → running → keep / failed |
 | verdict | critic 的判词，`runs/<run-id>/verdict.md` 首行 accept / revise / reject |
 | 射后不理 | role 投递下一跳后立即交活退出，不等下游回执 |
@@ -237,9 +250,11 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 
 | 现象 | 原因与处置 |
 |---|---|
-| `onlyne client run` 退出码 5 | herdr/orca/zellij 三者都不在 PATH 且 `ONLYNE_BACKEND` 未设；装一个宿主或显式 `ONLYNE_BACKEND=exec` |
-| 全量 parse 报非法 key | 占位 key 保持合法 32 字节 base64；`onlyne client init` 会把占位换成真 key |
-| `onlyne server start` 起不来 | 看 `.onlyne/run/socket` 与 `onlyne server status` 的 `socket_present`；端口占用就换 `listen` |
+| `onlyne-client run` 退出码 5 | placement 探不出可用的宿主且 `ONLYNE_BACKEND` 未设；装 orca/zellij、给工作区 `config.toml` 写 `placement = "headless"`，或显式 `ONLYNE_BACKEND=exec` |
+| 全量 parse 报非法 key | 占位 key 保持合法 32 字节 base64；`onlyne-client init` 会把占位换成真 key |
+| server 起不来 | 起它的 tab 里读报错；端口占用就换 `[server].listen`。判活用 `onlyne status --server-root .` 加 `onlyne ls` |
+| 报 `exit 6` 或 marker 对不上 | 账本是旧 revision（v1 是 `state.db`）。没有 migrate：停机、把旧文件移到旁边、让 v2 全新起账 |
+| 报某个 spec 键不存在 | 2.0.0 对未知键按名拒绝（`spec.toml:<行号>: <消息>`）。最常撞的是 v1 的 `backend`、`session_command`、`relay_required*`：drive 进 `[client.runtime]`，argv 进同节的 `command`，完成守卫交给 `allowed_targets` |
 | `acl_denied` | spec 缺边：A 的 `onlyne_handoff` 到 B 要求 B 的 `allowed_senders` 含 A 且 A 的 `allowed_targets` 含 B |
 | `recipient_offline` | note 类消息找不到可唤醒的目标：角色离线，或在线但无 working session 且 `note_queue` 关闭。改用 `onlyne_send kind:"task"` 或 `onlyne_handoff` |
 | `duplicate` / `conflict` | 同一 `op_id` 重发。原帧重发；换内容会得 `conflict` |
@@ -255,7 +270,7 @@ AGENTS.md                  角色面正本：角色表、边义、runs 结构、
 .agents/skills/            领域技能（paper-figures、paper-writing）与平台技能（onlyne-role、onlyne-supervisor）
 .pi/SYSTEM.md              supervisor 值班会话的岗位说明
 scripts/promote.sh         装配器：九检 + 落分支
-onlyne 侧：.onlyne/spec.toml（拓扑真相）+ templates/flywheel/<role>/（细则与模型位）
+onlyne 侧：.onlyne/spec.toml（拓扑真相，含 [client.runtime]）+ templates/flywheel/<role>/（细则与模型位）
 知识产物：pool/（idea 池）、runs/（一轮过程件）、papers/（成稿与 figs）、research/（证据）
 领域代码：experiment/、evaluation/；第一发任务书：payload/
 ```

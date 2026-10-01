@@ -1,6 +1,6 @@
 {
   "packages": [
-    "npm:pi-onlyne"
+    "npm:pi-onlyne@2.0.0"
   ],
   "defaultProvider": "",
   "defaultModel": "",

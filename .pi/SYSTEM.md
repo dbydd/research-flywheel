@@ -8,18 +8,18 @@
 
 ## 值班职责
 
-- 账目：`onlyne --server-root . ledger|sessions|roles|faults` 读在途与历史；`onlyne --server-root . ghosts --limit N` 读 ghost sweep 审计。`.onlyne/state.db` 是二进制账本，用 CLI 读。禁止递归读 `.onlyne/`。
+- 账目：`onlyne --server-root . ledger|sessions|roles|faults` 读在途与历史；`onlyne --server-root . ghosts --limit N` 读 ghost sweep 审计；`onlyne --server-root . history` 回放 envelope，`onlyne --server-root . watch --follow` 跟事件流。`.onlyne/server.db` 是二进制账本（schema marker 6），用 CLI 读。禁止递归读 `.onlyne/`。
 - 队列：读 `pool/ideas.md` 与 `runs/`，报告 queued 与在飞。
 - 残影恢复：`onlyne faults --open-only` 看核心检测（intent exhausted 落此）。`onlyne repair inspect|retry|close|fail|ack|rebind|adopt --task <id>` 处置投递层故障。client 重挂后、投新任务前，对每条 working 行逐个 `onlyne repair inspect --task <id>`；pane 已死而 ledger 仍 working 的行不会自愈，用 `onlyne repair close --task <id> --reason ...` 销账（记 cancelled）或 `onlyne repair fail --task <id> --reason ...`（记 failed）。原因：faults 只覆盖投递层，running_ms 判定活在 client 侧，client 重启后旧账无人续判。
 - Ghost 与重排队：ghost sweep 处理已结算任务仍显示 `working` 的镜像行；离线 owner 且任务仍开放时保留 `stale_working`，用 repair 处置。`[server].requeue_ttl_secs` 默认 `0`（关闭）；配置后超过 enqueue age 自动 requeue，原因写 `requeue_ttl`。`repair retry` 绕过 TTL gate。
-- 七动词 gate：shell 的 `send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 都必须同时带 `--force --yes-i-am-supervisor-not-other-role`；缺任一 flag 退出 2。mounted pi role 用 `onlyne_send`、`onlyne_handoff`、`onlyne_complete` 插件工具。
+- 七动词 gate：shell 的 `send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 都必须同时带 `--force --yes-i-am-supervisor-not-other-role`；缺任一 flag 退出 2。`repair` 族（`inspect|retry|close|fail|ack|rebind|adopt`）不带这两个 flag，也没有 `--from`。mounted pi role 用 `onlyne_send`、`onlyne_handoff`、`onlyne_complete` 插件工具。
 - 终结：`onlyne --server-root . control cancel --task <id> --from _supervisor --reason "..." --force --yes-i-am-supervisor-not-other-role` 收一个任务族。探活用同一 gate 的 `control probe --task <id> --from _supervisor`，不传 `--reason`。spec.toml 与 templates 的改动经 `onlyne spec_diff --server-root .` 看差异，再 `onlyne reload --server-root .`。
-- TUI 快照：`onlyne tui --server-root . --once --page 1 --state active`（默认 active）或 `--page 2 --state all`；`all` 包含 settled 行与 reason。
+- TUI 快照：`onlyne tui --server-root . --once` 渲一帧纯文本就退出（渲的是 cluster 页）；交互面 `onlyne tui --server-root .` 是三页看板。机器级清单用 `onlyne ls`（本机全部 server/client 注册，SOCKET 与 ALIVE 分开报，一起读）。
 - 对人报告：把任意一轮的现场如实报给用户，现场含 runs/ 路径、task_id、ledger 行、TUI 状态。
 
 ## 空转判定
 
-进会话先查 `onlyne server status`、`onlyne ledger`、`runs/`。
+进会话先查 `onlyne status --server-root .`、`onlyne ledger`、`runs/`。
 
 - server 不在跑：首行写「server 未运行」，给 README 的起环步骤。
 - server 在跑、ledger 无在途、`runs/` 空：写「飞轮 idle，等待第一发注入」，并给：

@@ -47,11 +47,28 @@ esac
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
 ROLE_SURFACE=( ".agents/AGENTS.md" )
 while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
-OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|generate|stop)|/Users/|/home/|codesign'
-OPS_HITS="$(grep -nE "$OPS_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
+OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne (server|client) (init|generate|stop|start)|/Users/|/home/|codesign'
+# The two platform manuals are the documents 2.0.0 itself ships
+# (`onlyne skill export`), and they are reference material: they name install
+# and lifecycle commands on purpose. Authored canon and role templates may not.
+SHIPPED_MANUALS=( ".agents/skills/onlyne-supervisor/SKILL.md" ".agents/skills/onlyne-role/SKILL.md" )
+AUTHORED_SURFACE=()
+for f in "${ROLE_SURFACE[@]}"; do
+  skip=0
+  for m in "${SHIPPED_MANUALS[@]}"; do [ "$f" = "$m" ] && skip=1; done
+  [ "$skip" = "0" ] && AUTHORED_SURFACE+=( "$f" )
+done
+OPS_HITS="$(grep -nE "$OPS_RE" "${AUTHORED_SURFACE[@]}" 2>/dev/null || true)"
 if [ -n "$OPS_HITS" ]; then
-  printf '%s\n' "$OPS_HITS" >&2
+  echo "$OPS_HITS" >&2
   fail "role surface carries assembly or ops content (lines above)"
+fi
+# Machine-specific residue is residue wherever it sits, manuals included.
+RESIDUE_RE='REPLACE_ME|/Users/|/home/|codesign'
+RESIDUE_HITS="$(grep -nE "$RESIDUE_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
+if [ -n "$RESIDUE_HITS" ]; then
+  echo "$RESIDUE_HITS" >&2
+  fail "role surface carries machine-specific residue (lines above)"
 fi
 # The duty canon holds ops verbs by design; it carries no assembly content.
 DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|codesign|npm:pi-onlyne' .pi/SYSTEM.md 2>/dev/null || true)"
@@ -92,7 +109,7 @@ assert not missing, f"keys absent or not strings: {missing}"
 if not all(d[k] for k in keys):
     print(f"{sys.argv[1]}: model triplet empty, the installer fills it (pi falls back to its own default)")
 pkgs = d.get("packages", [])
-assert pkgs == ["npm:pi-onlyne"], f'packages={pkgs}: published template ships npm:pi-onlyne (supervisor first-run: pi install npm:pi-onlyne)' 
+assert pkgs == ["npm:pi-onlyne@2.0.0"], f'packages={pkgs}: published template ships npm:pi-onlyne@2.0.0 (v2 protocol; the unversioned plugin is incompatible with a 2.0.0 client)'
 PY_CHECK2
 done
 
@@ -191,7 +208,7 @@ if ! ls research/ 2>/dev/null | grep -vq "^\.gitkeep$"; then
   fail "research/ needs a domain file besides .gitkeep"
 fi
 
-# --- check 8: npm:pi-onlyne in every role settings; agent_package empty ------
+# --- check 8: npm:pi-onlyne@2.0.0 in every role settings; agent_package empty
 python3 - "$SPEC" <<'PY_PKG' || fail "pi-onlyne settings INVALID (reason above)"
 import tomllib, sys, glob, json
 spec = tomllib.load(open(sys.argv[1], "rb"))
@@ -202,27 +219,27 @@ found = 0
 for s in glob.glob(root + "/*/*/.pi/settings.json"):
     found += 1
     pk = json.load(open(s)).get("packages", [])
-    assert pk == ["npm:pi-onlyne"], f"{s}: packages {pk} want ['npm:pi-onlyne']"
+    assert pk == ["npm:pi-onlyne@2.0.0"], f"{s}: packages {pk} want ['npm:pi-onlyne@2.0.0']"
 assert found >= 1, f"no role .pi/settings.json under {root}"
 PY_PKG
-if pi list 2>/dev/null | grep -q "npm:pi-onlyne"; then
-  info "pi plugin npm:pi-onlyne present"
+if pi list 2>/dev/null | grep -q "npm:pi-onlyne@2.0.0"; then
+  info "pi plugin npm:pi-onlyne@2.0.0 present"
 else
-  warn "pi plugin npm:pi-onlyne not installed here: the role client loads it at runtime, so the supervisor runs \`pi install npm:pi-onlyne\` before starting the ring"
+  warn "pi plugin npm:pi-onlyne@2.0.0 not installed here: the role client loads it at runtime, so the supervisor runs \`pi install npm:pi-onlyne@2.0.0\` before starting the ring"
 fi
 
-# --- check 9: v1 toolchain + backend candidates --------------------------------
+# --- check 9: 2.0.0 toolchain + placement candidates ---------------------------
 for b in onlyne onlyne-server onlyne-client pi; do
-  command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui)"
+  command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
 done
-V1_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} below 1.0.0 floor (track latest: cargo install --force the five onlyne crates)"
+ONLYNE_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
+python3 - "${ONLYNE_VER:-0}" <<'PY_VER' || fail "onlyne version=${ONLYNE_VER:-none} below 2.0.0 floor (cargo install --force --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [1, 0, 0], "below the 1.0.0 floor (v0 line is legacy protocol; exit 2 on legacy .onlyne/); install latest"
+assert (parts + [0, 0])[:3] >= [2, 0, 0], "below the 2.0.0 floor: there is no migrate, so an older store stops its daemon (exit 6); install latest and start a fresh ledger"
 PY_VER
-if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no herdr/zellij/orca on PATH: auto probe empty, onlyne-client run exits 5 unless ONLYNE_BACKEND=exec or fake"
+if ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
+  warn "no orca/zellij on PATH: placement probe falls back to headless; onlyne-client run still exits 5 unless ONLYNE_BACKEND is set or the workspace config.toml names a placement"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
@@ -279,13 +296,15 @@ git commit -qm "feat(promote): promote template to theme $THEME"
 cat <<EOF
 promoted to theme/$THEME. Power-on is manual and is not running yet.
 Full procedure: README.md "装配与通电".
-1) toolchain (once, latest): cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui onlyne-testkit
-   && pi install npm:pi-onlyne
+1) toolchain (once, latest): cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit
+   && pi install npm:pi-onlyne@2.0.0
 2) server:   onlyne server init --root . --listen <port>   # then fill spec.toml cert_pin and per-role keys
-   onlyne server generate --root . && onlyne server start --root .
+   onlyne server generate --root . && onlyne reload --server-root .
+   then, in its own visible tab: onlyne-server run --root .   # foreground; v2 has no start/stop
 3) supervisor: open pi in this directory (the _supervisor admin mount)
-4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
+4) roles:    onlyne-client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) flywheel is idle: empty ledger, empty runs/, seeds only in pool. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md --force --yes-i-am-supervisor-not-other-role
+   liveness: onlyne status --server-root .   and machine-wide onlyne ls
 EOF
 

@@ -1,4 +1,4 @@
-# Research Flywheel v3 — onlyne v1 公共约定
+# Research Flywheel v3 — onlyne 2.0.0 公共约定
 
 本文件在 server-root。pi 沿父目录链把它拼进树内每个 role 会话的上下文。
 
@@ -21,7 +21,7 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 ## 目录
 
 - `.agents/skills/`：预制技能，随树分发（pi 沿父目录链发现，与本文件同机制）。领域两件：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律），读者是 writer 与 critic，出图出稿前、审文字面时先读对应一件。平台两件：`onlyne-role`（角色协同纪律，读者是每个 role 会话）、`onlyne-supervisor`（值班与运维纪律，读者是 supervisor 会话）。
-- `.onlyne/spec.toml`：拓扑唯一真相。[server] 一节加每 role 一个 [[client]]，含 prose、ACL、timeout、intent。
+- `.onlyne/spec.toml`：拓扑唯一真相。[server] 一节加每 role 一个 [[client]]，含 prose、ACL、`timeout`、`intent`，以及 `[client.runtime]` 的 `drive` 与 `command`（v1 的 `session_command` 在 2.0.0 已并进 runtime）。
 - `.onlyne/templates/flywheel/<role>/`：role 细则（AGENTS.md）与 `.pi/settings.json` 模型位的正本，渲进 `.onlyne/ws/`。
 - `pool/ideas.md`：idea 池，也是唯一队列。一条 idea 一个小节，checkbox 状态机 + note 追加行，格式见下。scout 追加并自取消费。supervisor 不碰队列。
 - `runs/<run-id>/`：一轮 idea 的全部过程件。里面有 `idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
@@ -53,18 +53,20 @@ idea 的 `evaluation` 字段必须能按本节直接填写。缺项的 idea 不�
 
 ## onlyne 工具（pi 插件在 role 会话提供）
 
-mounted pi role 的工具面按职责分开：`onlyne_handoff{to, text}` 接力并延续当前任务族；`onlyne_send{to, text, kind, image}` 开新任务族（`kind:"task"`）或在飞任务追加 note（`kind:"note"`，默认值）；`onlyne_complete{outcome, text}` 交活结项，`outcome` 为 `done|failed|cancelled`。note 不建 session：目标离线、或者在线但手头没有 working session，都直接得 `recipient_offline`（server 侧 `note_queue = true` 才排队，排队后到 `ttl_ms` 记 expired）。to 必须在本 role 的 `allowed_targets` 里，否则返回 `acl_denied`，行都不落。
+mounted pi role 的工具面按职责分开：`onlyne_handoff{to, text, image}` 接力并延续当前任务族；`onlyne_send{to, text, kind, image}` 开新任务族（`kind:"task"`）或在飞任务追加 note（`kind:"note"`，默认值）；`onlyne_complete{outcome, summary, details, files}` 交活结项，`outcome` 为 `done|failed|cancelled|blocked`。note 不建 session：目标离线、或者在线但手头没有 working session，都直接得 `recipient_offline`（server 侧 `[server].note_queue = true` 才排队，排队后到 ttl 记 expired）。to 必须在本 role 的 `allowed_targets` 里，否则返回 `acl_denied`，行都不落。三个工具在 plugin 与 acp 两种 drive 下同名同义。
 
-mounted pi 的接力是唯一适合 role 会话的下一步：`onlyne_handoff` 记录 `parent_task` 与 hop+1 血缘，ledger 顺 `parent_task` 链能查出整条科研链路。每一次 handoff 继承任务族的 family root、hop budget、origin、RFC3339 deadline 和最多 8 个 labels；任务到达 hop budget 时，当前 hop 停止继续 handoff，保留并完成手上的工作。
+mounted pi 的接力是唯一适合 role 会话的下一步：`onlyne_handoff` 记录 `parent_task` 与 hop+1 血缘，ledger 顺 `parent_task` 链能查出整条科研链路。每一次 handoff 继承任务族的 family root、hop budget、origin、RFC3339 deadline 和最多 8 个 labels。跳数不由任务正文携带：client 从账本机械核对，越过 hop budget 的 `handoff` 在子任务开出来之前就被拒，报错点名它要破的那个预算，该 hop 保留并完成手上的工作。
 
-shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个动词都要求同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`。mounted pi role 不走这条 shell 接口；它用上面的插件工具，交接记录由插件 session 维护。
+shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个动词都要求同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`；`repair` 族不带这两个 flag，也不需要 `--from`。mounted pi role 不走这条 shell 接口；它用上面的插件工具，交接记录由插件 session 维护。
 
-`onlyne_complete{outcome, text}` 的 text 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就指产物路径。同一 task 第二次 complete 会被拒，只喊一次。ACP 结项报告（往 `<ws>/.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:` 一行）只在 `backend = "acp"` 时生效；本模板 `session_command` 是 pi 插件路径，结项走 `onlyne_complete`。
+`onlyne_complete{outcome, summary, ...}` 的 summary 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就用 `details` 装全文、`files` 点产物路径。同一 task 第二次 complete 不再落第二份报告，只回同一条 `reported <outcome>`。`drive = "acp"` 的会话经 `onlyne mcp` 挂同一套三个工具，不再有 v1 那份往 `.onlyne/out/` 写结项文件的 payload 协议；本模板五角色都是 `drive = "plugin"`（pi），结项一律走 `onlyne_complete`。
+
+报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。v1 的 `relay_required*` 三个键在 2.0.0 会被点名拒绝，这道守卫就由这一个列表承担。
 
 server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并在结算原因写 `requeue_ttl`；`repair retry` 绕过这道 TTL gate。
-- 失败交活：`onlyne_handoff` / `onlyne_complete` 的 text 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
+- 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
 - 重试纪律：同一 `op_id` 换内容重发得到 `conflict`。重试时原帧重发。断线期照常干活：outgoing receipt 落 intent，重连后按序补投。
-- role 会话查现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。pi 内用 `/onlyne` 命令看连接与 task 统计。
+- role 会话查现场：`onlyne who`、`onlyne ping`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace` 或从 cwd 上行找拥有 socket 的树；socket 本身在机器级运行目录 `/tmp/onlyne-<uid>/<digest>.sock`（`$ONLYNE_RUNTIME_DIR` 可改目录），树内的 `.onlyne/run/s` 只是操作员读的拼写。pi 内用 `/onlyne` 命令看连接与 task 统计。
 
 ## 任务书四段（`onlyne_send` / `onlyne_handoff` 的 text）
 
