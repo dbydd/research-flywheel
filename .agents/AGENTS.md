@@ -61,7 +61,9 @@ shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`�
 
 `onlyne_complete{outcome, summary, ...}` 的 summary 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就用 `details` 装全文、`files` 点产物路径。同一 task 第二次 complete 不再落第二份报告，只回同一条 `reported <outcome>`。`drive = "acp"` 的会话经 `onlyne mcp` 挂同一套三个工具，不再有 v1 那份往 `.onlyne/out/` 写结项文件的 payload 协议；本模板五角色都是 `drive = "plugin"`（pi），结项一律走 `onlyne_complete`。
 
-报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。v1 的 `relay_required*` 三个键在 2.0.0 既不被读也不被拒绝：未知键只打一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就跳过，spec 照跑。写错键的后果不是启动失败，而是设置静默走默认值——一个被删掉的键和一个生效的键长得一模一样，唯一察觉途径是跑完 spec 读 server 启动日志里那些 `ignoring unknown key` 行。这道守卫就由 `allowed_targets` 这一个列表承担，不靠任何键声明。
+报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。这道守卫就由 `allowed_targets` 这一个列表承担，不靠任何键声明——`RELAY_IS_GONE` 的原话把替代口径讲全了：一处声明就是全部策略，欠谁的投递就得先交；什么都不欠的 role 把 `allowed_targets` 留空即可。
+
+spec 键分三档，别混：① **未知键**只打一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就忽略，设置静默吃默认值，唯一察觉途径是 server 启动日志里那些行；② **值错误**才失败并点名行号（`spec.toml:<行>: <msg>`，exit 4）；③ **v2 按名废止的四键**——`backend`、`relay_required`、`relay_required_count`、`relay_count`——在 schema 转换之前就被具名硬拒（`BACKEND_IS_GONE` / `RELAY_IS_GONE`），根层与 `[[client]]` 内都拒，exit 4。所以 relay 三键不是「被忽略」，是被点名；`[client.intent]` 才是被忽略的那一档。
 
 server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并在结算原因写 `requeue_ttl`；`repair retry` 绕过这道 TTL gate。
 - 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。这只是**正文习惯**：2.0.0 没有任何解析方读这一行（v1 那套往 `.onlyne/out/` 写结项文件的 hop-done/hop-failed 首行协议随 payload 一起删了），ledger 不按它分流，接收角色靠人读。产物与现场照写。
