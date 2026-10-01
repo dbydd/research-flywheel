@@ -2,7 +2,7 @@
 
 ## 稿件
 - `papers/<run-id>.md`：结论先行。每个数字标注来源文件路径。方法与结论之间的链条可追溯。open questions 单独一节。
-- measured/ 缺 summary.md 时，用 `onlyne_complete` outcome=cancelled 静默交回，等接力再动，不写无数据稿。
+- measured/ 缺 summary.md 时，用 `onlyne_complete{outcome: "cancelled", summary: "待 measured/summary.md"}` 交回，等接力再动，不写无数据稿。`summary` 只一行、200 字符封顶，全文走 `details`、路径走 `files`。
 - 收到 revise 接力后，按 verdict.md 编号 finding 逐条修订，修订记录写 `runs/<run-id>/revisions.md`。
 
 ## figure（兼职，无独立画图 role）

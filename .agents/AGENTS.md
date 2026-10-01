@@ -61,10 +61,10 @@ shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`�
 
 `onlyne_complete{outcome, summary, ...}` 的 summary 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就用 `details` 装全文、`files` 点产物路径。同一 task 第二次 complete 不再落第二份报告，只回同一条 `reported <outcome>`。`drive = "acp"` 的会话经 `onlyne mcp` 挂同一套三个工具，不再有 v1 那份往 `.onlyne/out/` 写结项文件的 payload 协议；本模板五角色都是 `drive = "plugin"`（pi），结项一律走 `onlyne_complete`。
 
-报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。v1 的 `relay_required*` 三个键在 2.0.0 会被点名拒绝，这道守卫就由这一个列表承担。
+报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。v1 的 `relay_required*` 三个键在 2.0.0 既不被读也不被拒绝：未知键只打一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就跳过，spec 照跑。写错键的后果不是启动失败，而是设置静默走默认值——一个被删掉的键和一个生效的键长得一模一样，唯一察觉途径是跑完 spec 读 server 启动日志里那些 `ignoring unknown key` 行。这道守卫就由 `allowed_targets` 这一个列表承担，不靠任何键声明。
 
 server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并在结算原因写 `requeue_ttl`；`repair retry` 绕过这道 TTL gate。
-- 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。产物与现场照写。
+- 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。这只是**正文习惯**：2.0.0 没有任何解析方读这一行（v1 那套往 `.onlyne/out/` 写结项文件的 hop-done/hop-failed 首行协议随 payload 一起删了），ledger 不按它分流，接收角色靠人读。产物与现场照写。
 - 重试纪律：同一 `op_id` 换内容重发得到 `conflict`。重试时原帧重发。断线期照常干活：outgoing receipt 落 intent，重连后按序补投。
 - role 会话查现场：`onlyne who`、`onlyne ping`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace` 或从 cwd 上行找拥有 socket 的树；socket 本身在机器级运行目录 `/tmp/onlyne-<uid>/<digest>.sock`（`$ONLYNE_RUNTIME_DIR` 可改目录），树内的 `.onlyne/run/s` 只是操作员读的拼写。pi 内用 `/onlyne` 命令看连接与 task 统计。
 
@@ -114,7 +114,7 @@ server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超
 
 1. scout：产出入池后自取一条 queued idea，把 `runs/<run-id>/idea.json` 固化（status 改 running），再用 `onlyne_handoff` 交建模任务。supervisor 不进环。
 2. 每个 role：完成后按角色表自己那行的 `下游` 用 `onlyne_handoff` 发接力任务书，然后 `onlyne_complete{outcome:"done"}` 交活退出。
-3. 产物未齐的跳：用 `onlyne_complete{outcome: "cancelled", text: "等待条件说明"}` 体面交回，也可以静默终止，由 idle 回收兜底。等接力唤醒再动，不写无依据产物。
+3. 产物未齐的跳：用 `onlyne_complete{outcome: "cancelled", summary: "等待条件说明", details: "缺哪个文件、等到什么条件才动"}` 体面交回。**没有静默兜底**：一个 turn 干净结束而没有 `complete`，client 记一次 `turn_end_without_complete` 并发一句 nudge（`If this task is finished, report it with onlyne_complete; if something is missing, say what.`）；第二次仍不报就结算这一跳——本模板 `scope` 是默认的 `oneshot`，判 `blocked`，看板显示 waiting（`task`/`role` 则是转 idle）。等接力唤醒再动，不写无依据产物。
 4. 闭环回到 scout：critic 的 accept/reject 本跳自归档，keep 的稿件留 papers/，pool 该行改 keep；failed 的记 verdict.md，pool 改 failed。随后提取下一条 idea 入池（origin=derived），用 `onlyne_handoff` 开新一轮。
 5. 回执自动回 origin，离线也排队。role 的 `allowed_targets` 从不含 `_supervisor`，上行零常驻边。
 
@@ -132,5 +132,5 @@ server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超
 
 - 改 `experiment/`、`evaluation/` 前先读 runs/ 里上一轮记录。改动在任务产物里写明。
 - 数值只从 measured/ 引。报告只写跑出来的东西。
-- 失败也交活：跑不动的结论写进 runs/，用 `onlyne_complete{outcome: "failed", text: "> hop-failed: <原因> <现场路径>"}` 交失败报告，让下游有据可依。
+- 失败也交活：跑不动的结论写进 runs/，用 `onlyne_complete{outcome: "failed", summary: "> hop-failed: <原因> <现场路径>"}` 交失败报告，让下游有据可依。全文与产物路径走 `details` 与 `files`；`summary` 只一行、200 字符封顶，空的 `summary` 会退回最后一段 assistant 文本，所以别把它当全文位。
 - 发布面/工作面边界：草稿、中间件、探针、staged 代码先落 role 自己的 ws（私有区）。定稿产物一次性发布到任务书点名的 root 路径，并在 `runs/<run-id>/run-log.md` 记一行本地→发布映射。追加式台账（pool/ideas.md、frontier-notes.md、run-log.md、measured/ 流件）直写 root，接力唤醒要求实时。peer 的 ws 可以只读翻看。交接与审稿判据仍是任务书与 root 发布物。

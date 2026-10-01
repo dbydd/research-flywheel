@@ -13,9 +13,9 @@
 ## 固化与派发
 - 从 pool 按文件顺序取第一个 `## [ ]` 小节，写 `runs/<run-id>/idea.json`（全字段快照），并把该小节标题框符改 `[>]`。
 - 然后用 `onlyne_handoff{to: "model", text: "<四段任务书>"}` 交给 model。
-- 失败回传接收：收到正文首行 `> hop-failed:` 的接力时，把失败结论追加到对应 runs/，再从 pool 取下一个 `[ ]` 小节续环。
+- 失败回传接收：收到正文首行写着 `> hop-failed:` 的接力时，把失败结论追加到对应 runs/，再从 pool 取下一个 `[ ]` 小节续环。这一行只是正文习惯，2.0.0 没有解析方，靠你读它。
 
 ## 上报
-- onlyne_complete 的 text 用一行放全：idea id 列表、已派发 run-id、证据路径。out_head 有 200 字符封顶，写不下就落文件并指路径。
+- onlyne_complete 的 `summary` 用一行放全：idea id 列表、已派发 run-id、证据路径。ledger 的 head 就是它，200 字符封顶（空 `summary` 会退回最后一段 assistant 文本）；写不下就落文件，正文走 `details`，路径走 `files`。
 
 - 拒收的正当通道：本跳任务书与磁盘现场对不上（输入路径缺失、spec 自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason（插件 onlyne 面），账落 rejected，上游自会有据重派；repair ack 只关故障行，与投递拒收无关。拿不准要不要拒时收单、做一半、按失败回传交活，禁止静默 done。

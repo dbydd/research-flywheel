@@ -86,7 +86,7 @@ pi install npm:pi-onlyne@2.0.0
   ```
 
 - 会话宿主：2.0.0 起这件事叫 placement，值域只有 `orca | zellij | headless | external`（`fake` 是测试运行时），v1 的 `herdr` 不在其中。选择链是 `ONLYNE_BACKEND`（非空）> 工作区 `.onlyne/config.toml` 的 `placement` 键 > auto；auto 探测序 orca→zellij，都没有就退回 headless（client 在后台起运行时）。
-- 驱动（drive）是另一件事，属于运行时、写进 spec 的 `[client.runtime] drive`（`plugin | acp | exec`）；`acp` 要求 `placement = "headless"`。v1 那个把两者混在一起的 `backend` 键在 2.0.0 会被点名拒绝。
+- 驱动（drive）是另一件事，属于运行时、写进 spec 的 `[client.runtime] drive`（`plugin | acp | exec`）；`acp` 要求 `placement = "headless"`。v1 那个把两者混在一起的 `backend` 键在 2.0.0 不再被读——写了也只是被忽略（每键一条 `ignoring unknown key` 的 warn），不是拒绝。
 - 一个 session 服务几跳，是工作区 `.onlyne/config.toml` 的 `[client.session] scope`：`oneshot`（默认，一跳一 session，该跳结算就关）、`task`（一个任务族共用）、`role`（常驻池，至多 `max_sessions` 个）；`idle_close` 管空闲多久释放。本模板用默认 `oneshot`。
 - 验收：`onlyne version` 报 `2.0.0`；`pi list` 里有 `npm:pi-onlyne@2.0.0`。
 - 可选的图形前端是 `onlyne-web`（`onlyne-web --server-root <dir>`，自带 token），本模板不用它。
@@ -176,7 +176,7 @@ onlyne tui
 
 示例按模板默认拓扑写 `--to scout`；实际入口以角色表 `★` 行为准，换主题时同步这一行。第一发落地后环即成形：entry role 产出入池并自取 queued 派给下游，后续每轮靠接力任务推进。supervisor 不进环。
 
-第一发可以带任务族元数据：`--hop-budget <n>` 设定可用的跳数，`--label <key=value>` 最多重复八次，`--deadline <RFC3339>` 设定整族截止时间。每次 `onlyne_handoff` 继承 family root、hop budget、origin、deadline 与 labels；计数由 client 机械检查——越过 hop budget 的那一跳 `handoff` 直接被拒，报错点名它要破的那个预算，该跳保留并完成当前工作。v1 的 `relay_required*` 三个键在 2.0.0 已被点名拒绝，完成守卫改由 `allowed_targets` 承担。
+第一发可以带任务族元数据：`--hop-budget <n>` 设定可用的跳数，`--label <key=value>` 最多重复八次，`--deadline <RFC3339>` 设定整族截止时间。每次 `onlyne_handoff` 继承 family root、hop budget、origin、deadline 与 labels；计数由 client 机械检查——越过 hop budget 的那一跳 `handoff` 直接被拒，报错点名它要破的那个预算，该跳保留并完成当前工作。v1 的 `relay_required*` 三个键在 2.0.0 不再被读，也**不被拒绝**——未知键只打一条 `ignoring unknown key` 的 warn 就跳过，完成守卫改由 `allowed_targets` 承担；察觉写错的键只有一条路，跑完 spec 读 server 启动日志里那些 warn 行。
 
 ### 第 5 步：旁观与收摊
 
@@ -195,7 +195,7 @@ onlyne tui
 装配把通用骨架填成一个具体研究主题的飞轮，产出一条 `theme/<slug>` 分支与一套可通电的拓扑。装配期间不启动集群，不跑实验。
 
 1. **定题**。填 `.agents/AGENTS.md` 的「研究问题与判进标准」「runs/<run-id>/ 目录约定」「评测契约」三节：研究问题一句话加验收它的度量，主度量与次度量各自的阈值，算力与时间预算，禁区。
-2. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `onlyne_handoff` 到 B 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。同一个 `allowed_targets` 还是完成守卫：session 报终态前必须已经把活交给它列出的每个下游角色，还欠着的 `onlyne_complete` 被拒并点名欠谁。v1 的 `relay_required*` 三键在 2.0.0 会被点名拒绝，就是被这一条并进来的。
+2. **拓扑**。role 增删与边改 `.onlyne/spec.toml` 的 `[[client]]`，同步 `.onlyne/templates/flywheel/<role>/` 目录。角色名的唯一事实源是模板目录名。prose 是身份与上报纪律，与角色表两处保持一致。ACL 铁律：A 的 `onlyne_handoff` 到 B 要求 B 条目 `allowed_senders` 含 A，且 A 条目 `allowed_targets` 含 B。同一个 `allowed_targets` 还是完成守卫：session 报终态前必须已经把活交给它列出的每个下游角色，还欠着的 `onlyne_complete` 被拒并点名欠谁。v1 的 `relay_required*` 三键在 2.0.0 会被**忽略**（未知键只 warn，不拒绝），这道守卫是被这一条并进来的。
 3. **模型档位**。逐 role 填 `.onlyne/templates/flywheel/<role>/.pi/settings.json` 的三元组。
 4. **种子**。写 `pool/ideas.md`：一条 idea 一个小节，`evidence`、`evaluation.objectives`、`done_when` 三项非空才进池。同时写 `research/` 的领域锚点文件，含 `frontier-notes.md` 表头与至少一条真实来源记录。
 5. **装具**。跑「第 0 步」的 Onlyne、onlyne-testkit 与 pi 插件安装命令；缺 `npm:pi-onlyne@2.0.0` 时 `pi list` 会点出来。手册用 `onlyne skill export --dest .agents/skills --set role` 与 `onlyne skill export --dest .agents/skills --set supervisor` 导出——它们从二进制里读，装好的 onlyne 自带自己版本的手册，不需要源码 checkout。
@@ -209,7 +209,7 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 
 三个断电口径：`onlyne status --server-root .` 答 ok 是 server 死活真相；每个启用 role 在 `onlyne roles` 显示 connected 才算连上；ws 内 `.pi/settings.json` 的 packages 保持 `npm:pi-onlyne@2.0.0`。
 
-**账本没有迁移**。server 的账本是 `.onlyne/server.db`（schema marker 6），client 的是 `.onlyne/client.db`（marker 3），v1 的 `state.db` 在 2.0.0 不再被读。marker 对不上时 daemon 停下来报一句它找到的 revision，遗留布局直接 exit 6；没有 `migrate` 动词，换版本的动作是排干集群、把旧文件手工移到旁边、再让 v2 全新起账。想看 v2 的键集全貌，跑 `onlyne schema spec`（和 `onlyne schema client` 看工作区那份 `config.toml`）——键、类型、哪些必填都从编译产物里出来。
+**账本没有迁移**。server 的账本是 `.onlyne/state.db`（schema marker 6），client 的是 `.onlyne/client.db`（marker 3）。**v1 与 v2 同路径、不同 marker**（v2 = `onlyne-server/6/1`，v1 = `onlyne-server/4/1`）：`state.db` 这个名字不是 v1 遗留，别按文件名清「残留」，判据只有 marker。marker 对不上时 daemon 停下来报一句它找到的 revision 并退 6；遗留布局（`channels/` 目录，或带 v1 表标记的 `state.db`）让 `onlyne client init` 在写任何东西之前停下，也是 6。**exit 2 是另一扇门**：坏旗标、未知动词、少 supervisor gate 旗标。没有 `migrate` 动词，换版本的动作是排干集群、把旧文件手工移到旁边、再让 v2 全新起账。想看 v2 的键集全貌，跑 `onlyne schema spec`（和 `onlyne schema client` 看工作区那份 `config.toml`）——键、类型、哪些必填都从编译产物里出来。
 
 ### 第一发
 
@@ -239,8 +239,8 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 | role | 一个固定职能的长期身份，跑在自己的 workspace 里（scout、model、bench、writer、critic） |
 | session | role 当前手上的一件工作，一跳即结 |
 | hop / 接力 | 一次任务交付；role 会话用 `onlyne_handoff`，ledger 顺 `parent_task` 链可查整条科研链 |
-| ledger | server 侧的二进制账本（`.onlyne/server.db`，marker 6），用 CLI 读，禁止递归读 `.onlyne/` |
-| drive / placement | drive 是运行时属性，写在 spec 的 `[client.runtime] drive`（`plugin｜acp｜exec`）；placement 是机器属性，写在 role workspace 的 `.onlyne/config.toml` 的 `placement`（`orca｜zellij｜headless｜external`）。v1 那个混体的 `backend` 键 2.0.0 点名拒绝 |
+| ledger | server 侧的二进制账本（`.onlyne/state.db`，marker 6），用 CLI 读，禁止递归读 `.onlyne/` |
+| drive / placement | drive 是运行时属性，写在 spec 的 `[client.runtime] drive`（`plugin｜acp｜exec`）；placement 是机器属性，写在 role workspace 的 `.onlyne/config.toml` 的 `placement`（`orca｜zellij｜headless｜external`）。v1 那个混体的 `backend` 键 2.0.0 不再被读，写了也只是被忽略 |
 | hook | `[[hook]]`：事件落盘后跑操作员脚本，at-least-once，按 `seq` 续。`on` 取闭合集合里的类名，`run` 是 argv，`timeout` 必填。改 hook 要重启 server |
 | idea 池 | `pool/ideas.md`，唯一队列，checkbox 状态机：queued → running → keep / failed |
 | verdict | critic 的判词，`runs/<run-id>/verdict.md` 首行 accept / revise / reject |
@@ -251,10 +251,10 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 | 现象 | 原因与处置 |
 |---|---|
 | `onlyne-client run` 退出码 5 | `ONLYNE_BACKEND` 或工作区 `config.toml` 的 `placement` 给了一个环境与配置都不认的名字。按 `orca｜zellij｜headless｜external` 重写，或干脆删掉让 auto 探测走（探不着就退回 headless） |
-| 全量 parse 报非法 key | 占位 key 保持合法 32 字节 base64；`onlyne-client init` 会把占位换成真 key |
+| 报 `spec.toml:<行号>` 的值错误 | 值不合法是真失败；**未知键不是**（见下一行）。占位 key 保持合法 32 字节 base64，`onlyne-client init` 会把占位换成真 key |
 | server 起不来 | 起它的 tab 里读报错；端口占用就换 `[server].listen`。判活用 `onlyne status --server-root .` 加 `onlyne ls` |
-| 报 `exit 6` 或 marker 对不上 | 账本是旧 revision（v1 是 `state.db`）。没有 migrate：停机、把旧文件移到旁边、让 v2 全新起账 |
-| 报某个 spec 键不存在 | 2.0.0 对未知键按名拒绝（`spec.toml:<行号>: <消息>`）。最常撞的是 v1 的 `backend`、`session_command`、`relay_required*`：drive 进 `[client.runtime]`，argv 进同节的 `command`，完成守卫交给 `allowed_targets` |
+| 报 `exit 6` 或 marker 对不上 | 账本是旧 revision。v1 与 v2 同路径不同 marker（都叫 `state.db`），别按文件名清残留，看 marker。没有 migrate：停机、把旧文件移到旁边、让 v2 全新起账 |
+| 未知 spec 键被静默忽略 | 2.0.0 **不拒绝**未知键：每键一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就跳过，spec 照跑、设置静默走默认值，一个被删掉的键和一个生效的键长得一模一样。察觉途径只有一条：跑完 spec 读 server 启动日志的 `ignoring unknown key` 行。最常撞的是 v1 的 `backend`、`session_command`、`relay_required*` 与 `[client.timeout].running_ms`：drive 进 `[client.runtime]`，argv 进同节的 `command`，完成守卫交给 `allowed_targets`，进度冻结看工作区 `config.toml` 的 `stall_report_secs` |
 | `acl_denied` | spec 缺边：A 的 `onlyne_handoff` 到 B 要求 B 的 `allowed_senders` 含 A 且 A 的 `allowed_targets` 含 B |
 | `recipient_offline` | note 类消息找不到可唤醒的目标：角色离线，或在线但无 working session 且 `note_queue` 关闭。改用 `onlyne_send kind:"task"` 或 `onlyne_handoff` |
 | `duplicate` / `conflict` | 同一 `op_id` 重发。原帧重发；换内容会得 `conflict` |
