@@ -252,7 +252,7 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 |---|---|
 | `onlyne-client run` 退出码 5 | `ONLYNE_BACKEND` 或工作区 `config.toml` 的 `placement` 给了一个环境与配置都不认的名字。按 `orca｜zellij｜headless｜external` 重写，或干脆删掉让 auto 探测走（探不着就退回 headless） |
 | 报 `spec.toml:<行号>: <消息>` | **值错误**与**v2 按名废止的键**两档都在这里，两者都点名行号与句子（例：`spec.toml:7: cert_pin digest must be base64 or lowercase hex`）。占位 key 保持合法 32 字节 base64，`onlyne-client init` 会把占位换成真 key |
-| 同一句报错，退的码不一样 | **码按门走**。同一份坏 spec，报的句子与行号三门一致：融合 `onlyne` 动词（`server generate` / `client init` / `mcp`）退 4；守护二进制 `onlyne-server` / `onlyne-client` 退 1（这次运行失败）；server 读 spec 之前问的 admin 动词（走 admin socket 的 `status` / `spec_diff` / `ls`）退 3（无 socket）。**读句子，别读码** |
+| 同一句报错，退的码不一样 | **码按门走**，判据是这扇门**自己干活还是转发**：在 `onlyne` 进程内干活的那扇门退 4（实测 `onlyne server generate`）；转发给守护二进制的那几个跟守护同一个码——`onlyne client init` 把参数原样转给 `onlyne-client`，退 1，`onlyne server run` exec 守护进程也退 1；直接跑 `onlyne-server` / `onlyne-client` 一律 1（这次运行失败）；server 读 spec 之前问的 admin 动词（走 admin socket 的 `status` / `spec_diff` / `ls`）退 3（无 socket）。同一份坏 spec 各门报同一句话与同一行号，**读句子，别读码** |
 | server 起不来 | 起它的 tab 里读报错；端口占用就换 `[server].listen`。判活用 `onlyne status --server-root .` 加 `onlyne ls` |
 | 报 `exit 6` 或 marker 对不上 | 账本是旧 revision。v1 与 v2 同路径不同 marker（都叫 `state.db`），别按文件名清残留，看 marker。没有 migrate：停机、把旧文件移到旁边、让 v2 全新起账 |
 | 未知 spec 键被静默忽略 | 2.0.0 对**一般未知键**只 warn 不拒绝：每键一条 `` `<file>: ignoring unknown key <path>` `` 就跳过，spec 照跑、设置静默走默认值，一个被删掉的键和一个生效的键长得一模一样。察觉途径只有一条：跑完 spec 读 server 启动日志的 `ignoring unknown key` 行。落在这一档的典型是 v1 的 `session_command` 与 `[client.timeout].running_ms`——argv 进 `[client.runtime]` 的 `command`，进度冻结看工作区 `config.toml` 的 `stall_report_secs`。**注意四键例外**：`backend`、`relay_required`、`relay_required_count`、`relay_count` 不在此列，它们被具名硬拒（exit 4），见上一行 |
