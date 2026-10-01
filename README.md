@@ -162,7 +162,7 @@ onlyne-server run --root .                            # 前台；停它就在这
 onlyne-client run --workspace .onlyne/ws/flywheel/scout
 ```
 
-五个 role 五条命令五个 tab。`onlyne-client` 从目标 worktree 自己的 tab 起。daemon 类（`onlyne-server`、`onlyne-client`、TUI）一律起在可见 tab，不进 agent 后台。退出码 5＝三个宿主都不在 PATH 且 `ONLYNE_BACKEND` 未设。
+五个 role 五条命令五个 tab。`onlyne-client` 从目标 worktree 自己的 tab 起。daemon 类（`onlyne-server`、`onlyne-client`、TUI）一律起在可见 tab，不进 agent 后台。`ONLYNE_BACKEND` 或 `config.toml` 给出一个环境与配置都不认的名字，`run` 就在启动处停下退出 5。
 
 再在仓库根目录开一个 agent 会话（omp 或 pi）当 supervisor 值班面，它的岗位说明在 `.pi/SYSTEM.md`。
 
@@ -250,7 +250,7 @@ key 位在换真身前保持合法 32 字节 base64 占位（`AQEBAQ...AQE=`）�
 
 | 现象 | 原因与处置 |
 |---|---|
-| `onlyne-client run` 退出码 5 | placement 探不出可用的宿主且 `ONLYNE_BACKEND` 未设；装 orca/zellij、给工作区 `config.toml` 写 `placement = "headless"`，或显式 `ONLYNE_BACKEND=exec` |
+| `onlyne-client run` 退出码 5 | `ONLYNE_BACKEND` 或工作区 `config.toml` 的 `placement` 给了一个环境与配置都不认的名字。按 `orca｜zellij｜headless｜external` 重写，或干脆删掉让 auto 探测走（探不着就退回 headless） |
 | 全量 parse 报非法 key | 占位 key 保持合法 32 字节 base64；`onlyne-client init` 会把占位换成真 key |
 | server 起不来 | 起它的 tab 里读报错；端口占用就换 `[server].listen`。判活用 `onlyne status --server-root .` 加 `onlyne ls` |
 | 报 `exit 6` 或 marker 对不上 | 账本是旧 revision（v1 是 `state.db`）。没有 migrate：停机、把旧文件移到旁边、让 v2 全新起账 |

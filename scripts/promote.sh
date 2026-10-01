@@ -239,7 +239,7 @@ parts = [int(x) for x in sys.argv[1].split(".")]
 assert (parts + [0, 0])[:3] >= [2, 0, 0], "below the 2.0.0 floor: there is no migrate, so an older store stops its daemon (exit 6); install latest and start a fresh ledger"
 PY_VER
 if ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no orca/zellij on PATH: placement probe falls back to headless; onlyne-client run still exits 5 unless ONLYNE_BACKEND is set or the workspace config.toml names a placement"
+  warn "no orca/zellij on PATH: the placement probe falls back to headless (client starts the runtime in the background). onlyne-client run exits 5 when ONLYNE_BACKEND or the workspace config.toml names a placement neither the environment nor the config knows"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
