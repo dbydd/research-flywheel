@@ -5,14 +5,14 @@ description: 论文图表制作规范。writer 画 figs、排表格时加载：m
 
 # 图表制作
 
-来源三处，都给了出处，改的时候留着：
+来源三处，出处随文给出，修改时保留：
 - 绘图脚本模式：https://github.com/guanyingc/latex_paper_writing_tips （`python_plot_utils/`，CVPR/ECCV 论文实用代码，作者 Guanying Chen）
 - 表格与 LaTeX 图规则：同仓库 `paper_writing_tips.pdf`
 - 模型结构示意图灵感库：https://github.com/dair-ai/ml-visuals （draw.io 模板，MIT，作者 Omar Sanseviero）
 
 ## 实验图（matplotlib）
 
-一份 conf 文件配一张图。图的数据、标题、轴、图例全在 conf 里，画图函数不认识具体内容。重跑一个脚本就能复现整张图，改数据只动 conf。
+一份 conf 文件配一张图。图的数据、标题、轴、图例全在 conf 里。画图函数不认识具体内容。重跑一个脚本就能复现整张图，改数据只动 conf。
 
 conf 长这样（py dict，命名 `<figure-name>.conf.py`）：
 
@@ -48,7 +48,7 @@ cfg = {
 5. 本方法那行加粗（`\textbf{Ours}`）或改行名，别用底色。
 6. 表名放表格上方，图名放图下方（LaTeX 惯例，题注永远在物体之上/下各自的固定位）。
 
-表格里数字多、列数爆，先想横排换竖排、合并列、拆两张表，最后才缩字号。`\small` 以下审稿人骂人。
+表格里数字多、列数爆：先想横排换竖排、合并列、拆两张表，最后才缩字号。字号到 `\small` 以下审稿人会挑。
 
 ## 示意图（模型结构、流程）
 

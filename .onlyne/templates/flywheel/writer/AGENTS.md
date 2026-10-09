@@ -14,6 +14,7 @@
 
 ## 派发
 - 成稿后用 `onlyne_handoff{to: "critic", text: "<任务书>"}` 交给 critic，任务书带稿件、证据、figs 清单路径。
-- revise 接力里，理论层 finding 用 `onlyne_handoff{to: "model", text: "<任务书>"}` 交给 model 补推导，证据层 finding 用 `onlyne_handoff{to: "scout", text: "<任务书>"}` 交给 scout 补检索，任务书点名 verdict.md 的 finding 编号。
+- revise 接力里，证据层 finding 用 `onlyne_handoff{to: "scout", text: "<任务书>"}` 交给 scout 补检索。任务书点名 verdict.md 的 finding 编号。
+- 理论层 finding 不能直接交给 model，writer 没有这条边。把它写进修订记录，再用 `onlyne_handoff{to: "critic", text: "<任务书>"}` 交给 critic，请 critic 判 revise-理论 并交给 model。
 
 - 拒收的正当通道：本跳任务书与磁盘现场对不上（输入路径缺失、spec 自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason（插件 onlyne 面），账落 rejected，上游自会有据重派；repair ack 只关故障行，与投递拒收无关。拿不准要不要拒时收单、做一半、按失败回传交活，禁止静默 done。

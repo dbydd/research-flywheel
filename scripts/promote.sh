@@ -3,9 +3,9 @@
 #
 # Usage: ./scripts/promote.sh [--dry-run] [--theme <slug>] [--force-stage]
 #
-# Contract: README.md "装配与通电 > 装配". Checks run first; any
-# failure exits 1 with the stage unchanged. --dry-run runs checks and prints
-# the planned actions with zero writes. Already live refuses to run.
+# Contract: README.md "装配与通电 > 装配". Checks run first. Any failure
+# exits 1 with the stage unchanged. --dry-run runs checks and prints the
+# planned actions with zero writes. Already live refuses to run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -47,8 +47,8 @@ esac
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
 ROLE_SURFACE=( ".agents/AGENTS.md" )
 while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
-OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne(-server|-client)? (server |client )?(init|generate|run)([^[:alnum:]-]|$)|/Users/|/home/|codesign'
-# The two platform manuals are the documents 2.0.0 itself ships
+OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne (server|client) (init|generate|run|doctor)([^[:alnum:]-]|$)|onlyne-client|onlyne-server|/Users/|/home/|codesign'
+# The two platform manuals are the documents the installed onlyne ships
 # (`onlyne skill export`), and they are reference material: they name install
 # and lifecycle commands on purpose. Authored canon and role templates may not.
 SHIPPED_MANUALS=( ".agents/skills/onlyne-supervisor/SKILL.md" ".agents/skills/onlyne-role/SKILL.md" )
@@ -95,7 +95,7 @@ PY_ROLES
 )" || fail "spec.toml parse FAILED (python3>=3.11 tomllib)"
 [ -n "$ROLES" ] || fail "spec.toml has no [[client]] roles"
 
-# --- check 2: per-role template dir + model triplet -------------------------
+# --- check 2: per-role template dir + thinking level -------------------------
 for r in $ROLES; do
   A="$TPLDIR/$r/AGENTS.md"; S="$TPLDIR/$r/.pi/settings.json"
   [ -f "$A" ] || fail "$A MISSING"
@@ -103,13 +103,10 @@ for r in $ROLES; do
   python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INCOMPLETE (reason above)"
 import json,sys
 d = json.load(open(sys.argv[1]))
-keys = ("defaultProvider", "defaultModel", "defaultThinkingLevel")
-missing = [k for k in keys if not isinstance(d.get(k), str)]
-assert not missing, f"keys absent or not strings: {missing}"
-if not all(d[k] for k in keys):
-    print(f"{sys.argv[1]}: model triplet empty, the installer fills it (pi falls back to its own default)")
+for k in ("defaultProvider", "defaultModel", "defaultThinkingLevel"):
+    assert k not in d, f"{k} must be omitted: pi uses the operator's configured defaults; empty strings are invalid values"
 pkgs = d.get("packages", [])
-assert pkgs == ["npm:pi-onlyne@2.0.0"], f'packages={pkgs}: published template ships npm:pi-onlyne@2.0.0 (v2 protocol; the unversioned plugin is incompatible with a 2.0.0 client)'
+assert pkgs == ["npm:pi-onlyne@2.1.0"], f'packages={pkgs}: published template ships npm:pi-onlyne@2.1.0 (v2 protocol; the unversioned plugin is incompatible with a 2.1 client)'
 PY_CHECK2
 done
 
@@ -204,11 +201,20 @@ fi
 # --- check 7: payload/ and research/ --------------------------------------------
 PAYLOAD_MISSING=0
 [ -d payload ] || PAYLOAD_MISSING=1
+if [ -f payload/first.md ]; then
+  python3 - <<'PY_PAYLOAD' || fail "payload/first.md sections INCOMPLETE (reason above)"
+import re
+txt = open("payload/first.md", encoding="utf-8").read()
+missing = [n for n in ("目标", "背景", "输入", "期望产物", "自由度", "下一跳建议")
+           if not re.search(r"^#{0,6}\s*" + re.escape(n) + r"[^#\n]*[：:]", txt, flags=re.M)]
+assert not missing, f"payload/first.md: missing sections {missing}"
+PY_PAYLOAD
+fi
 if ! ls research/ 2>/dev/null | grep -vq "^\.gitkeep$"; then
   fail "research/ needs a domain file besides .gitkeep"
 fi
 
-# --- check 8: npm:pi-onlyne@2.0.0 in every role settings; agent_package empty
+# --- check 8: npm:pi-onlyne@2.1.0 in every role settings; agent_package empty
 python3 - "$SPEC" <<'PY_PKG' || fail "pi-onlyne settings INVALID (reason above)"
 import tomllib, sys, glob, json
 spec = tomllib.load(open(sys.argv[1], "rb"))
@@ -219,27 +225,27 @@ found = 0
 for s in glob.glob(root + "/*/*/.pi/settings.json"):
     found += 1
     pk = json.load(open(s)).get("packages", [])
-    assert pk == ["npm:pi-onlyne@2.0.0"], f"{s}: packages {pk} want ['npm:pi-onlyne@2.0.0']"
+    assert pk == ["npm:pi-onlyne@2.1.0"], f"{s}: packages {pk} want ['npm:pi-onlyne@2.1.0']"
 assert found >= 1, f"no role .pi/settings.json under {root}"
 PY_PKG
-if pi list 2>/dev/null | grep -q "npm:pi-onlyne@2.0.0"; then
-  info "pi plugin npm:pi-onlyne@2.0.0 present"
+if pi list 2>/dev/null | grep -q "npm:pi-onlyne@2.1.0"; then
+  info "pi plugin npm:pi-onlyne@2.1.0 present"
 else
-  warn "pi plugin npm:pi-onlyne@2.0.0 not installed here: the role client loads it at runtime, so the supervisor runs \`pi install npm:pi-onlyne@2.0.0\` before starting the ring"
+  warn "pi plugin npm:pi-onlyne@2.1.0 not installed here: the role client loads it at runtime, so the supervisor runs \`pi install npm:pi-onlyne@2.1.0\` before starting the ring"
 fi
 
-# --- check 9: 2.0.0 toolchain + placement candidates ---------------------------
-for b in onlyne onlyne-server onlyne-client pi; do
+# --- check 9: 2.1 toolchain + placement candidates ---------------------------
+for b in onlyne pi; do
   command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
 done
 ONLYNE_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "${ONLYNE_VER:-0}" <<'PY_VER' || fail "onlyne version=${ONLYNE_VER:-none} below 2.0.0 floor (cargo install --force --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
+python3 - "${ONLYNE_VER:-0}" <<'PY_VER' || fail "onlyne version=${ONLYNE_VER:-none} below the 2.1 floor (cargo install --force --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
-assert (parts + [0, 0])[:3] >= [2, 0, 0], "below the 2.0.0 floor: there is no migrate, so an older store stops its daemon (exit 6); install latest and start a fresh ledger"
+assert (parts + [0, 0])[:3] >= [2, 1, 0], "below the 2.1 floor: there is no migrate, so an older store stops its daemon (exit 6); install latest and start a fresh ledger"
 PY_VER
-if ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no orca/zellij on PATH: the placement probe falls back to headless (client starts the runtime in the background). onlyne-client run exits 5 when ONLYNE_BACKEND or the workspace config.toml names a placement neither the environment nor the config knows"
+if ! command -v tern >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
+  warn "no tern/orca/zellij on PATH: the placement probe falls back to headless (client starts the runtime in the background). onlyne client run exits 5 when ONLYNE_BACKEND or the workspace config.toml names a placement neither the environment nor the config knows"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
@@ -297,12 +303,12 @@ cat <<EOF
 promoted to theme/$THEME. Power-on is manual and is not running yet.
 Full procedure: README.md "装配与通电".
 1) toolchain (once, latest): cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit
-   && pi install npm:pi-onlyne@2.0.0
+   && pi install npm:pi-onlyne@2.1.0
 2) server:   onlyne server init --root . --listen <port>   # then fill spec.toml cert_pin and per-role keys
-   onlyne server generate --root . && onlyne reload --server-root .
-   then, in its own visible tab: onlyne-server run --root .   # foreground; v2 has no start/stop
+   onlyne generate --root . && onlyne reload --server-root .
+   then, in its own visible tab: onlyne server run --root .   # foreground; v2 has no start/stop
 3) supervisor: open pi in this directory (the _supervisor admin mount)
-4) roles:    onlyne-client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
+4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) flywheel is idle: empty ledger, empty runs/, seeds only in pool. To turn the ring:
    onlyne --server-root . send --from _supervisor --to $ENTRY --file payload/first.md --force --yes-i-am-supervisor-not-other-role
    liveness: onlyne status --server-root .   and machine-wide onlyne ls

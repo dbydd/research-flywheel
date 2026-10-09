@@ -1,4 +1,4 @@
-# Research Flywheel v3 — onlyne 2.0.0 公共约定
+# Research Flywheel v3 — onlyne v2 公共约定
 
 本文件在 server-root。pi 沿父目录链把它拼进树内每个 role 会话的上下文。
 
@@ -21,7 +21,7 @@ session 不等下游。投递后立即返回一行 receipt JSON。后续进展�
 ## 目录
 
 - `.agents/skills/`：预制技能，随树分发（pi 沿父目录链发现，与本文件同机制）。领域两件：`paper-figures`（matplotlib conf 驱动绘图 + LaTeX 三线表与图规则，源自 guanyingc/latex_paper_writing_tips 与 dair-ai/ml-visuals）、`paper-writing`（稿件骨架 + LaTeX 细则 + 措辞纪律），读者是 writer 与 critic，出图出稿前、审文字面时先读对应一件。平台两件：`onlyne-role`（角色协同纪律，读者是每个 role 会话）、`onlyne-supervisor`（值班与运维纪律，读者是 supervisor 会话）。
-- `.onlyne/spec.toml`：拓扑唯一真相。[server] 一节加每 role 一个 [[client]]，含 prose、ACL、`timeout`、`intent`，以及 `[client.runtime]` 的 `drive` 与 `command`（v1 的 `session_command` 在 2.0.0 已并进 runtime）。
+- `.onlyne/spec.toml`：拓扑唯一真相。[server] 一节加每 role 一个 [[client]]，含 prose、ACL、`timeout`、`intent`，以及 `[client.runtime]` 的 `drive` 与 `command`。`timeout` 只有 `ready_ms` 与 `idle_ms` 两个键。
 - `.onlyne/templates/flywheel/<role>/`：role 细则（AGENTS.md）与 `.pi/settings.json` 模型位的正本，渲进 `.onlyne/ws/`。
 - `pool/ideas.md`：idea 池，也是唯一队列。一条 idea 一个小节，checkbox 状态机 + note 追加行，格式见下。scout 追加并自取消费。supervisor 不碰队列。
 - `runs/<run-id>/`：一轮 idea 的全部过程件。里面有 `idea.json` 快照、`derivation.md`、`lean/`、`measured/`、`verdict.md`。
@@ -59,27 +59,31 @@ mounted pi 的接力是唯一适合 role 会话的下一步：`onlyne_handoff` �
 
 shell 的 role-speaking 动词是 exec 会话的显式接口。`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 七个动词都要求同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`；`repair` 族不带这两个 flag，也不需要 `--from`。mounted pi role 不走这条 shell 接口；它用上面的插件工具，交接记录由插件 session 维护。
 
-`onlyne_complete{outcome, summary, ...}` 的 summary 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就用 `details` 装全文、`files` 点产物路径。同一 task 第二次 complete 不再落第二份报告，只回同一条 `reported <outcome>`。`drive = "acp"` 的会话经 `onlyne mcp` 挂同一套三个工具，不再有 v1 那份往 `.onlyne/out/` 写结项文件的 payload 协议；本模板五角色都是 `drive = "plugin"`（pi），结项一律走 `onlyne_complete`。
+`onlyne_complete{outcome, summary, ...}` 的 summary 原样进 ledger 的 `out_head`：单行、200 字符封顶。这是唯一的上行通道，整句答案放这里，写不下就用 `details` 装全文、`files` 点产物路径。同一 task 第二次 complete 不再落第二份报告，只回同一条 `reported <outcome>`。`drive = "acp"` 的会话经 `onlyne mcp` 挂同一套三个工具；本模板五角色都是 `drive = "plugin"`（pi），结项一律走 `onlyne_complete`。
 
-报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。这道守卫就由 `allowed_targets` 这一个列表承担，不靠任何键声明——`RELAY_IS_GONE` 的原话把替代口径讲全了：一处声明就是全部策略，欠谁的投递就得先交；什么都不欠的 role 把 `allowed_targets` 留空即可。
+报终态之前，session 必须已经把活交给 `allowed_targets` 里列出的每个**下游**角色（交任务给上游那一个本身就是回复，不在列）。还欠着的 `onlyne_complete` 会被拒，并点名还欠谁。这道守卫就由 `allowed_targets` 这一个列表承担，不靠任何键声明：一处声明就是全部策略，欠谁的投递就得先交；什么都不欠的 role 把 `allowed_targets` 留空即可。
 
-spec 键分三档，别混：① **未知键**只打一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就忽略，设置静默吃默认值，唯一察觉途径是 server 启动日志里那些行；② **值错误**失败并点名行号与句子（`spec.toml:<行>: <msg>`）；③ **v2 按名废止的四键**——`backend`、`relay_required`、`relay_required_count`、`relay_count`——在 schema 转换之前就被具名硬拒（`BACKEND_IS_GONE` / `RELAY_IS_GONE`），根层与 `[[client]]` 内都拒。所以 relay 三键不是「被忽略」，是被点名；`[client.intent]` 才是被忽略的那一档。②③ 两档的退出码**按门走**，判据是这扇门自己干活还是转发：在 `onlyne` 进程内干活的融合动词退 4，转发给守护二进制的那几个（client 全组、server run）跟守护同一个码 1，server 读 spec 之前问的 admin 动词退 3。同一份坏 spec 各门报同一句话，读句子别读码；逐入口的对照表在 README「排障」，操作员动作归 supervisor，不归 role 会话。
+spec 键分三档，别混：① **未知键**只打一条 `` `<file>: ignoring unknown key <path>` `` 的 warn 就忽略，设置静默吃默认值，唯一察觉途径是 server 启动日志里那些行；② **值错误**失败并点名行号与句子（`spec.toml:<行>: <msg>`）；③ **按名废止的四键**——`backend`、`relay_required`、`relay_required_count`、`relay_count`——在 schema 转换之前就被具名硬拒（`BACKEND_IS_GONE` / `RELAY_IS_GONE`），根层与 `[[client]]` 内都拒。所以 relay 三键不是「被忽略」，是被点名。②③ 两档的退出码**按门走**，判据是这扇门自己干活还是转发：在 `onlyne` 进程内干活的融合动词退 4，转发给守护二进制的那几个（client 全组、server run）跟守护同一个码 1，server 读 spec 之前问的 admin 动词退 3。同一份坏 spec 各门报同一句话，读句子别读码；逐入口的对照表在 README「排障」，操作员动作归 supervisor，不归 role 会话。
 
 server 的 `requeue_ttl_secs` 默认是 0（关闭）。配置后，队列项超过 enqueue age 会自动 requeue，并在结算原因写 `requeue_ttl`；`repair retry` 绕过这道 TTL gate。
-- 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。这只是**正文习惯**：2.0.0 没有任何解析方读这一行（v1 那套往 `.onlyne/out/` 写结项文件的 hop-done/hop-failed 首行协议随 payload 一起删了），ledger 不按它分流，接收角色靠人读。产物与现场照写。
+- 失败交活：`onlyne_handoff` 的 text 或 `onlyne_complete` 的 `summary` 首行写 `> hop-failed: <环节> <一句话>`，并带 `outcome=failed`。这只是**正文习惯**：current onlyne 没有任何解析方读这一行，ledger 不按它分流，接收角色靠人读。产物与现场照写。
 - 重试纪律：同一 `op_id` 换内容重发得到 `conflict`。重试时原帧重发。断线期照常干活：outgoing receipt 落 intent，重连后按序补投。
-- role 会话查现场：`onlyne who`、`onlyne ping`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace` 或从 cwd 上行找拥有 socket 的树；socket 本身在机器级运行目录 `/tmp/onlyne-<uid>/<digest>.sock`（`$ONLYNE_RUNTIME_DIR` 可改目录），树内的 `.onlyne/run/s` 只是操作员读的拼写。pi 内用 `/onlyne` 命令看连接与 task 统计。
+- role 会话查现场：`onlyne who`、`onlyne ping`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace` 或从 cwd 上行找拥有 socket 的树；socket 本身在机器级运行目录 `/tmp/onlyne-<uid>/<digest>.sock`（`$ONLYNE_RUNTIME_DIR` 可改目录），树内的 `.onlyne/run/s` 只是操作员读的拼写。
 
-## 任务书四段（`onlyne_send` / `onlyne_handoff` 的 text）
+## 任务书六段（`onlyne_send` / `onlyne_handoff` 的 text）
 
 ```text
 目标：<一句话，做完算什么>
-输入：<必须读的文件路径，runs/ 与 research/ 为准>
+背景：<为什么做这件事：上游发现了什么、卡在哪、这个任务在整体里处于什么位置；两三句；没有就写 无>
+输入：<必须读的路径，一条一行，括号里写清这份文件是什么；接收方是全新上下文，没点的路径它找不到>
 期望产物：<写到哪里的什么文件，格式要求>
+自由度：<除点名产物外鼓励顺手做什么：补检索、修断链、记负证据、建索引页；或写 按角色表惯例>
 下一跳建议：<完成后用 onlyne_handoff 交给谁、干什么；没有就写 无>
 ```
 
-输入路径必须真实存在。接收方 session 是全新上下文。任务书里没写的路径它找不到。
+六段标题字面固定（目标/背景/输入/期望产物/自由度/下一跳建议），接收方与校验器按标题找段。段内自由行文；`输入` 保持一条一行格式。`背景` 与 `自由度` 允许写「无」；写「无」时接收方按角色表与根约定自主判断。空段不算缺失；段标题必须存在。
+
+接收方带着上下文干活：先读背景，再决定怎么干；点名产物是硬契约，工作路径自己判断。输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。
 
 ## idea 格式（pool/ideas.md 一条一个小节）
 

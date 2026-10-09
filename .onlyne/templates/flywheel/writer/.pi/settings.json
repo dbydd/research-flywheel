@@ -1,8 +1,5 @@
 {
   "packages": [
-    "npm:pi-onlyne@2.0.0"
-  ],
-  "defaultProvider": "",
-  "defaultModel": "",
-  "defaultThinkingLevel": ""
+    "npm:pi-onlyne@2.1.0"
+  ]
 }
