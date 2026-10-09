@@ -14,12 +14,12 @@ def main():
  ap=argparse.ArgumentParser(); ap.add_argument('--run-id',required=True); ap.add_argument('--probe-dir',required=True); ap.add_argument('--sample-manifest',required=True); ap.add_argument('--impl',required=True); ap.add_argument('--device',default='mps'); ap.add_argument('--scan-backend',default='pscan'); ap.add_argument('--init',default='orthogonal_small'); ap.add_argument('--optimizer',default='adam_coordinate'); ap.add_argument('--chain',default='per'); ap.add_argument('--budget',type=int,default=32); ap.add_argument('--branches',default='1,2,4,8,16'); ap.add_argument('--seed',type=int,default=20260908); ap.add_argument('--jobs',type=int,default=1); ap.add_argument('--devices',type=int,default=1); ap.add_argument('--num-workers',type=int,default=0); ap.add_argument('--interrupt-step',type=int,default=300); ap.add_argument('--steps',default='600'); ap.add_argument('--checkpoint-dir',required=True); ap.add_argument('--repo-lock',default=''); ap.add_argument('--arms',default='reference,resume'); ap.add_argument('--slice-limit-s',type=float,default=2700); ap.add_argument('--time-budget-s',type=float,default=7200)
  a=ap.parse_args(); root=Path(__file__).resolve().parents[1]; out=root/'runs'/a.run_id/'measured'; out.mkdir(parents=True,exist_ok=True); cpdir=root/a.checkpoint_dir if not Path(a.checkpoint_dir).is_absolute() else Path(a.checkpoint_dir); cpdir.mkdir(parents=True,exist_ok=True)
  entries=[json.loads(x) for x in Path(a.sample_manifest).read_text().splitlines() if x.strip()]; entries=sorted([e for e in entries if e.get('probe_id') in PROBES],key=lambda e:e['probe_id']);
- (out/'sample-manifest.jsonl').write_text(''.join(json.dumps({**e,'resume_audit_sample':True,'sample_seed':20260909,'sample_unit':'probe','source_manifest':'runs/ssd-convergence-004/probes/manifest.jsonl'},sort_keys=True)+'\n' for e in entries))
+ (out/'sample-manifest.jsonl').write_text(''.join(json.dumps({**e,'resume_audit_sample':True,'sample_seed':20260909,'sample_unit':'probe','source_manifest':a.sample_manifest},sort_keys=True)+'\n' for e in entries))
  rows=[]; cps=[]; align=[]; slices=[]; started=time.time(); device=torch.device('mps' if a.device=='mps' and torch.backends.mps.is_available() else 'cpu')
  gate={'run_id':a.run_id,'fallback_env':os.environ.get('PYTORCH_ENABLE_MPS_FALLBACK'),'mps_built':torch.backends.mps.is_built(),'mps_available':torch.backends.mps.is_available(),'device':str(device),'forward_backward':False}
  for e in entries:
-  p=e['probe_id']; pp=root/'runs/ssd-convergence-004/probes'/e['file'];
-  if not pp.exists(): pp=root/'runs/ssd-convergence-004/probes/attn'/e['file']
+  p=e['probe_id']; pp=Path(a.probe_dir)/e['file'];
+  if not pp.exists(): pp=Path(a.probe_dir)/'attn'/e['file']
   target=torch.tensor(np.load(pp),dtype=torch.float32,device=device); L=target.shape[0]; mask=torch.tril(torch.ones((L,L),device=device),-1)
   for r in [int(x) for x in a.branches.split(',')]:
    n=B_SS//r; k=key(p,r); seed=seed_for(p,r,a.seed); torch.manual_seed(seed); random.seed(seed); np.random.seed(seed%(2**32-1))

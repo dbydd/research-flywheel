@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""DEPRECATED 对照存档 — 旧 mlx + numpy 栈评测器（run ssd-spectral-restore-001 / ssd-convergence-004）。
+"""DEPRECATED 对照存档 — 旧 mlx + numpy 栈评测器（v0 历史口径，模板保留）。
 
 本文件的 objective 名集合与阈值语义属已废弃口径；新栈实现见 evaluation/attn_spectral_probe_torch.py 与
-experiment/fit_ssd_branches_torch.py，当前权威条款见 runs/ssd-convergence-004-torch/spec.md（§0.1 禁引用清单、§2 正式判定、§12 命令行）。
-本文件保留供第一轮已 accept 结果的复算与图表再生使用；在 training freeze 期内不新增执行。
+experiment/fit_ssd_branches_torch.py，当前权威条款见各 run 的 spec.md。
+本文件保留供已 accept 历史结果的复算与图表再生使用；在 training freeze 期内不新增执行。
 
 evaluation/attn_spectral_probe.py — 谱还原评测器（spec §7，语义定稿）。
 

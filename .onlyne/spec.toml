@@ -1,138 +1,142 @@
-# Onlyne v1 cluster spec. Written by `onlyne-server init`.
+# Onlyne 2.1.1 research-flywheel spec —— 模板版（唯一事实源）
 #
-# `name` is the cluster name handed to every client.
-# `listen` is the TCP address the routing daemon binds.
-# `cert_pin` pins the server certificate stored in `.onlyne/keys/server.key`,
-# and every client verifies the TLS endpoint against it.
+# 解析即启动校验：值错误直接拒绝，报错形如 `spec.toml:<行号>: <消息>`；
+# v2 按名废止的四键（backend 与 v1 的 relay 三键）在 schema 转换之前就被具名硬拒
+# （BACKEND_IS_GONE / RELAY_IS_GONE）。
+# 改完用 `onlyne reload --server-root .`；预览差异跑只读动词
+# `onlyne spec-diff --server-root .`。键集全貌看 `onlyne schema spec`。
+#
+# THEME:aris —— 主题问题、ARIS 映射与判进标准写进根 AGENTS.md，此处只放拓扑。
+
 [server]
-name = "aris"
+name = "aris"                                      # 集群名；{{cluster}}/{{server_name}} 占位符的源头
 listen = "127.0.0.1:7813"
-cert_pin = "sha256/REPLACE_ME_after_server_init"
-note_queue = false
+cert_pin = "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="   # onlyne server init 后回填真值
+note_queue = false                                 # note 不排队：目标离线即 recipient_offline
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-agent_package = "__AGENT_PACKAGE_ABS__"
+# pi 插件走 npm。六份模板 `.pi/settings.json`（五 role + root `.pi/`）的 packages
+# 写 `npm:pi-onlyne@2.1.0`（v2 协议面变了，旧版插件对 v2 client 不兼容）。
+# 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径。
+# 自展开第一次由 supervisor 手动跑 `pi install npm:pi-onlyne@2.1.0`。
+# 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi`
+# 的绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，
+# 并把 settings 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`。
+agent_package = ""
+# 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、
+# requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关闭）。
 template_root = ".onlyne/templates"
 
-# Each role is one `[[client]]` row. `onlyne-client init` prints a ready row
-# whose `key` value matches the workspace it just created.
+# ---- supervisor：admin mount，跑在 server-root 本身，不起 client 进程。----
+# 它的 send 走瘦入口
+# `onlyne --server-root . send --from _supervisor --to <role> --file <payload>
+#  --force --yes-i-am-supervisor-not-other-role`（落账 admin=true）。
+# 角色的 completion 回执自动回流 origin（origin==收件方时免 ACL）。
+# key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
+[[client]]
+role = "_supervisor"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+prose = """你是 ARIS 研究飞轮的 supervisor（admin mount）。你不进工作环：取 idea 派工、归档 verdict、起新一轮都在 role 手里。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to scout --file payload/first.md --force --yes-i-am-supervisor-not-other-role`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec-diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+admin = true
+max_sessions = 1
+allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
+allowed_targets = ["scout"]                        # 只保留第一发与人工唤醒 scout 的边
 
-# ---- ARIS 六角色（研究飞轮 v3 · supervisor 不注册，admin 面代行）。----
+[client.runtime]
+drive = "plugin"                                   # plugin | acp | exec；drive 是运行时的属性，spec 面
+command = []                                       # admin mount 不起 client，留空即无 session
+
+# ---- ARIS 六角色（研究飞轮 v3）。----
 # 拓扑唯一事实源=根 AGENTS.md 角色表；prose 薄壳，细则在 templates/aris/<role>/AGENTS.md。
-# 第一发注入：onlyne --server-root . send --from critic --to scout --file payload/first.md
-# intent 大数方案（0=首次失败即 exhausted，弃用）；bench 单开 running_ms 承接旧 busy_secs。
+# 第一发注入：onlyne --server-root . send --from _supervisor --to scout --file payload/first.md
+#   （带 --force --yes-i-am-supervisor-not-other-role）
+# 完成守卫：allowed_targets 一处声明既是 ACL 又是完成守卫——role 报终态前必须
+# 已向列表里的每个下游角色投递；v1 的 relay 守卫键已废。
+# 超时与重试用默认值（ready_ms=30000、idle_ms=60000；attempts=3、backoff 三档），
+# 全部省略；长跑批的时间片纪律归 bench 细则管，spec 不再设大额超时。
 
 [[client]]
-role = "scout"
+role = "scout"                                     # ★ entry role（第一发投递对象）
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 scout（前沿侦察员，entry role）。你的作业细则在本工作区 AGENTS.md（检索标准、入池硬门、固化与派发、失败回传接收口），先读它再动手。上报纪律：onlyne_complete 的 text 一行放全（idea id、run-id、证据路径），写不下落文件指路径。"""
+prose = """你是 ARIS 研究飞轮的 scout（前沿侦察员）。检索→盘点→按 idea schema 入池；入池后自取一条 queued idea 固化 runs/<run-id>/idea.json（status=running），用 onlyne_handoff 交给 analyzer 建模前置任务（任务书指向 idea.json 与 research/ 证据，要求先立 analysis.md）。失败回传接收口：收到正文首行写着 `> hop-failed:` 的接力时，把结论记入 runs/ 并从 pool 取下一条 queued 续环——这一行只是正文习惯，2.x 没有解析方，靠你读它。你的接力下游只有 analyzer。不跑实验，不下结论。"""
 admin = false
-max_sessions = 2
-relay_required = ["analyzer"]
-reuse = true
-allowed_senders = ["critic", "analyzer", "model", "bench", "writer"]
+max_sessions = 1
+allowed_senders = ["_supervisor", "critic", "analyzer", "model", "bench", "writer"]   # 第一发/新轮/失败回传/补检索
 allowed_targets = ["analyzer"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 120000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
-[[client]]
-role = "analyzer"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 analyzer（成因机制分析与问题定型），坐在 scout 与 model 之间。作业细则在本工作区 AGENTS.md（analysis.md 四节骨架：成因/机制/难点/选型考察点；难点只提问不解答，应对与贡献归 model；证据边界与失败回传见细则），先读它再动手。你不出 derivation、不出 spec、不写代码。产出 runs/<run-id>/analysis.md 后 handoff model。上报一行放全，细节落 runs/。"""
-admin = false
-max_sessions = 2
-relay_required = ["model"]
-reuse = true
-allowed_senders = ["scout", "model"]
-allowed_targets = ["model", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 120000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "model"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 model（推导+Lean 形式化+出 spec）。作业细则在本工作区 AGENTS.md，先读它。你只出 spec，不写 experiment/ 代码。上报一行放全，细节落 runs/。"""
+prose = """你是 ARIS 研究飞轮的 model（推导 + Lean 形式化 + 出 spec）。读 runs/<run-id>/analysis.md（analyzer 立问题）与 idea.json，逐难点给应对并确立贡献主张，出 derivation.md 与 spec.md。代码与评测器由 bench 按 spec 落地。Lean 失败：失败命令与断言位置写进 derivation.md，用 onlyne_handoff 交给 scout 失败回传，不再下派。你不出 experiment/ 代码。上报一行放全（summary 200 字符封顶），细节落 runs/。"""
 admin = false
-max_sessions = 2
-relay_required = ["bench"]
-reuse = true
-allowed_senders = ["analyzer", "critic"]
-allowed_targets = ["bench", "writer", "analyzer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 120000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+max_sessions = 1
+allowed_senders = ["analyzer", "critic"]           # critic→model：revise 触及理论时直补建模
+allowed_targets = ["bench", "writer", "analyzer", "scout"]   # analyzer=补分析回请，scout 仅失败回传边
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[[client]]
+role = "analyzer"
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+prose = """你是 ARIS 研究飞轮的 analyzer（问题层分析）。读 runs/<run-id>/idea.json 与 evidence，写 runs/<run-id>/analysis.md（成因/机制/难点/选型考察点四节：难点=现有方法何处失效+结构性原因，只提问；应对与贡献归 model）。用 onlyne_handoff 交给 model。证据不足判别时写「无法判别」段，handoff scout 补检索或失败回传。你不出 derivation、不出 spec、不写代码。上报一行放全，细节落 runs/。"""
+admin = false
+max_sessions = 1
+allowed_senders = ["scout", "model"]               # model→analyzer：补分析回请
+allowed_targets = ["model", "scout"]               # scout 仅失败回传/补检索边
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "bench"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 bench（跑批与测量）。作业细则与功耗纪律、训练槽协议在本工作区 AGENTS.md，先读它。数值只出自 measured/，失败也归档。"""
+prose = """你是 ARIS 研究飞轮的 bench（跑批与测量）。按 runs/<run-id>/spec.md 落地 experiment/ 与 evaluation/，跑 baseline 与 candidate，原始 stdout/stderr、配置、种子、耗时逐条落 runs/<run-id>/measured/，汇总与 delta 写 measured/summary.md：每个 objective 一个实测值，每个 constraint 一个 pass/fail。命令失败也归档，不伪造数值，不改评测器语义。功耗纪律与训练槽协议见工作区 AGENTS.md。落盘后用 onlyne_handoff 交给 writer 续作（指向 summary.md）；跑不动时用 onlyne_handoff 交给 scout 失败回传（正文首行写 `> hop-failed: bench` + 现场路径）。"""
 admin = false
-max_sessions = 2
-relay_required = ["writer"]
-reuse = true
+max_sessions = 1
 allowed_senders = ["model"]
 allowed_targets = ["writer", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 3600000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "writer"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 writer（成稿，figure 兼职归你）。作业细则与 vault 写作规范在本工作区 AGENTS.md，先读它。不写无数据稿；每个数字标 measured/ 来源。"""
+prose = """你是 ARIS 研究飞轮的 writer（成稿，figure 兼职归你）。按任务书读 runs/<run-id>/ 全部产物；measured/ 缺 summary.md 就 onlyne_complete{outcome=blocked, summary=待 measured/summary.md} 交回（summary 只一行、200 字符封顶，全文走 details），等有数据接力再写稿，不写无数据稿。稿件写 papers/<run-id>/：结论先行，每个数字标注来源路径，open questions 单独一节。figure 数据图 matplotlib 从 measured/ 重绘、脚本与成图落 figs/（一键重跑），示意 mermaid/tikz 源同目录留档。成稿后用 onlyne_handoff 交给 critic 送审。收到 revise 接力按 verdict.md 编号 finding 修订，记录写 runs/<run-id>/revisions.md。"""
 admin = false
-max_sessions = 2
-relay_required = ["critic"]
-reuse = true
+max_sessions = 1
 allowed_senders = ["model", "bench", "critic"]
-allowed_targets = ["critic", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 120000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+allowed_targets = ["critic", "scout"]              # scout→writer→scout：稿中检索缺口回补
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "critic"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 ARIS 研究飞轮的 critic（审稿+归档+提下一条 idea）。作业细则与本跳归档职责在本工作区 AGENTS.md，先读它。只依据磁盘材料裁决；revise 分文字→writer、理论→model；accept/reject 自归档后 handoff scout 开新轮。第一发注入由 supervisor 走 admin 面以 --from critic 署名，你收到的是 queued 收件行，无需处理。"""
+prose = """你是 ARIS 研究飞轮的 critic（审稿+归档+提下一条 idea）。只依据磁盘材料逐条核对：数字可追溯到文件、方法支撑结论、verdict 与实测一致、失败与边界不藏。结论写 runs/<run-id>/verdict.md（首行 accept/revise/reject + 编号 finding，每条点名稿件小节）。revise 按性质用 onlyne_handoff 交给 writer（表述）或 model（理论）；accept/reject 本跳自归档（keep 留 papers/、pool 该小节框符改 [x]；failed 记 verdict.md、框符改 [!]），从 open questions 或失败结论提下一条 idea 入池（origin=derived 注父 run），用 onlyne_handoff 交给 scout 新轮派工。"""
 admin = false
-max_sessions = 2
-relay_count = 1
-reuse = true
+max_sessions = 1
 allowed_senders = ["writer"]
-allowed_targets = ["writer", "model", "scout"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
-[client.timeout]
-ready_ms = 30000
-running_ms = 120000
-idle_ms = 60000
-[client.intent]
-attempts = 100000
-backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
+allowed_targets = ["writer", "scout", "model"]     # model=理论级 revise 直达
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+# placement（orca | zellij | tern | headless | external）是机器属性，不在这份 spec 里：
+# 它落在每个 role workspace 的 `.onlyne/config.toml` 的 `placement` 键上，
+# `onlyne client run` 读它；缺失时依次探测 tern、orca、zellij，再退回 headless；
+# 非空的 `ONLYNE_BACKEND` 优先。`drive = "acp"` 要求 `placement = "headless"`。
+# `[client.session] scope`（oneshot 默认 | task | role）与 `idle_close` 也在工作区
+# config.toml；本主题用默认 oneshot。

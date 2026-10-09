@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""experiment/build_corpus.py — 四域语料构建（spec §3, run ssd-spectral-restore-001）。
+"""experiment/build_corpus.py — 四域语料构建（模板示例：四域语料构建）。
 
 产出:
   experiment/corpus/src/<domain>.full.txt   每个域的完整源文本（含 provenance 头注释之外的纯文本）
@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-UA = {"User-Agent": "onlyne-swarm-bench/1.0 (research flywheel; ssd-spectral-restore-001)"}
+UA = {"User-Agent": "onlyne-bench/1.0 (research flywheel)"}
 
 
 def http_get(url: str, timeout: int = 60) -> bytes:
@@ -113,9 +113,9 @@ def fetch_code_py():
 # ---------------- math_tex ----------------
 
 MATH_SOURCE_FILES = [
-    "obsidian/draft/Mamba与Transformer的秩差距-学习笔记-2026-09-08.md",
-    "runs/ssd-spectral-restore-001/spec.md",
-    "runs/ssd-spectral-restore-001/derivation.md",
+    "obsidian/draft/<笔记名>.md",
+    "runs/<run-id>/spec.md",
+    "runs/<run-id>/derivation.md",
 ]
 
 
