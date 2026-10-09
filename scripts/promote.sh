@@ -43,20 +43,20 @@ case "$STAGE" in
 esac
 
 # --- check 1: role surface carries no assembly or ops content --------------
-# Scope is the file set a role session reads through the parent-directory
-# chain. README.md, .supervisor/, and scripts/ are the operator and duty
-# surface and carry their own rule below.
+# Scope is the hand-written file set a role session reads through the
+# parent-directory chain. README.md, .supervisor/, scripts/, and
+# .agents/skills/ (binary-exported duty canon) carry their own rules below.
 [ -f .agents/AGENTS.md ] || fail ".agents/AGENTS.md MISSING"
 ROLE_SURFACE=( ".agents/AGENTS.md" ".onlyne/AGENTS.md" )
-while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .agents/skills .onlyne/templates -type f -name '*.md' 2>/dev/null)
-OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|generate|stop)|/Users/|/home/|codesign'
+while IFS= read -r f; do ROLE_SURFACE+=( "$f" ); done < <(find .onlyne/templates -type f -name '*.md' 2>/dev/null)
+OPS_RE='装配|装机|换机|通电|promote|bootstrap|REPLACE_ME|clone|cargo install|pi install|brew|launchd|workspace rename|onlyne server (init|run|generate)|onlyne generate|/Users/|/home/'
 OPS_HITS="$(grep -nE "$OPS_RE" "${ROLE_SURFACE[@]}" 2>/dev/null || true)"
 if [ -n "$OPS_HITS" ]; then
   echo "$OPS_HITS" >&2
   fail "role surface carries assembly/ops content (list above)"
 fi
 # The duty canon holds ops verbs by design; it carries no assembly content.
-DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|codesign|npm:pi-onlyne' .supervisor/AGENTS.md 2>/dev/null || true)"
+DUTY_HITS="$(grep -nE 'REPLACE_ME|cargo install|pi install|clone|/Users/|/home/|npm:pi-onlyne' .supervisor/AGENTS.md 2>/dev/null || true)"
 if [ -n "$DUTY_HITS" ]; then
   echo "$DUTY_HITS" >&2
   fail ".supervisor/AGENTS.md carries assembly content (list above)"
@@ -76,21 +76,22 @@ PY_ROLES
 )" || fail "spec.toml parse FAILED (python3>=3.11 tomllib)"
 [ -n "$ROLES" ] || fail "spec.toml has no [[client]] roles"
 
-# --- check 2: per-role template dir + model triplet filled ------------------
+# --- check 2: per-role template dir + pi plugin package pinned --------------
 for r in $ROLES; do
   A="$TPLDIR/$r/AGENTS.md"; S="$TPLDIR/$r/.pi/settings.json"
   [ -f "$A" ] || fail "$A MISSING"
   [ -f "$S" ] || fail "$S MISSING"
-  python3 - "$S" <<'PY_CHECK2' || fail "$S model triplet INVALID (reason above)"
+  python3 - "$S" <<'PY_CHECK2' || fail "$S pi settings INVALID (reason above)"
 import json,sys
 d = json.load(open(sys.argv[1]))
-keys = ("defaultProvider", "defaultModel", "defaultThinkingLevel")
-missing = [k for k in keys if not isinstance(d.get(k), str)]
-assert not missing, f"keys absent or not strings: {missing}"
-empty = [k for k in keys if not d[k]]
-assert not empty, f"model triplet empty: {empty} (the gemini template ships concrete models)"
+# The published template ships no provider or model: pi runs on the
+# operator's already-configured defaults. Model choice is assembly-time.
+for k in ("defaultProvider", "defaultModel"):
+    assert k not in d, f"{k}={d[k]!r}: template ships no private provider/model"
+thinking = d.get("defaultThinkingLevel")
+assert isinstance(thinking, str) and thinking, f"defaultThinkingLevel missing: {d}"
 pkgs = d.get("packages", [])
-assert pkgs == ["npm:pi-onlyne"], f'packages={pkgs}: role settings ship npm:pi-onlyne'
+assert pkgs == ["npm:pi-onlyne@2.1.0"], f'packages={pkgs}: role settings ship npm:pi-onlyne@2.1.0'
 PY_CHECK2
 done
 
@@ -172,7 +173,7 @@ def missing_sections(path, names):
     return [n for n in names if not re.search(r"^#{0,6}\s*" + re.escape(n) + r"\s*(?:[：:]|$)", txt, flags=re.M)]
 for path, names in (
     (".agents/AGENTS.md", ("主线", "支线", "索引")),
-    ("payload/first.md", ("目标", "输入", "期望产物", "下一跳建议")),
+    ("payload/first.md", ("目标", "背景", "输入", "期望产物", "自由度", "下一跳建议")),
 ):
     miss = missing_sections(path, names)
     assert not miss, f"{path}: missing sections {miss}"
@@ -208,7 +209,7 @@ found = 0
 for s in glob.glob(root + "/*/*/.pi/settings.json"):
     found += 1
     pk = json.load(open(s)).get("packages", [])
-    assert pk == ["npm:pi-onlyne"], f"{s}: packages {pk} want ['npm:pi-onlyne']"
+    assert pk == ["npm:pi-onlyne@2.1.0"], f"{s}: packages {pk} want ['npm:pi-onlyne@2.1.0']"
 assert found >= 1, f"no role .pi/settings.json under {root}"
 PY_PKG
 if pi list 2>/dev/null | grep -q "npm:pi-onlyne"; then
@@ -217,18 +218,18 @@ else
   warn "pi plugin npm:pi-onlyne not installed here: the role client loads it at runtime, so run \`pi install npm:pi-onlyne\` before starting the ring"
 fi
 
-# --- check 9: v1 toolchain + backend candidates --------------------------------
-for b in onlyne onlyne-server onlyne-client pi; do
-  command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui)"
+# --- check 9: v2 toolchain + placement candidates --------------------------------
+for b in onlyne pi; do
+  command -v "$b" >/dev/null || fail "binary MISSING:: $b (cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit)"
 done
-V1_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
-python3 - "${V1_VER:-0}" <<'PY_VER' || fail "onlyne version=${V1_VER:-none} below 1.0.0 floor (track latest: cargo install --force the five onlyne crates)"
+V2_VER="$(onlyne version 2>&1 | grep -o "[0-9][0-9.]*" | head -1)"
+python3 - "${V2_VER:-0}" <<'PY_VER' || fail "onlyne version=${V2_VER:-none} below 1.0.0 floor (track latest: cargo install --force the four onlyne crates)"
 import sys
 parts = [int(x) for x in sys.argv[1].split(".")]
 assert (parts + [0, 0])[:3] >= [1, 0, 0], "below the 1.0.0 floor (v0 line is legacy protocol; exit 2 on legacy .onlyne/); install latest"
 PY_VER
-if ! command -v herdr >/dev/null && ! command -v zellij >/dev/null && ! command -v orca >/dev/null; then
-  warn "no herdr/zellij/orca on PATH: auto probe empty, onlyne-client run exits 5 unless ONLYNE_BACKEND=exec or fake"
+if ! command -v zellij >/dev/null && ! command -v orca >/dev/null && ! command -v tern >/dev/null; then
+  warn "no tern/orca/zellij on PATH: placement probe falls back to headless unless ONLYNE_BACKEND names one"
 fi
 
 info "checks: 9/9 PASS (entry_role=$ENTRY, roles: $(echo $ROLES | tr '\n' ' '))"
@@ -275,12 +276,12 @@ git commit -qm "feat(promote): promote template to theme $THEME"
 cat <<EOF
 promoted to theme/$THEME. Power-on is manual and is not running yet.
 Full procedure: README.md "装配与通电".
-1) toolchain (once, latest): cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui
+1) toolchain (once, latest): cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit
    && pi install npm:pi-onlyne
-2) server:   onlyne-server init --root . --listen 127.0.0.1:7812
+2) server:   onlyne server init --root . --listen 127.0.0.1:7812
    then copy .onlyne/spec.toml + templates back, fill cert_pin from the init output
-   onlyne-server generate --root .   # prints one [[client]] row per role: paste each key back
-   onlyne-server start --root .
+   onlyne generate --root .   # prints one [[client]] row per role: paste each key back
+   onlyne server run --root .
 3) supervisor: open your agent in this directory (pi, omp, anything) and read .supervisor/AGENTS.md
 4) roles:    onlyne client run --workspace .onlyne/ws/$TOPO/<role>    # one visible tab per role
 5) gemini is idle: empty ledger. To turn the ring:

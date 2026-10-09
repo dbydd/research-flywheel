@@ -1,143 +1,252 @@
 ---
 name: onlyne-supervisor
-description: Use when operating an Onlyne cluster as _supervisor — dispatching tasks, polling the ledger, reading faults, and repairing deliveries.
+description: Use when operating an Onlyne cluster as _supervisor. Start workspaces, dispatch tasks, poll the ledger, read faults, and repair deliveries through the admin surface.
 ---
 
 # Onlyne Supervisor
 
-You run the cluster. The server makes no decisions of its own: routing, the ledger,
-queueing, and ACL are mechanics. Every call is yours, together with the spec file.
+You own orchestration and recovery. The server routes, queues, records, and enforces ACL. It
+settles no open task on its own: one automatic rule moves a stale `working` mirror row, and
+it runs only after that task's own ledger row is terminal. Every other recovery choice is
+yours, made in the spec file or through the repair verbs.
 
 ## Mount points
 
-- Admin surface: `onlyne --server-root <root> <verb>` reaches the served admin socket.
-  Resolve order: `--socket` > `ONLYNE_SOCKET` > `--server-root` > `--workspace`/cwd walk.
-  A directory owns a surface when `.onlyne/run/s` or `.onlyne/run/socket` answers. Canonical
-  `<root>/.onlyne/run/s` binds while the path fits 103 bytes; past the bound the daemon binds
-  `<temp>/onlyne-<16hex>/s` and writes the served path to `<root>/.onlyne/run/socket` (0600).
-  Your sends carry `--from _supervisor`, and your spec entry needs `admin = true`.
-- Lifecycle you touch at runtime: `onlyne --server-root <root> status|roles|sessions|ledger|faults|watch|history`,
-  `onlyne --server-root <root> control|repair|send|handoff|reply|complete|reload|spec_diff|cluster|tui`.
-  A client process never detaches and carries no `start`/`stop`: whoever runs one has it in a
-  visible foreground tab.
+- The admin surface is `onlyne --server-root <root> <verb>`. It reaches the socket that
+  root's daemon publishes in the machine-level runtime directory
+  (`/tmp/onlyne-<uid>/<digest>.sock`, `$ONLYNE_RUNTIME_DIR` overrides the directory). The
+  socket binds 0600, and `<root>/.onlyne/run/s` is a spelling for operators to print, not a
+  file anything binds. Your sends carry `--from _supervisor`, and the admin surface stamps
+  `admin = true` on every envelope it relays. Put `admin = true` on your own `[[client]]`
+  entry too: that is the standing a client-held supervisor session sends with.
+- Lifecycle verbs: `onlyne server init|run|status|generate|reload`, the top-level
+  `onlyne wait-ready`, `onlyne client run|init|status|doctor`, and `onlyne gateway status`.
+  Nothing detaches. There is no `start` or `stop`: both daemons run in the foreground, and a
+  supervisor that wants one in the background starts `run` itself, in a tab, or under
+  launchd or systemd.
+- Every request verb prints one JSON line for its answer. `onlyne cluster export-prose`
+  prints role prose raw for pasting into a TOML multi-line string; `--json` wraps it in an
+  object. Exit codes: 0 ok, 1 a failed answer, 2 local validation, 3 no socket, 4 refused
+  operator input (`generate`, and `skill export` declining to overwrite), 5 `client run`
+  found no session host, 6 the build refuses a file from another revision, 127 a missing
+  sibling binary.
 
-## Cluster facts
+## Current operating facts
 
-- The spec file is the only truth. There is no runtime config API.
-- `onlyne spec_diff --server-root <root>` previews the pending delta, `onlyne reload
-  --server-root <root>` applies it.
-- A workspace directory is relocatable. Move it with `mv`; the client resolves everything it
-  needs from `--workspace`, and its intents and cursors travel inside `.onlyne/`.
-- Every verb prints one JSON line. Exit codes: 0 ok, 1 failed answer, 2 local validation,
-  3 no socket, 4 refusal, 5 no supported host, 127 missing sibling.
+- Install the four crates from the registry, unlocked and at the same version for all four:
+
+  ```bash
+  cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit
+  ```
+
+  Read `onlyne version`, `onlyne-server --version`, and `onlyne-client --version` after
+  installation. The four must agree. The protocol gate is `protocol:1` in `onlyne version`.
+- `onlyne schema spec` and `onlyne schema client` print the compiled JSON Schema of
+  `.onlyne/spec.toml` and of a workspace's `.onlyne/config.toml`. `--pretty` indents the
+  same document. The installed binary answers for its own vocabulary.
+- Re-export the shipped handbooks with
+  `onlyne skill export --set role --set supervisor --force`. This template carries its own
+  rewritten copies of both documents under `.agents/skills/`.
+
+## Onboard a cluster
+
+1. Run `onlyne server init --root <root> --listen 127.0.0.1:<port>`. It writes the
+   `[server]` spec, the server key pair, and a fresh `cert_pin`, and prints the pin. An
+   existing `spec.toml` stops the verb with exit 4 until `--force`, and an existing readable
+   key pair keeps its own pin.
+2. Put role content in `<root>/.onlyne/templates/<topo>/<role>/`. The basename is the spec
+   role name. Templates hold AGENTS.md, prompts, and `.pi/` settings, plus a closed set of
+   placeholders: `{{role}} {{cluster}} {{server_name}} {{listen}} {{cert_pin}} {{admin}}
+   {{max_sessions}} {{agent_package}}`. The coding-agent package travels on that last
+   placeholder: set `[server].agent_package` to the absolute path of a real package, and
+   give the template a `.pi/settings.json` holding `{"packages": ["{{agent_package}}"]}`.
+   `generate` then vendors the package into `<ws>/.onlyne/agent/<pkg-name>/` and renders the
+   settings entry as `../.onlyne/agent/<pkg-name>`, the form pi loads. A template that names
+   the placeholder while `agent_package` is empty exits 4. A template that never names it
+   gets a workspace with no package, and its sessions start with no plugin tools.
+   Export the duty skills beside them:
+   `onlyne skill export --dest <workspace>/.agents/skills --set role` writes `onlyne-role`,
+   and `--set supervisor` writes this document. A differing file stops the export with exit 4
+   until `--force`.
+3. Run `onlyne generate --root <root>`. It renders workspaces under `<root>/.onlyne/ws`,
+   mints one key per role that has none, and prints paste-ready `[[client]]` fragments. If
+   any generated byte embeds an absolute path, the verb fails with exit 4 and deletes its
+   output. A generated directory is relocatable: move it with `mv`, then run
+   `onlyne client run --workspace <new-path>` in the foreground.
+4. Paste the fragments into `spec.toml`, then run `onlyne reload`. `onlyne spec-diff` (or
+   `onlyne spec_diff`) shows the pending delta first. The spec file is the only truth; there
+   is no runtime config API.
+
+A key the schema does not know is warned about and ignored: the server starts, and the
+setting silently keeps its default. `onlyne-server run` prints one
+`ignoring unknown key \`<path>\`` line per such key at startup, so read those lines after
+every spec edit. Two classes refuse instead, and both name the line
+(`spec.toml:7: <sentence>`): a real key holding a wrong value, and the keys v2 retired by
+name — `backend`, `relay_required`, `relay_required_count`, `relay_count`,
+`session_command`, `reuse`, and `[client.timeout].running_ms`. The retired names answer
+`BACKEND_IS_GONE` or `RELAY_IS_GONE`, so a v1 spec is told what to delete.
+
+`allowed_targets` is one list with two effects. The server reads it as the permission. The
+client reads it as the obligation: a session owes every listed downstream role a delivery
+before it may report a terminal outcome. The origin, the role that handed the task over, is
+exempt, so a ring's return edge asks nothing. A completion that still owes a role is
+refused, and the refusal names what is missing. `RELAY_IS_GONE` carries this replacement
+text.
 
 ## Dispatch flows downhill
 
 ```bash
-onlyne --server-root <root> send --from _supervisor --to <role> --text "RING=... K=1 TOTAL=10"
+onlyne --server-root <root> send --from _supervisor --to <role> --file <payload>
 ```
 
-- Roles answer by completing the task. The receipt lands in the ledger as `out_head` — the
-  one-line, 200-character summary copied verbatim from the role's `onlyne_complete` text. A
-  root receipt addressed to `_supervisor` queues (`state = queued`) by design: those rows
-  are your pull-inbox. `ledger` reads the backlog, and the queue drains when your own client
-  attaches.
-- The ledger carries the state. Poll it for proof.
+Seven verbs speak for a role and require both flags: `send`, `reply`, `handoff`, `complete`,
+`ack`, `reject`, and `control`. Each refusal names the plugin tool that answers for a role
+where one exists (`onlyne_send` for `send`, `onlyne_handoff` for `handoff`,
+`onlyne_complete` for `complete`). A call missing either flag exits 2 before it opens a
+socket. The reads — `repair *`, `ledger`, `sessions`, `roles`, `faults`, `watch`, `history`,
+`reload`, and `status` — carry no such flag.
 
-```bash
-onlyne --server-root <root> ledger --task <task-id>       # queued|in_flight|acked|rejected|expired
-onlyne --server-root <root> sessions --task <task-id>     # lifecycle projection
-onlyne --server-root <root> watch --follow --tier durable  # live stream; tiers: durable|advisory
+**Material moves by path.** The delivery template renders an optional block quoting an
+upstream role's result, and nothing in the tree fills it. That is the decision: moving
+material between roles is the roles' business. A role that wants the next one to have
+something writes it where both can reach it and names the path in its handoff text. A file
+that rides the envelope rides in `attachments`, and the client has already written it by the
+time the text names it. A fifteen-page digest goes over as a path. A small result that
+belongs in the conversation goes in the handoff body itself.
+
+A task family carries its own metadata, set where the run starts. `send --hop-budget <n>`
+records the hops the family may spend, `--label <k=v>` (repeatable, at most 8) records what
+a script of yours reads beside the ledger, and `--deadline <rfc3339>` records the wall-clock
+bound. Every handoff inherits all of it. The counters are read off the ledger, never out of
+the task text: `onlyne ledger` prints `family` and `hop_budget` straight off the row.
+
+- Roles answer by completing the task. The receipt lands in the ledger as `out_head`: the
+  first 200 grapheme clusters of the body, flattened to one line. `details` carries the full
+  result to the next hop and the originator, capped at 64 KiB, and `--file` names an
+  absolute path. A receipt for a task your role dispatched reaches you with no receiver-side
+  grant and waits in `queued` until your role has a live session. Those rows are your
+  pull-inbox; drain them first on every start.
+- `_supervisor` is a logical signature node: `command = []`. No client ever dials it, and it
+  reads `offline` for the life of the cluster. That is the design. A row sitting at `queued`
+  is a message that arrived safely and is waiting for you.
+- Nothing wakes you. Bind `[[hook]]` to `ledger_state` and filter on the row's recipient to
+  learn the moment work lands. The hook worker set is read at server start, so editing
+  `[[hook]]` needs a restart, and a `reload` that changes the set names it in the log.
+- Completion receipts for a task you dispatched always reach you: the ledger's recorded
+  origin is the path, and it needs no standing edge.
+
+## Operator policy lives outside the core
+
+```toml
+[[hook]]
+on = ["delivery_blocked", "turn_end_without_complete"]
+run = ["./hooks/notify-supervisor.sh"]
+timeout = "10s"
 ```
 
-- Keep `allowed_targets` on ring and worker edges only. A role that can message
-  `_supervisor` turns you into a work queue. When one task genuinely needs a live uplink,
-  add `_supervisor` to that role's `allowed_targets`, run `reload`, then drop the edge once
-  the task settles — grants are per task.
-- Completion receipts always reach the role the ledger records as origin, offline queueing
-  included. Reporting upward needs no standing edges at all.
+- `on` names classes from a closed set: `ledger_state`, `session_state`, `fault`,
+  `role_presence`, `gateway_presence`, `spec_reloaded`, `turn_end_without_complete`,
+  `delivery_blocked`, and `handoff`. A class outside the set refuses the whole load by name.
+- The server spawns `run` for each matching event with the event as one JSON object on stdin
+  and `ONLYNE_SOCKET` set to the admin socket, so the script can act in the same step. A
+  slow script delays nothing.
+- Delivery is at-least-once per hook. A script that must not act twice deduplicates on
+  `seq`. A nonzero exit or a timeout records fault `hook_failed` once for that event and
+  leaves the event untouched.
 
 ## Faults and repair
 
 ```bash
 onlyne --server-root <root> faults --open-only            # what the core detected
 onlyne --server-root <root> repair inspect --task <id>    # read the stored facts
-onlyne --server-root <root> repair retry|close|fail --task <id> [--reason ...]
-onlyne --server-root <root> repair ack --fault-id <n> --reason ...
+onlyne --server-root <root> repair retry --task <id> [--reason <text>]
+onlyne --server-root <root> repair close --task <id> --reason <text>
+onlyne --server-root <root> repair fail  --task <id> --reason <text>
+onlyne --server-root <root> repair ack   --fault-id <n> --reason <text>
 ```
 
-The core detects and records; recovery is your call. `retry` re-dispatches, `close` ends the
-session, `rebind`/`adopt` point a task at a live pane, `fail` marks the row. `close` and
-`fail` also file a `Cancel` for the owning role. Task control runs beside repair:
-`onlyne control recycle|probe|snapshot|cancel|focus --task <id>` (`focus` raises the
-task's live session in its host tab).
-`DeliveryState::Exhausted` is terminal — retry only after an explicit decision here.
+The core detects and records; recovery is your call. `repair retry` handles eligible
+`queued` or `in_flight` work and returns `conflict` for a settled task. `repair fail`
+settles the task failed and rejects its undelivered rows; `repair close` settles it
+cancelled the same way. `repair inspect` prints the session projection with every fault
+recorded against the task. The `kind=task` row is authoritative for the task outcome. A
+`kind=completion` row records receipt transport and `out_head`; its state never reopens a
+rejected task.
+
+Task control runs beside repair:
+`onlyne control recycle|probe|snapshot|cancel|focus --task <id> --from <role> --force
+--yes-i-am-supervisor-not-other-role`. `recycle` and `cancel` require `--reason`; the other
+three take none. `focus` brings the task's live session to the front of its host. `recycle`
+and `cancel` end the task on your word: the client asks the plugin for its ending and closes
+the host resource, and a word the plugin never answers is settled by this client after three
+heartbeat intervals.
 
 Heartbeat faults carry the liveness verdict, and the row keeps its state through them.
-`heartbeat_missing` says the pane's beats stopped while the role link stayed up: the row is
-`working`, `onlyne sessions` answers `heartbeat_stale` on it, and the TUI shows `working+stale`.
-Check the pane first. A dead process answers `control recycle`, and a live one resumes beating
-inside ten seconds and clears the flag on its own. `heartbeat_after_complete` says a session
-kept talking after its completion landed; recycle ends the straggler, and the row's own history
-keeps the settled completion either way. Both kinds open once per task and stay open until you
-`repair ack` them, so the fault table doubles as your to-do list.
+`heartbeat_missing` says the pane's beats stopped and the role link stayed up. Check the
+pane first: a dead process answers `control recycle`, and a live one resumes beating and
+clears the flag on its own. `heartbeat_after_complete` says a session kept talking after its
+completion landed; `control recycle` ends the straggler, and the row's own history keeps the
+settled completion. Both kinds open once per task and stay open until you `repair ack` them,
+so the fault table doubles as your to-do list.
 
-`stalled` is the client's own report: a session whose projection tuple froze for
-`stall_report_secs` (1800 default, 0 disables) faults once per episode. No-op beats keep the
-row beating; `stalled` is the progress verdict beside the liveness one. The verdict means real
-silence on live work: the client checks the stored lifecycle at the scan and again at the send
-boundary, so a session that already completed has its progress clock retired before any fault
-fires. `control probe` first, then `recycle` or `repair retry` as the answer demands.
+`stalled` is the client's own progress verdict: a session whose projection tuple froze for
+`stall_report_secs` (1800 default, 0 disables) faults once per episode. `control probe`
+first, then `control recycle` or `repair retry` as the answer demands.
 
-A finished session takes its host resource with it. The client closes the pane, tab, zellij
-session, or exec child once that session holds no task and its agent has detached, and the
-client log records the closure with `retiring idle session resource`. An idle pane still open
-in front of you means its agent remains attached — the `reuse` case — or the owning client is
-down.
+`stale_working` covers the owner that left: a row the mirror still reads `working` whose
+role has been offline past 600 seconds. The server's own observer writes it once per
+episode. A row no client will ever write again is the ghost sweep's work: the server rewrites
+a `working` mirror row whose task's own ledger row already reached a terminal state,
+`acked` settles `done`, `rejected` and `expired` settle `failed`, and the pass records one
+audit row in `ghost_sweeps`. Read it with `onlyne ghosts [--limit N]`. One class stays out
+of the sweep: a `working` row whose owner role is offline while the task is still open. That
+class's recovery stays yours through `repair_*`.
 
-Automatic re-delivery rides two spec gates: `[server].requeue_max_attempts` (0 unlimited) lands
-a starving row as `rejected` with reason `requeue_exhausted`, and `[server].requeue_ttl_secs`
-(0 off) lands it as `expired` with reason `requeue_ttl`. `repair retry` always rides outside
-the gates. A reconnecting client also declares its live sessions at `hello`, so a link flap
-leaves a running task's row `in_flight` and un-duplicated; a claimed session that dies without
-completing gets its row requeued the moment the client reports it exited, and `repair inspect`
-keeps the whole trail either way.
-
-A role at `max_sessions` keeps pulling with `control_only = true`, so `focus`/`recycle`/`cancel`
-still land while work rows stay `queued`.
-
-From onlyne-client 1.2.1 a settled task with no result line still files its `completion`
-receipt, body empty. A next hop waiting on that receipt proceeds. ACP payload-v1
-(`hop-done:` / `hop-failed:` one line in `<ws>/.onlyne/out/<task-id>.md`) is the
-`backend = "acp"` report path only; this template's `session_command` is pi.
-
-`onlyne ledger` prints `reason` among the row keys when the row has one. A pane backend
-refuses a protocol `session_command` (`--mode rpc`, `--acp`) with a ledger reason naming
-`exec` or `acp` as the matching workspace backend.
+Automatic re-delivery rides two spec gates: `[server].requeue_max_attempts` (0 unlimited)
+lands a returned in-flight row as `rejected` with reason `requeue_exhausted`, and
+`[server].requeue_ttl_secs` (0 off) lands returned rows as `expired` with reason
+`requeue_ttl`. `repair retry` always rides outside the gates. A restarted client declares no
+live sessions, so the server requeues every unacknowledged row of the roles it reconnects
+as, and the next pull hands them out again.
 
 ## Errors you will see
 
-`acl_denied` → the edge is missing from the spec. `unauthorized` → the key is not
-registered. `recipient_offline` → a `note` found nothing to wake: its role was
-offline, or online with no session running while `note_queue` stays off. The
-message says which. `duplicate` → the same `op_id` again; its `data` is the
-original receipt, byte for byte.
-`conflict` → same `op_id`, different body. `not_admin` → a non-admin role sent with
-`--from`. Every reject writes no ledger row and leaves no sender intent. A queued
-note's `--ttl` deadline sits on its ledger row, so the sweep answers `expired` after
-a server restart too.
+- `acl_denied` — the edge is missing from the spec. The sender's `allowed_targets` and the
+  receiver's `allowed_senders` must name each other. `_supervisor` is exempt on the sender
+  side: it reads no receiver list.
+- `unauthorized` — the handshake refused the peer: an unregistered key, an unregistered
+  role, a key registered for another role, or a bad signature.
+- `recipient_offline` — a note found nothing to wake: its role was offline, or online with
+  no session running and `note_queue` off.
+- `duplicate` — the same `op_id` again; its `data` is the original receipt, byte for byte.
+- `conflict` — the same `op_id`, a different body.
+- `not_admin` — a `cluster:` principal sent without an admin standing.
+- `forbidden` — a role that is neither the administrator nor the task owner sent a control
+  frame.
+
+Every reject writes no ledger row and leaves no sender intent. A queued note carries its
+`--ttl` deadline on its ledger row, and the server re-arms stored deadlines at startup, so
+the sweep answers `expired` after a restart too.
 
 ## Watching with the TUI
 
-`onlyne tui --server-root <root>` opens the two-page board: page 1 the role network
-(serpentine grid, `●` busy, `◐` in flight, orthogonal hops), page 2 the ledger. `hjkl`
-walks edges, `l` follows one, `e` reveals your dispatch spokes, `a` filters to active,
-arrows pan.
+`onlyne tui --server-root <root>` opens the three-page board. `1`/`2`/`3` switch pages, `Tab`
+walks a page's panes, `↑`/`↓` step the selected row, `PgUp`/`PgDn` (or `[`/`]`) scroll a
+pane, and `q` or `Esc` leaves. The cluster page lists every role with its presence, its
+sessions, and its queue depth. `Enter` opens the selected card's family on the task page:
+every delivery by hop, with its verdict and the receipt it settled with. The faults page
+lists the open faults and the repair keys: `a` `repair ack`, `t` `repair retry`, `c`
+`repair close`, `F` `repair fail`, `i` `repair inspect`. The four operations are forms the
+board opens on the selection: `s` sends a task, `f` focuses, `r` reports a verdict. `Enter`
+submits, `Esc` cancels, `^R` re-reads the snapshot. Nothing polls: a page moves when the
+admin stream says the cluster did. `--once` renders one frame of the cluster page as plain
+text and exits.
 
 ## Clusters under clusters
 
 Your own client connects to a parent server as a plain `[[client]]` entry marked
-`aggregate`. Tasks flow in, completions flow out, and no child role name ever appears in
-the parent ledger. Hand the parent operator your interface text with
-`onlyne cluster export-prose`. The protocol contains zero federation code, so there is
-nothing to break.
+`aggregate = "<child-cluster>"`. The label is an annotation: it contributes no ACL rows, and
+a generated `[[client]]` fragment drops it. Tasks flow in, completions flow out, and every
+parent ledger row names parent-visible roles alone. Hand the parent operator your interface
+text with `onlyne cluster export-prose --role <role>`. The protocol contains zero federation
+code, so there is nothing to break.

@@ -1,92 +1,118 @@
 ---
 name: onlyne-role
-description: Use when acting as a role inside an Onlyne cluster — a session assigned a task by the server, needing the correct handoff, completion, and reporting discipline.
+description: Use when acting as one role inside an Onlyne cluster. A task arrives as a delivery, you do the work, then you report one completion and hand work on through the edges your spec names.
 ---
 
 # Onlyne Role
 
-You are one role in an Onlyne cluster. A task arrives as an injected message, and your
-session exists for that one task. Do the work, then report in the form the ledger reads.
+You are one role in an Onlyne cluster. A delivery arrives in your session, and the work it
+carries belongs to that task. Do the work. Report it with a completion. Hand work on only
+through the targets your spec entry names.
 
 ## How work reaches you
 
-- The task body arrives in your session as a user-role injection:
-  `[onlyne] task <task-id> from role:<sender> (kind task)`. Your role prose comes from the
-  cluster spec through `welcome`, and is already in your context.
-- The `{task}` placeholder in your spawn command is the task **id**, never the body. Argv
-  holds no payload.
-- Your session serves this task. Finish it here. A new task gets a fresh session.
+- The delivery arrives as a user-role injection. The first line is `From <role>:` and names
+  the sender. The body follows byte for byte. Attachment paths, when the sender attached an
+  image, point into `<workspace>/.onlyne/tmp/attachments/`.
+- Your role prose comes from the cluster spec. It is already in your instruction layer: pi
+  takes it as a system-prompt section, and an ACP session reads it from the client's block in
+  the workspace `AGENTS.md`.
+- The `{task}` placeholder in the role's `[client.runtime] command` is the task id. The body
+  never travels in argv.
+- Which deliveries one session serves is the workspace's `[client.session] scope`. `oneshot`
+  is the default: one session per delivery, closed when the delivery settles. `task` keeps
+  one session for the whole family. `role` keeps a pool and gives each delivery to the
+  session that has waited longest.
+- Where your process is displayed is the workspace's `placement`. The machine owns it. An
+  absent placement probes tern, then orca, then zellij, and falls back to headless. A
+  nonempty `ONLYNE_BACKEND` names the placement and wins over the config file. `client run`
+  exits 5 when that name matches nothing.
 
-## Reporting: completion is the receipt
+## Report with a completion
 
-Report upward by completing the task. The completion row is what the supervisor polls.
+The completion row is your receipt. Everything upstream reads that row.
 
-```bash
-onlyne complete --task <task-id> --outcome done --head-from local --text "<one-line result>"
+Inside a pi session, the plugin tool is the path:
+
+```
+onlyne_complete{outcome, summary, details, files}
 ```
 
-or, inside a pi session, the `onlyne_complete{outcome, text}` tool.
+- Your `summary` becomes the ledger `out_head`: the first 200 grapheme clusters of the body,
+  flattened to one line. It is the display line the supervisor reads. Put the result there.
+  A summary that carries nothing files your last assistant text as the head instead.
+- `outcome` is `done`, `failed`, `cancelled`, or `blocked`. A provable impossibility is
+  `failed`, with the reason in `summary`. A stop outside this session is `blocked`.
+- `details` carries the full result, at or under 64 KiB. `files` names the absolute paths the
+  result rests on. Both travel with the completion as they stand.
+- A mounted pi session answers through the tool. The tool is the only path to `done`. A turn
+  that ends with no completion gets one nudge in your input. A second turn with no completion
+  settles the delivery: a `oneshot` task becomes `blocked`, and a `task` or `role` session
+  goes idle.
+- One completion per task. A second `onlyne_complete` for a reported task files no report and
+  answers the same `reported <outcome>` line. Idempotence keys on `op_id`: the same `op_id`
+  with the same body answers `duplicate`, and with a changed body answers `conflict`. Call
+  the tool once.
 
-- `--head-from` is required on the CLI: `local` truncates your `--text` into `out_head`,
-  `ledger` reads back the head already stored for the row.
-- Your `--text` becomes the ledger `out_head`, verbatim: one line, whitespace-collapsed,
-  capped at 200 characters. Put the whole answer there. It is the only upward channel.
-- `--outcome done|failed|cancelled`. Provable impossibility → `failed`, with the reason in
-  `text`. The report path depends on your host. A mounted pi session answers through the
-  `onlyne_complete` tool, and if you fall silent there the plugin files a fallback receipt
-  from your last assistant text — so name the result in that text. A plain `exec` session
-  carries no plugin and no fallback: `onlyne complete` is yours to run before you stop.
-- A `backend = "acp"` session mounts nothing and needs no `onlyne` command. Its prompt
-  ends with an absolute report path the client prepared under the workspace
-  (`<workspace>/.onlyne/out/<task-id>.md`); the last action before you stop is one line
-  in that file — `hop-done: <the result in one line>` or `hop-failed: <why it failed, one
-  sentence>` — written via a temp name in the same directory then renamed into place.
-  The client reads that file once at turn end and deletes it. Missing file keeps the old
-  behavior (head from the last streamed line). `hop-done` replaces `out_head`. `hop-failed`
-  settles Failed. A file that fails the contract settles Cancelled, with a fault reason
-  opening `acp payload invalid:`. This template's `session_command` is pi; the
-  ACP file contract stays dormant until a workspace sets `backend = "acp"`.
-- From onlyne-client 1.2.1, a settled task with no result line still files its
-  `completion` receipt, with empty text. The next hop waiting on that receipt proceeds.
-- One completion per task. Inside your session the plugin keeps that record: a second
-  `onlyne_complete` for a task it already reported answers `duplicate`, files no report, and the
-  process exits once. Call it once.
+## Deliver what your edges owe
 
-## Passing work sideways
+Your spec entry's `allowed_targets` is one list with two effects. The server reads it as the
+permission: a send to any other name returns `acl_denied` before a row exists. The client
+reads it as the obligation: before you report a terminal outcome, your session must have
+delivered to every downstream role on the list.
 
-```bash
-onlyne handoff --to <next-role> --task <task-id> --text "<same task text>"
+- The role that handed you the task is never one of them. Your completion is itself the
+  delivery back to it. A self-addressed entry and a ring's return edge therefore ask nothing
+  of you.
+- A completion that still owes a role is refused. The refusal names the roles you have not
+  reached and the ones you have.
+- An entry that names no target owes nothing. There is no switch to declare.
+
+## Hand work sideways
+
+Inside a pi session, `onlyne_handoff` hands this task on:
+
+```
+onlyne_handoff{to: "<next-role>", text: "<task text for the next hop>", image: "<path, optional>"}
 ```
 
-The handoff reads your task's ledger row, mints a child task under `parent_task`, and sets
-`hop = parent + 1`. Targets come from your spec entry's `allowed_targets`; any other name
-returns `acl_denied` before a row exists. Ring and fan-out shapes live in your prose. The
-mechanics here never change.
+The host mints the child. It names this task as `parent_task`, sits one hop deeper, and
+carries the family metadata: the family root id, the hop budget, the origin, the deadline,
+and the labels. A handoff over the family's hop budget is refused, and the refusal names the
+budget it would break. The hop that meets the budget keeps the work.
 
-`onlyne_send{to, text, kind}` covers the same ground from inside a pi session:
-`kind:"task"` mints a fresh family, while `kind:"note"` (the default) is free text that
-rides an already-live session on the receiving role — a role that is offline, or online
-with every session settled, refuses it with `recipient_offline`. Follow-up instructions
-for your own in-flight task are notes; new work is a task.
+`onlyne_send{to, text, kind, image}` starts a fresh family instead. `kind:"task"` mints a
+task with no parent and `hop = 0`. `kind:"note"`, the default, is free text with no session
+on the other side; a note to an offline role answers `recipient_offline`. `image` attaches
+one image, capped at 2 MiB of decoded bytes.
 
-This tree's handoff convention `> hop-failed: <环节> <一句话>` is body text on the
-relay, a different object from the ACP payload-v1 file prefix `hop-failed:`.
+## Speak for a role from a shell
+
+The CLI verbs that speak for a role are `send`, `reply`, `handoff`, `complete`, `ack`,
+`reject`, and `control`. Each writes a role's own voice on the wire. A verdict written from a
+shell answers for a session the plugin is still serving, so every one of these verbs refuses
+a call that misses either `--force` or `--yes-i-am-supervisor-not-other-role`.
+
+An `exec` session mounts no plugin. It runs the CLI form and declares itself with both flags:
+
+```bash
+onlyne complete --task <task-id> --outcome done --summary "<one-line result>" \
+  --force --yes-i-am-supervisor-not-other-role
+```
+
+The CLI `--outcome` accepts only `done`, `failed`, and `cancelled`. An `exec` session that
+hits an outside block reports `failed` and gives the reason in `summary`. An ACP session
+mounts the same three tools through `onlyne mcp` and needs no `onlyne` command of its own.
 
 ## Rules of the ring
 
-- Do not message the supervisor. Results ride completions: the origin recorded in the
-  ledger receives them automatically, even from offline queueing. The supervisor grants an
-  uplink route for a specific task through the spec, and revokes it the same way.
-- Content crosses by reference. Share a file **path** in text; the receiver reads the file.
-  Workspace bytes never ride the bus.
-- Your local socket answers `who`, `ping`, `watch` from inside the workspace:
-  `onlyne who`, `onlyne watch --follow`. Resolve order: `--socket` > `ONLYNE_SOCKET` >
-  cwd walk of `.onlyne/run/s` or `.onlyne/run/socket`. The client injects `ONLYNE_SOCKET`
-  into the session it spawns.
-- When the server link drops, keep working: your running session still reaches its terminal
-  state, and outgoing receipts persist as intents and flush after reconnect. Nothing needs
-  your memory to bridge a gap.
-- Your pane sits in the operator's session host, and the host decides the pane title.
-  Identify your own pane as `<cluster>:<role>`.
-- A finished session takes its host resource with it. An idle pane that stays open means
-  `reuse` kept the agent attached for the next task.
+- Do not message the supervisor. Results ride completions: the origin recorded in the ledger
+  receives them automatically, even from offline queueing.
+- Content crosses by reference. Write a file path in the text; the receiver reads the file.
+  The one exception is the `image` field, which carries a single image at 2 MiB of decoded
+  bytes in png, jpeg, gif, or webp.
+- Your local socket answers `who` and `ping` in place. Every other verb travels on to the
+  server through your client's link. `onlyne watch --follow` resolves the socket above your
+  cwd and subscribes your client's own link to the event stream.
+- When the server link drops, keep working. Your running session still reaches its terminal
+  state. Outgoing receipts persist as intents and flush after reconnect in order.

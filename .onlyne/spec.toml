@@ -1,71 +1,92 @@
-# Onlyne v1（工具链追 latest，版本闸只设 protocol=1 下限）gemini 双子 spec —— 模板版（唯一事实源）
+# Onlyne v2 gemini 双子 spec —— 模板版（唯一事实源）
 #
-# 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
-# 改完用 `onlyne reload --server-root <root>`；预览差异跑只读动词 `onlyne spec_diff --server-root <root>`（reload 无 --dry-run）。
+# 解析即校验：类型错误拒绝启动，报错形如 `spec.toml:<行号>: <消息>`；schema 不认的键
+# 警告后忽略（该设置等于没生效），v2 已退役的键（backend、relay_required、
+# relay_required_count、relay_count、session_command、reuse、timeout.running_ms）按名拒绝。
+# 改完用 `onlyne reload --server-root <root>`；预览差异跑 `onlyne spec-diff --server-root <root>`
+# 或 `onlyne spec_diff --server-root <root>`（reload 无 --dry-run）。
 # 定稿顺序（非法 key 会让全量 parse 连 client init 都跑不动，占位 key 必须合法长度）：
-#   1) 空根 `onlyne-server init --root . --listen 127.0.0.1:7812`（产 .onlyne/keys/server.key 与 cert_pin，cert_pin 打到 stdout）
+#   1) 空根 `onlyne server init --root . --listen 127.0.0.1:7812`
+#      （产 .onlyne/keys/server.key，cert_pin 打到 stdout；已有 spec.toml 会退 4，--force 覆盖）
 #   2) 拷本 spec.toml + templates/ 进 .onlyne/，回填 cert_pin
-#   3) 各 role key 先播合法 32 字节占位 base64（AQEBAQ...AQE= 形）
-#   4) `onlyne-server generate --root .` 渲染 ws 并逐 role 铸 key，stdout 打 [[client]] 行；key 粘回本文件对应行
-#   5) `onlyne server start --root .`（run 不写 pid，status 的 running 只认 pid 文件，判活用 socket_present；
-#      深路径看 .onlyne/run/socket）→ `onlyne reload`
+#   3) 各 role key 先播合法 32 字节占位 base64（AQEBAQ...AQE= 形，即 32×0x01）
+#   4) `onlyne generate --root .` 渲染 ws 并逐 role 铸 key（ws 已有 key 则保留），
+#      stdout 打 [[client]] 行；把每行的真 key 粘回本文件对应条目
+#   5) `onlyne server run --root .`（前台，可见 tab）→ `onlyne reload`
 # 运行期没有任何配置 API：这份文件就是全部。
 
 [server]
 name = "gemini"                                    # 集群名；{{cluster}}/{{server_name}} 占位符的源头
 listen = "127.0.0.1:7812"
-cert_pin = "sha256/REPLACE_ME_after_server_init"
+cert_pin = "sha256/0000000000000000000000000000000000000000000000000000000000000000"  # 占位（32 字节全零 hex）；空根 server init 后回填真值
 note_queue = false                                 # note 不排队：目标离线即 recipient_offline
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# pi 插件走 npm。两份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne`。
-# 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径。
-# 首次由人跑一次 `pi install npm:pi-onlyne`，装渠道 latest。
-# 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi` 的绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，并把 settings 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`。
+# pi 插件走 npm。两份 role 模板 `.pi/settings.json` 的 packages 写 `npm:pi-onlyne@2.1.0`。
+# 本字段保持空串：generate 原样保留 npm 路径，产物零绝对路径（generate 会扫描
+# 绝对路径并整体拒绝）。首次由人跑一次 `pi install npm:pi-onlyne`，装渠道 latest。
+# 源码跟未发布 fix 时，把本字段填成 onlyne checkout 里 `plugins/onlyne-agent-pi` 的
+# 绝对路径；generate 会 vendor 进每个 ws 的 `.onlyne/agent/<basename>/`，并把 settings
+# 里与本字段字面值相同的条目改写成 `../.onlyne/agent/<basename>`（pi 0.85.1 相对
+# settings 所在目录解析，`../` 形才装得上）。
 agent_package = ""
-# 1.1.x 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关）。
+# 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、
+# ghost_sweep_secs=60（0 关）、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关）。
 template_root = ".onlyne/templates"
 
 # ---- supervisor：管理者节点就是仓根本身，不起 client 进程；签发名 _supervisor。----
 # 它的 send 走瘦入口 `onlyne --server-root . send --from _supervisor --to <role> --file <payload>`
 # （落账 admin=true）。角色的 completion 回执自动回流 origin（origin==收件方时免 ACL）。
-# _supervisor 收件箱是 ledger 里的 queued 行，pull 式读。角色侧零指向 _supervisor 的上行边，
-# 环就不进 supervisor。
+# _supervisor 收件箱是 ledger 里的 queued 行，pull 式读；`command = []` 即无 client 拨号，
+# `onlyne roles` 显示 offline 是常态。角色侧零指向 _supervisor 的上行边，环就不进 supervisor。
 # key 是合法长度占位（base64 32 字节），不起 client 即不验真身。
 [[client]]
 role = "_supervisor"
-key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="  # 合法长度占位（base64 32×0x01）；不起 client 即不验真身
-prose = """我是 gemini 双子的 supervisor，也就是管理者节点本身。我不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / reload / spec_diff / repair* / control。spec.toml 是唯一配置真相；role 与模型的改动都落文件再 reload。"""
+key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="  # 合法长度占位（32×0x01）；不起 client 即不验真身
+prose = """我是 gemini 双子的 supervisor，也就是管理者节点本身。我不进环：互推在 castor 与 pollux 之间自转。第一发注入：写 payload/ 任务书后 `onlyne --server-root <root> send --from _supervisor --to castor --file payload/first.md`。现场观察与运维走 admin 面：status / roles / sessions / ledger / faults / watch / history / ghosts / reload / spec-diff / repair* / control。spec.toml 是唯一配置真相；role 与边的改动都落文件再 reload。"""
 admin = true
 max_sessions = 1
 allowed_senders = []                               # 上行边永久关闭；回执走 origin 自动通道不经 ACL
 allowed_targets = ["castor", "pollux"]             # 第一发与人工唤醒；入口 role 见角色表 ★ 行
-session_command = []
 
-# ---- 双子：两条互指的边，一个二元环。拓扑 = 角色表 = 这里；relay 一律 handoff（parent_task+hop 血缘）。----
+[client.runtime]
+drive = "plugin"
+command = []
+
+# ---- 双子：两条互指的边，一个二元环。拓扑 = 角色表 = 这里；转跳一律 handoff（parent_task+hop 血缘）。----
 # 共用条款在 root AGENTS.md（pi 沿父目录链进每个 role 会话），prose 只放身份与上报纪律。
 # 两个 role 职责相同、模型位不同；边的方向决定谁是下一跳。
+# allowed_targets 一词两义：既是发面 ACL，也是收面义务——本 session 没给每个目标点过名
+# 之前，terminal outcome（complete）会被拒绝（豁免 origin，即上游派单方；环的回边因此免检）。
 
 [[client]]
 role = "castor"                                    # ★ entry role（第一发投递对象）
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """我是 gemini 双子中的 castor。我的 peer 只有 pollux：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 text。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 gemini 双子中的 castor。我的 peer 只有 pollux：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书六段是交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 summary。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
 allowed_senders = ["_supervisor", "pollux"]
 allowed_targets = ["pollux"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 [[client]]
 role = "pollux"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """我是 gemini 双子中的 pollux。我的 peer 只有 castor：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书四段（目标/输入/期望产物/下一跳建议）是唯一交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 text。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
+prose = """我是 gemini 双子中的 pollux。我的 peer 只有 castor：一跳做完把下一跳任务书 handoff 给它，它做完 handoff 回我，环由两条互指的边自转。任务书六段是交接面，产物写到任务书点名的路径，结果一行进 onlyne_complete 的 summary。收束判据满足时只 complete 不 handoff。我写文件与账；.onlyne/ 与 spec 面只读。"""
 admin = false
 max_sessions = 1
 allowed_senders = ["_supervisor", "castor"]
 allowed_targets = ["castor"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 
 # 超时与重试都有默认值，可以省：[client.timeout] ready_ms=30000 idle_ms=60000
 # [client.intent] attempts=3 backoff_ms=[1000,2000,4000]。
+# session 作用域 `[client.session] scope = oneshot(默认)|task|role` 写 ws 的 config.toml，
+# 模板不设：双子一跳一 session，默认 oneshot 即语义。

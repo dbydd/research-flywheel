@@ -8,7 +8,7 @@
 .pi/schedule-prompts.json
 .pi/schedule-prompts-settings.json
 
-# onlyne v1 runtime state (regenerate: onlyne server init / generate)
+# onlyne runtime state (regenerate: onlyne server init / generate)
 # spec.toml、templates/、AGENTS.md 是模板真相必须跟踪；其余 .onlyne/ 是运行时
 .onlyne/*
 !.onlyne/spec.toml
