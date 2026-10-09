@@ -8,19 +8,14 @@
 .pi/schedule-prompts.json
 .pi/schedule-prompts-settings.json
 
-# onlyne v1 runtime state (regenerate: onlyne server init / generate)
+# onlyne 运行时状态（regenerate：onlyne server init / generate）
 # spec.toml、templates/、AGENTS.md 是模板真相必须跟踪；其余 .onlyne/ 是运行时
-# 例外：ws 下的 STATE.md 是 role 手写的记事，属手帐面必须跟踪（OneDrive 会静默换掉未跟踪文件）
+# ws 目录整体是 generate 的产物，不跟踪；role 手帐写在 ws STATE.md，属运行时
 .onlyne/*
 !.onlyne/spec.toml
 !.onlyne/AGENTS.md
 !.onlyne/templates/
 !.onlyne/templates/**
-!.onlyne/ws/
-.onlyne/ws/**
-!.onlyne/ws/**/
-!.onlyne/ws/**/STATE.md
-.onlyne/ws/**/.pi/
 .onlyne.v0-archive/
 
 # Obsidian（工作区即 vault）：笔记随树跟踪，机器态留本地

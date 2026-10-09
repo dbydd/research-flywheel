@@ -5,18 +5,30 @@ description: Use when acting as a role inside an Onlyne cluster — a session as
 
 # Onlyne Role
 
-You are one role in an Onlyne cluster. A task arrives as an injected message, and your
-session exists for that one task. Do the work, then report in the form the ledger reads.
+You are one role in an Onlyne cluster. A task arrives as an injected message, and the work
+you are handed belongs to it. Do the work, then report it with a completion.
 
 ## How work reaches you
 
-- The task body arrives in your session as a user-role injection:
-  `[onlyne] task <task-id> from role:<sender> (kind task)`. Your role prose comes from the
-  cluster spec through `welcome`, and is already in your context.
-- The `{task}` placeholder in your spawn command is the task **id**, never the body. Argv
-  holds no payload.
-- Your session serves this task. Its id is the task id, and a session that finished a task
-  takes no second one, so a new task arrives in a fresh session.
+- The task arrives as a user-role injection that names its source: a first line
+  `From <role>:`, the body, and then the paths of any attachments written for you under
+  `<workspace>/.onlyne/tmp/attachments/`. Your role prose comes from the cluster spec and is
+  already in your context: pi takes it as a system-prompt section, and an ACP session reads
+  it from the client's block in the workspace's `AGENTS.md`.
+- The `{task}` placeholder in the role's `[client.runtime] command` is the task **id**,
+  never the body. Argv holds no payload.
+- Whether your session serves one delivery or several is the workspace's
+  `[client.session] scope`: `oneshot` (the default) opens a session per delivery and closes
+  it when that delivery settles, `task` keeps the session for the family's next delivery,
+  and `role` keeps a pool and hands the next delivery to whichever session has waited
+  longest. An idle session keeps its row, and this client may release its process and bring
+  it back for the next delivery.
+- Where your process is displayed is the workspace's `placement`: `orca`, `zellij`, `tern`,
+  `headless`, or `external`, and it is the machine's property, not yours to set — `tern` runs
+  you as one block in your role's tab, and an absent `placement` probes `tern`, `orca`,
+  `zellij` in that order and falls back to `headless`, so a machine with Tern needs no line
+  of config to put you there. A nonempty `ONLYNE_BACKEND` names the placement over the
+  workspace key, and `client run` exits 5 naming the value when that name matches nothing.
 
 ## Reporting: completion is the receipt
 
@@ -25,52 +37,52 @@ Report upward by completing the task. The completion row is what the supervisor 
 Inside a pi session the plugin tool is the path:
 
 ```
-onlyne_complete{outcome, text}
+onlyne_complete{outcome, summary, details, files}
 ```
 
 The CLI verbs that speak for a role — `send`, `reply`, `handoff`, `complete`, `ack`, `reject`,
-`control` — refuse a call that carries neither `--force` nor
+`control` — refuse a call missing either `--force` or
 `--yes-i-am-supervisor-not-other-role`, because that door stands outside a plugin session and a
 verdict written there answers for a session the plugin is still serving. An `exec` session mounts
 no plugin, so it runs the CLI form and declares itself with both flags:
 
 ```bash
-onlyne complete --task <task-id> --outcome done --text "<one-line result>" \
+onlyne complete --task <task-id> --outcome done --summary "<one-line result>" \
+  [--details "<the full result>" --file <absolute path>] \
   --force --yes-i-am-supervisor-not-other-role
 ```
 
-- Your text becomes the ledger `out_head`: the first 200 grapheme clusters of the completion
-  body (`head_preview` in `crates/onlyne-store/src/server.rs`). The `onlyne_complete` tool
-  flattens its `text` to one line before it goes, so put the whole answer in that one line.
-  It is the only upward channel.
-- `--outcome done|failed|cancelled`. Provable impossibility → `failed`, with the reason in
-  `text`. The report path depends on your host. A mounted pi session answers through the
-  `onlyne_complete` tool, which is the only path to `done`; a call that carries no `text`
-  files your last assistant text as the head, so name the result in that text too.
-- A mounted pi session whose turn ends without `onlyne_complete` gets the assignment handed
-  back to it. The plugin re-injects the same header, task text, and attachment paths (the role
-  prose stays out, being already in your context) under the line `[onlyne] your turn ended
-  without a completion exit; this task is still open (reminder n of m). Call onlyne_complete
-  when it is finished.` The bound is `idleReminders` in `.pi/onlyne.json` — 2 by default, and
-  `0` fails the task at the first idle without a completion. The idle that finds the bound
-  spent reports the task `failed` with head `no completion after <n> idle reminders` and ends
-  the session; a turn that ends with a provider error reports `failed` at once, with that error
-  as the head.
+- Your `summary` becomes the ledger `out_head`: the first 200 grapheme clusters of the
+  completion body (`head_preview` in `crates/onlyne-store/src/server.rs`), flattened to one
+  line before it goes. It is the display line everything upstream reads, so put the result
+  there; a `summary` that carries nothing files your last assistant text as the head instead.
+- `outcome` on the `onlyne_complete` tool is `done`, `failed`, `cancelled`, or `blocked`:
+  provable impossibility → `failed`, with the reason in `summary`; something outside this
+  session that stops the work → `blocked`. The CLI's `--outcome` accepts only the first three,
+  so an `exec` session that hits an outside block reports `failed` and says why in `summary`.
+  A mounted pi session answers through the `onlyne_complete` tool, which is the only path to
+  `done`.
+- `details`, at or under 64 KiB, carries the full result and `files` names the absolute
+  paths it rests on; both travel with the completion as they stand. The summary is a display
+  line, not the whole channel: put every load-bearing conclusion in `details` or in a file
+  `files` names.
 - A plain `exec` session carries no plugin: `onlyne complete` is yours to run before you
   stop, with both supervisor flags above.
-- A `backend = "acp"` session mounts nothing and needs no `onlyne` command. Its prompt
-  ends with an absolute report path your client prepared under the workspace; the last
-  action before you stop is that file: one `hop-done:` / `hop-failed:` / `hop-blocked:`
-  verdict line, optionally followed by `handoff:` lines your client routes for you. The
-  client reads the file, settles the task, files the receipt, and passes the handoffs on.
-  Write and check the file with the `onlyne report` verbs, or read
-  `skills/onlyne-role-payload-v2/SKILL.md` for the whole grammar before you write one.
+- An ACP session mounts the same three tools through `onlyne mcp`, the MCP server its
+  client attaches to the session, so it needs no `onlyne` command of its own. The names
+  and arguments are the ones above, and a refused call comes back as the tool result's
+  error text, in the client's own words. Nothing about the task is yours to name: the
+  client holds the task, and a call names only the recipient, the text, or the outcome.
+- A turn that ends without `onlyne_complete` gets one nudge in your input: `If this task
+  is finished, report it with onlyne_complete; if something is missing, say what.` A
+  second turn that ends without one settles the delivery — a `oneshot` task becomes
+  `blocked`, and a `task` or `role` session goes idle and the board reads "waiting".
 - One completion per task. Inside your session the plugin keeps that record: a second
-  `onlyne_complete` for a task it already reported answers `duplicate` and files no report. The
-  process leaves once, at the completion the plugin acked. A hand-run `onlyne complete` carries
-  a fresh `op_id` each call, so the ledger reads it as a new frame and appends a second
-  `completion` row beside the first, and the task's own row keeps the state it settled in.
-  Idempotence keys on `op_id` alone: the same
+  `onlyne_complete` for a task it already reported files no further report and answers the
+  same `reported <outcome>` line. The process leaves once, at the completion the plugin
+  acked. A hand-run `onlyne complete` carries a fresh `op_id` each call, so the ledger reads
+  it as a new frame and appends a second `completion` row beside the first, and the task's
+  own row keeps the state it settled in. Idempotence keys on `op_id` alone: the same
   `op_id` with the same body answers `duplicate` and replays the first receipt byte for byte, and
   the same `op_id` with a changed body answers `conflict`; each writes no row. Call it once.
 
@@ -79,18 +91,18 @@ onlyne complete --task <task-id> --outcome done --text "<one-line result>" \
 Inside a pi session, `onlyne_handoff` hands this task on:
 
 ```
-onlyne_handoff{to: "<next-role>", text: "<same task text>"}
+onlyne_handoff{to, text}
 ```
 
 The host mints the child: it names this task as `parent_task`, sits one hop deeper, and carries the
 family's metadata — the family root id, the hop budget, the origin, the deadline, and the labels.
-Your injected header names where you stand in that family, so no task text has to carry the count.
-A task that meets the family's hop budget is the one that keeps the work.
+A task that meets the family's hop budget is the one that keeps the work: a `handoff` that would
+sit over the budget is refused, and the refusal names the budget it would break.
 
 An `exec` session runs the CLI form of the same step, with both supervisor flags:
 
 ```bash
-onlyne handoff --to <next-role> --task <task-id> --text "<same task text>" \
+onlyne handoff --task <task-id> --to <role> --text "<what the next hop reads>" \
   --force --yes-i-am-supervisor-not-other-role
 ```
 
@@ -99,6 +111,13 @@ no `parent_task` and `hop = 0`, `kind:"note"` (the default) is free text with no
 other side, and `image` attaches one image, 2 MiB of decoded bytes. The server gates the target of
 every route on your spec entry's `allowed_targets`, and any other name returns `acl_denied` before
 a row exists. Ring and fan-out shapes live in your prose. The mechanics here never change.
+
+That one list is your obligation as well as your reach: before you report a terminal outcome
+your session must have delivered to every *downstream* role the list names. The role that handed
+you the task is never one of them — completing is itself the delivery back to it — so a
+self-addressed entry, or a ring's return edge, asks nothing of you. A completion that still owes
+a role is refused, and the refusal names the roles you have not reached yet and the ones you
+have; an entry that names no target owes nothing. There is no separate switch to declare.
 
 ## Rules of the ring
 
@@ -109,16 +128,13 @@ a row exists. Ring and fan-out shapes live in your prose. The mechanics here nev
   One part rides the bus: `onlyne_send{..., image}` attaches a single image, capped at 2 MiB
   of decoded bytes, in png, jpeg, gif, or webp.
 - Your local socket answers `who` and `ping` in place, and every other verb it carries travels
-  on to the server through your client's link. `onlyne who` and `onlyne ping` resolve the
-  `.onlyne/run/s` above your cwd, and `onlyne watch --follow` resolves that same path and
+  on to the server through your client's link. `onlyne who` and `onlyne ping` resolve the socket
+  of the tree above your cwd, and `onlyne watch --follow` resolves that same path and
   subscribes your client's own link to the event stream.
 - When the server link drops, keep working: your running session still reaches its terminal
   state, and outgoing receipts persist as intents and flush after reconnect. Nothing needs
   your memory to bridge a gap.
-- In a herdr-hosted workspace your pane sits in the operator's session host, addressed as a
-  herdr workspace labelled
-  `onlyne:<cluster>` plus a tab named for your role. The operator points the backend at the
-  workspace they use by renaming it before sessions spawn: `herdr workspace rename
-  <WORKSPACE_ID> onlyne:<cluster>`, then `herdr tab rename <TAB_ID> <role>`. A label that
-  differs yields a second workspace, and the client logs a warning naming the label and the
-  workspace it created.
+- Where your process appears is the placement's business, not yours: `orca` gives you a
+  tab, `tern` a block inside the role's tab, `zellij` a pane, `headless` no pane at all,
+  and `external` means a runtime that was already resident dialed in. The operator sets it
+  in the workspace's `config.toml`; you read no placement key and name no host.

@@ -5,9 +5,9 @@ description: Use when building or updating a person page in this wiki — collec
 
 # scientist-profiles —— 人物画像协议
 
-人物是 `type: entity` 的一种。设计吸收自 `dbydd/scientists-archive`（`scripts/pipeline.py` 的 `expand_levels`、`build_edges`、`portrait_md`，以及 `templates/person-profile.md`），改造成本仓格式：属性进 frontmatter，边写在页面上，取消枢纽页与标签。
+人物是 `type: entity` 的一种。设计来自前代人物采集管线（逐层扩张、按合著频次建边、画像页模板），改造成本仓格式：属性进 frontmatter，边写在页面上，取消枢纽页与标签。
 
-渠道选择与各渠道的限额、代理前缀见 `paper-sources`。上游把 OpenAlex 当唯一主力；本仓按任务选主源，人物元数据用 OpenAlex 与 Semantic Scholar 双源交叉，DBLP 校书目，ORCID 校履历。
+渠道选择与各渠道的限额见 `paper-sources`。单一来源压得太重会把它的噪声当真相；本仓按任务选主源，人物元数据用 OpenAlex 与 Semantic Scholar 双源交叉，DBLP 校书目，ORCID 校履历。
 
 ## 页面契约
 
@@ -73,7 +73,7 @@ seeds（arXiv id / DOI / OpenAlex work URL）
   → 落页面、写快照
 ```
 
-逐层收紧的超参（上游默认值，按任务可调）：
+逐层收紧的超参（默认值，按任务可调）：
 
 | 超参 | 默认 | 含义 |
 |---|---|---|
@@ -100,7 +100,7 @@ Semantic Scholar 只做交叉补充：同名确认、被引与参考文献补洞
 
 ## 边界
 
-- 不建合作网络枢纽页。合著关系写在每个学者页的「主要合作者」里，图谱由页面自然长出。上游的 `关系图谱/合作网络.md` 大表不搬。
+- 不建合作网络枢纽页。合著关系写在每个学者页的「主要合作者」里，图谱由页面自然长出，不做总表。
 - 不写 `tags`。身份信息由 `type: entity` 与 frontmatter 字段承载。
 - 本协议不存论文。论文页由 reading 流程产出，这里只建链与建人。
 - 指标注明来源与访问日期。图内百分位只在本图谱内有效，写出来必须带这句限定。

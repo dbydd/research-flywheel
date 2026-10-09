@@ -64,7 +64,7 @@ wiki/     知识层：被打碎的知识点，子目录按知识层级组织
 - **写**：默认零。要落页就按 `.agents/skills/wiki-format/SKILL.md` 的规范建：一个知识点一个文件，slug 全库唯一，层级用目录表达，属性只写 frontmatter，`tags` 非要求不写。时刻写进被改页面的 `updated`，别处不放流水。
 - **引用**：正文用 `[[slug]]` 或 `[[slug|显示名]]`，指节写 `[[slug#小节]]`；来源写进 frontmatter 的 `sources`，用相对仓根的文件路径。图与媒体只进论文目录的 `assets/`，用 `![[…]]` 按相对仓根路径引用，不复制。
 - **不要**：建枢纽页（合作网络表一类的总表）、按话题乱建链、把资源层页面塞进 `wiki/`、给知识点建「属于哪篇论文」的映射表、往 `raw/` 改写已有文件。知识点由资源拆出，链接与 `sources` 就是溯源。
-- **取数**：要新拉论文或人物，渠道目录、限额与 macOS 代理前缀见 `.agents/skills/paper-sources/SKILL.md`；人物采集流程见 `.agents/skills/scientist-profiles/SKILL.md`。
+- **取数**：要新拉论文或人物，渠道目录与限额见 `.agents/skills/paper-sources/SKILL.md`；人物采集流程见 `.agents/skills/scientist-profiles/SKILL.md`。
 
 ## 目录清单
 
@@ -85,14 +85,13 @@ people/                    人物画像页
 wiki/                      知识点页面，子目录按知识层级
 tools/scripts/             脚本与工具
 tools/scratch/             临时文件（不入 git）
-.onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书四段、记事纪律
+.onlyne/AGENTS.md          角色行为约定：角色表、残差流、一跳、任务书六段、记事纪律
 .onlyne/spec.toml          集群拓扑与 ACL 的机器真相
-.onlyne/templates/<role>/   role 岗位骨架与模型三元组
-.onlyne/ws/<role>/          运行时渲染的 role 工作区（含 AGENTS.md 岗位口径与 STATE.md 手帐）
+.onlyne/templates/<role>/  role 岗位骨架与思考等级
+.onlyne/ws/<role>/         运行时渲染的 role 工作区（含 AGENTS.md 岗位口径与 STATE.md 手帐）
 .agents/skills/            wiki-format、paper-sources、scientist-profiles、onlyne-role、onlyne-supervisor
 .supervisor/AGENTS.md      supervisor 岗位说明：答问、派工、值班、记账
 .supervisor/STATE.md       supervisor 手帐面：值班过程记录
-.omp/AGENTS.md             omp 会话项目上下文：supervisor 指针与仓根 AGENTS.md
 .pi/                       role 会话的 pi 配置
 ```
 

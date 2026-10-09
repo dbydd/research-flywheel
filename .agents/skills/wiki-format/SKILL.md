@@ -5,7 +5,7 @@ description: "Use when writing, editing, splitting, merging, or linting any mark
 
 # wiki-format —— 本仓知识笔记的基本格式
 
-本仓的知识笔记按 llmwiki 格式写，落地面向 Obsidian。格式源：Karpathy 的 LLM Wiki pattern（三层加三操作）与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。上游与本仓冲突时以本文件为准。
+本仓的知识笔记按 llmwiki 格式写，落地面向 Obsidian。格式源：Karpathy 的 LLM Wiki pattern（三层加三操作）与它的开源实现（llmwiki.cc、ddsyasas/llm-wiki 的数据模型、Open Knowledge Format 的文件契约）。外部口径与本仓冲突时以本文件为准。
 
 ## 布局
 

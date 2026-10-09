@@ -1,18 +1,18 @@
 {
   "balanced": {
-    "scriber": ["supercheap", "low"],
-    "librarian": ["generic-researcher-weak", "high"],
-    "astrologer": ["supercheap", "low"],
-    "master": ["generic-researcher-powerful", "medium"],
-    "socrates": ["supercheap", "max"],
-    "scraper": ["supercheap", "medium"]
+    "scriber": "low",
+    "librarian": "high",
+    "astrologer": "low",
+    "master": "medium",
+    "socrates": "max",
+    "scraper": "medium"
   },
   "fast": {
-    "scriber": ["supercheap", "low"],
-    "librarian": ["supercheap", "medium"],
-    "astrologer": ["supercheap", "low"],
-    "master": ["supercheap", "medium"],
-    "socrates": ["supercheap", "max"],
-    "scraper": ["supercheap", "low"]
+    "scriber": "low",
+    "librarian": "medium",
+    "astrologer": "low",
+    "master": "medium",
+    "socrates": "max",
+    "scraper": "low"
   }
 }

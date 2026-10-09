@@ -1,11 +1,11 @@
 ---
 name: paper-sources
-description: Use when finding papers, authors, metadata, reviews, code, or full text for this wiki — choosing a retrieval channel, calling an API with correct limits, or fixing a failed fetch. Gives the channel catalog (arXiv, OpenAlex, Semantic Scholar, Crossref, DBLP, ORCID, OpenReview, ACL Anthology, CVF, PMLR, Europe PMC, bioRxiv, Unpaywall, CORE, GitHub, Hugging Face), each channel's endpoint, auth and rate limits, and the macOS proxy prefix that arXiv and OpenAlex calls need.
+description: Use when finding papers, authors, metadata, reviews, code, or full text for this wiki — choosing a retrieval channel, calling an API with correct limits, or fixing a failed fetch. Gives the channel catalog (arXiv, OpenAlex, Semantic Scholar, Crossref, DBLP, ORCID, OpenReview, ACL Anthology, CVF, PMLR, Europe PMC, bioRxiv, Unpaywall, CORE, GitHub, Hugging Face), each channel's endpoint, auth and rate limits, and the proxy hygiene rule some hosts need.
 ---
 
 # paper-sources —— 本仓的论文与人物情报渠道目录
 
-取论文、取人物、取元数据、取全文、取评审意见，都从本目录选渠道。上游的 scientists-archive 过度单一地压在 OpenAlex 上；本仓按任务类型选主源，OpenAlex 只是其中一条。
+取论文、取人物、取元数据、取全文、取评审意见，都从本目录选渠道。单一来源压得太重会把它的噪声当真相；本仓按任务类型选主源，OpenAlex 只是其中一条。
 
 ## 使用三原则
 
@@ -13,9 +13,9 @@ description: Use when finding papers, authors, metadata, reviews, code, or full 
 - 每条结论可回溯：来源 URL、访问日期、命中的具体记录（DOI、arXiv id、OpenAlex id）。记进对应页面的 `sources` 键与 `log.md`。
 - 限速与礼貌。带 `mailto:` 或账号的渠道走礼貌池；连续调用按各渠道的间隔要求 sleep；429 按 `Retry-After` 退避重试，不并发硬刷。
 
-## 本机代理条款（必读）
+## 代理卫生条款（按宿主启用）
 
-macOS 系统代理会劫持 arXiv API、arXiv HTML 与论文下载。所有外呼命令一律带前缀：
+宿主开着系统代理时，代理可能劫持 arXiv API、arXiv HTML 与论文下载。外呼命令带前缀，把这些请求摘出代理：
 
 ```bash
 env no_proxy='*' NO_PROXY='*' http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= <原命令>
@@ -37,7 +37,7 @@ env no_proxy='*' NO_PROXY='*' http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= 
 
 | 渠道 | 端点 | 拿什么 | 鉴权与限额 | 坑 |
 |---|---|---|---|---|
-| arXiv | `export.arxiv.org/api/query` | 题录、摘要、作者、分类、版本 | 免 key；连续调用间隔 3 秒；单次 `max_results` 分片 ≤2000，总量 ≤30000 | 必须带上面的代理前缀；大批量元数据走 OAI-PMH |
+| arXiv | `export.arxiv.org/api/query` | 题录、摘要、作者、分类、版本 | 免 key；连续调用间隔 3 秒；单次 `max_results` 分片 ≤2000，总量 ≤30000 | 宿主有代理时带上前缀；大批量元数据走 OAI-PMH |
 | arXiv HTML | `arxiv.org/html/<id>` | 分节正文、公式、表格、图 | 免 key | 新论文才有 HTML 版，旧文只有 PDF |
 | bioRxiv / medRxiv | `api.biorxiv.org/details/<srv>/<doi>` | 生命科学预印本 | 免 key | 元数据字段少，被引数据要回 OpenAlex 补 |
 | Europe PMC | `ebi.ac.uk/europepmc/webservices/rest` | 生物医学文献与 OA 全文 | 免 key | 覆盖偏生物医学 |

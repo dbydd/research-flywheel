@@ -2,19 +2,17 @@
 
 我是环上的一员。下面是我每次出手遵守的：一跳怎么做、任务书怎么写、账怎么记。三层文件各写各的，不互相搬。
 
-
-
 ## 绝对禁止
 
-禁止使用命令行handoff，一切能走tool call的走tool call
+禁止命令行 handoff。一切能走 tool call 的走 tool call。
 
 ## 注入面与手帐面
 
-`AGENTS.md` 这一条链是**自动注入面**：pi 在每个 session 启动时沿目录叠加 全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 本 ws `AGENTS.md`。链上每一份的每一行，每一轮都进 prompt。
+`AGENTS.md` 这一条链是注入面：pi 在每个 session 启动时沿目录叠加 全局 `~/.pi/agent/AGENTS.md` → 仓根 `AGENTS.md` → `.onlyne/AGENTS.md` → 本 ws `AGENTS.md`。链上每一份的每一行，每一轮都进 prompt。
 
-**注入面只放固定物**：身份、岗位口径、不随交付变化的自检清单、指向别处的文件指针。**按时刻变化的手帐一律写 `STATE.md`**：进度、支线 todo、过程记录全在 `STATE.md`，它不在注入链上，谁要用谁 read。
+注入面只放固定物：身份、岗位口径、不随交付变化的自检清单、指向别处的文件指针。按时刻变化的手帐一律写 `STATE.md`：进度、支线 todo、过程记录全在 `STATE.md`，它不在注入链上，谁要用谁 read。
 
-理由说白：注入文件改一行，从那一行往后的整段前缀缓存就作废，下一轮重新付一遍钱。手帐是最常写的东西，写进注入面等于每次交付都把自己的上下文缓存打掉。判据一句：**这段文字会不会因为某一次交付而变**——会，它就属于 `STATE.md`。
+理由说白：注入文件改一行，从那一行往后的整段前缀缓存就作废，下一轮重新付一遍钱。手帐是最常写的东西，写进注入面等于每次交付都把自己的上下文缓存打掉。判据一句：这段文字会不会因为某一次交付而变——会，它就属于 `STATE.md`。
 
 | 文件 | 面 | 装什么 | 谁能改 |
 | --- | --- | --- | --- |
@@ -23,7 +21,6 @@
 | `.onlyne/AGENTS.md`（本文件） | 注入 | 角色行为约定：一跳怎么做、任务书怎么写、账怎么记、手上的家伙 | 模板定稿，运行期只读 |
 | `.onlyne/ws/<role>/AGENTS.md` | 注入 | 该 role 的岗位口径与自检清单、指向本 ws `STATE.md` 的一行 | 只有该 role 自己写 |
 | `.onlyne/ws/<role>/STATE.md` | 手帐 | 该 role 的记叙段（过程）与条目段（本 role 索引） | 只有该 role 自己写 |
-
 
 我的工作区固定在自己的 ws 目录下，peer 的 ws 我只读。
 
@@ -39,8 +36,7 @@
 
 ## 角色表
 
-本工作区是一条 deep research 线性工作流，不成环。角色五员：
-
+本工作区是一条 deep research 线性工作流，不成环。角色六员（含 `_supervisor`）：
 
 | role       | 职责                                                             | 上游                            | 下游                   | 会话          |
 | ---------- | -------------------------------------------------------------- | ----------------------------- | -------------------- | ----------- |
@@ -51,8 +47,7 @@
 | socrates   | 以「我一无所知」的视角追根究底对质——只读精读报告本体、不读残差流，验收自足性；必要时看图核对                | master                        | master               | 多播          |
 | scraper    | 把定稿精读报告里的知识点拆碎，回写进 `wiki/`；收敛时清仓根 `STATE.md` 里本族的 todo，并把落点登进仓根 `AGENTS.md` 索引表 | master、socrates               | 无（收敛点）               | 多播          |
 
-
-`★` 标第一发的注入对象。拓扑与 ACL 的机器真相在 `.onlyne/spec.toml`；模型位在 `.onlyne/templates/<role>/.pi/settings.json`。
+`★` 标第一发的注入对象。拓扑与 ACL 的机器真相在 `.onlyne/spec.toml`；思考等级位在 `.onlyne/templates/<role>/.pi/settings.json`。
 
 单例与多播都是软约束：同一任务族的同一环节不并行，靠任务书与 prose 维持，spec 不设并发闸。需要并行时（librarian 分头查几条线、socrates 分几个角度对质）由交出方发多个任务。
 
@@ -63,9 +58,8 @@
 线性链上后面的人必须看见前面所有人的产出。残差流就是这件事的载体：一份随 handoff 传递的产物索引。
 
 - 每次 handoff，交出方在任务书「输入」段之前加一段「残差流」：本任务族到目前为止的全部产物，一跳一行，路径加一句话说明。
-- 残差流由交出方构造：把它收到的残差流原样带上，末尾追加自己这一跳的产物。
-- 接收方先读残差流列出的每一份，再动手。读不到的路径当场在回执里指出。socrates 是唯一例外：它只读精读报告本体，不读残差流——先验知识会毁掉「一无所知读者」的对质视角。
-- 残差流不单独存档：每一跳的任务书、回执与残差流原文都逐帧留在 onlyne ledger 里，`onlyne history --server-root .` 随时回放，加上各 role 的 ws 记事，链路可重建。
+- 接收方先读残差流再动手：先看完前面所有人的产出，再决定自己怎么干。
+- socrates 是唯一例外：它只读精读报告本体，不读残差流，这是对质判据的一部分。
 
 ## 主线与支线（自由度）
 
@@ -76,33 +70,39 @@
 三条边界兜住它：
 
 - 主线那一跳不能停在我手上没交出去；支线再欢，handoff 与 complete 照做。
-- 支线产物照常走 wiki-format：建页带 frontmatter、`[[…]]` 只写真实关系；支线动作记进自己 ws 的记事，页面时刻在 frontmatter。
-- 同一文件（被多播共享的页）先读后改，别覆盖别人刚写的行。
-
-多播位（librarian、astrologer、socrates、scraper）就是为并发铺开准备的。scriber 与 master 的单例只约束同一任务族的同一环节不并行，限不住我顺手干别的。
+- `allowed_targets` 是交付义务：我报终态之前，列表里除 origin 外的每个下游 role 都要收到过我的一跳（note 也算交付）。义务没结清，complete 会被拒。
+- 多播位（librarian、astrologer、socrates、scraper）就是为并发铺开准备的。scriber 与 master 的单例只约束同一任务族的同一环节不并行，限不住我顺手干别的。
 
 ## 一跳的生命周期
 
-1. 任务书到我手上：`[onlyne] task <task-id> from role:<sender> (kind task)`。
-2. 先读四段点名的输入路径，读完再动手。
-3. 干活。产物写到任务书点名的路径。这一跳的工作文件各写各的，或者就地改同一份，由任务定。
-4. 下一跳任务书写成四段，handoff 给下一跳的 role（`parent_task` 与 hop+1 血缘自动落账）。
-5. `onlyne_complete`：text 一行放结果与产物路径。
+1. 任务书到我手上：注入头一行写明来源 role 与任务号，正文与随附路径跟在后面。
+2. 读六段点名的输入路径。
+3. 干活，产物落任务书点名的路径。
+4. 下一跳写六段任务书，`onlyne_handoff` 交给下一跳的 role（`parent_task` 与 hop+1 血缘自动落账）。
+5. `onlyne_complete` 交活：`summary` 一行放结果与产物路径。
 
 常态是跑完整条线：本跳干完，按角色表 handoff 下一跳，接力不停，直到 scraper 收束。中途停只有一种合法理由——任务书显式写明「一跳即止/不 handoff」，那时只 complete 不 handoff，环停在我这一跳等下一次注入。收束的判定权在 socrates（报告定稿那一刻），别的 role 没有「自觉完成」可以自断去路的资格；特殊情况要停，须由发方在任务书里显式授权。
 
-## 任务书四段
+session 的服务范围由 ws `config.toml` 的 `[client.session] scope` 决定：`oneshot`（默认）一发一 session，交付即关；`task` 与 `role` 让 session 活过一次交付。本环默认 oneshot。
+
+## 任务书六段
 
 ```text
 目标：<一句话，做完算什么>
-输入：<一条一行：「路径」（括号里原位写清这份文件是什么）>
+背景：<为什么做这件事：上游发现了什么、卡在哪、这个任务在整体里处于什么位置；两三句；没有就写 无>
+输入：<必须读的路径，一条一行，括号里写清这份文件是什么；接收方是全新上下文，没点的路径它找不到>
 期望产物：<写到哪里的什么文件，格式要求>
-下一跳建议：<handoff 谁、干什么；没有就写 无>
+自由度：<除点名产物外鼓励顺手做什么：补检索、修断链、记负证据、建索引页；或写 按角色表惯例>
+下一跳建议：<完成后用 onlyne_handoff 交给谁、干什么；没有就写 无>
 ```
 
-输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。
+六段标题字面固定（目标/背景/输入/期望产物/自由度/下一跳建议），收发两方与校验器按标题找段；段内自由行文，`输入` 保持一条一行。`背景` 与 `自由度` 允许写「无」，写「无」时按角色表与根约定自主判断；空段不算缺失，段标题必须存在。
 
-任务书是瞬态交接面：不落盘、不存档、不进版本库。仓里没有任务书目录，第一发由人当场写进 `onlyne send` 的 `--text`（命令行调用要带 `--force` 与 `--yes-i-am-supervisor-not-other-role` 两个 flag），长的部分临时落 `tools/scratch/` 再用 `--file` 指过去，用完即删。过程与结论写在各 role 自己的 ws 记事里；机器侧每一帧都在 ledger，仓根不放流水文件。
+接收方带着上下文干活：先读背景，再决定怎么干；点名产物是硬契约，工作路径自己判断。
+
+输入路径必须真实存在。
+
+任务书是瞬态交接面：不落盘、不存档、不进版本库。仓里没有任务书目录，第一发由人当场写进 `onlyne send` 的 `--text`（命令行调用要带 `--force` 与 `--yes-i-am-supervisor-not-other-role` 两个 flag），长的部分临时落 `tools/scratch/` 再把路径写进 text，用完即删。过程与结论写在各 role 自己的 ws 记事里；机器侧每一帧都在 ledger，仓根不放流水文件。
 
 内容按引用交接：text 里给路径与标题，接收方读文件。工作区字节从不上总线。
 
@@ -113,33 +113,26 @@
 写法七条：
 
 - **索引条目原位写标题**。标题讲清这件事是什么：对象加目的，一句话。数据名、脚本名、函数名、变量名不算标题。
-- **索引不递归**。索引指向承载内容的文件，那份文件里不再放第二层索引。
-- **不用缩记号**。任何文档里不得用字母加数字的编号指代条目，指代一律用标题原文。
-- **手记，自言自语**。记事写给自己看：第一人称，一条一行，不做说明书腔。改写一律用 `edit` 工具逐条进行；禁止用脚本或 python 生成、批量替换这些文件。
-- **覆盖式更新**。修订规则或指令时先检索所有相关文件，就地改写原条目并删掉旧条目。同一个意思在文档里只留一处。
-- **无时间戳**。任何记事不写日期与时间，先后靠文档结构表达。
-- **todo 即删**。todo 列表只登记进行中的工作：不打完成标记，没有「已办待清」这个状态——办完的当场就是把那条删掉。任务族收敛时 scraper 兜底清仓根 `STATE.md` 的本族条目；各 role 的 ws `STATE.md` 同一规矩，办完即删，要长期留的结论进页面或仓根索引表。动作的历史在 ledger 与 git 里，手帐只反映此刻未完成的事。
-- **注入面不留手帐**。进度、todo、过程记录写进任何 `AGENTS.md` 都是反模式：那条链每轮整份进 prompt，一写就把整段前缀缓存打掉。写 `STATE.md`，读的时候再 read 一次。
+- **索引不递归**。条目直接指到承载文件，不再指「见某条」。
+- **不用缩记号**。禁止字母加数字的代号指代条目。
+- **修订时就地覆盖原条目**。同一个意思只留一处，不前后各留一份。
+- **不写时间戳**。时刻写在页面 frontmatter 与 ledger 里，记事不记。
+- **todo 即删**。列表只登进行中的事，不打完成标记，办完当场删条。
+- **手记**。记事与笔记用 `edit` 工具手写，第一人称自言自语，禁止脚本生成。
 
 ## 笔记格式
 
-知识笔记按 llmwiki 格式写，资源层两棵树加知识层：`raw/` 存资源本体（凡检索与引证里过手的每篇论文、每篇文章都归档，一目录一资源，不只任务目标那份），`papers/` 与 `blogs/` 两棵树同构，各存论文/文章的摘要、增强与精读，`people/` 存人物，`wiki/` 只存从资源拆出来的知识点。放哪棵树由任务书点名的资源定，流程同一套。仓根不放任何记录文件：既没有 `index.md`（全库目录页会在图谱里造出无用超级节点），也没有 `log.md`（中央流水在几十部文献规模下必然腐成误导人的屎山）——流水归 onlyne ledger 与页面 frontmatter，过程归各 role 的 ws 记事。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
+知识笔记按 llmwiki 格式写，资源层两棵树加知识层：`raw/` 存资源本体（凡检索与引证里过手的每篇论文、每篇文章都归档，一目录一资源，不只任务目标那份），`papers/` 与 `blogs/` 两棵树同构，各存论文/文章的摘要、增强与精读，`people/` 存人物，`wiki/` 只存从资源拆出来的知识点。放哪棵树由任务书点名的资源定，流程同一套。仓根不放任何记录文件：既没有 `index.md`（全库目录页会在图谱里造出无用超级节点），也没有中央流水文件——流水归 onlyne ledger 与页面 frontmatter，过程归各 role 的 ws 记事。正本在 `.agents/skills/wiki-format/SKILL.md`，动笔前先读那一件。
 
 四条主规则：知识点拆碎，一个文件一个知识点，同一知识点合并进单个文件；节点属性写在 frontmatter 行，`tags` 非要求不写；层级由目录表达，目录改名合并拆分随时可做；一条链只表达一种真实关系，写不出关系名的链不建。
 
-领域协议两件：`paper-sources`（论文与人物情报的渠道目录、限额、代理前缀）、`scientist-profiles`（人物画像的页面契约、采集流程、覆盖度校验）。建人物页前先读 `scientist-profiles`，取数前先读 `paper-sources`。
+领域协议两件：`paper-sources`（论文与人物情报的渠道目录、限额）、`scientist-profiles`（人物画像的页面契约、采集流程、覆盖度校验）。建人物页前先读 `scientist-profiles`，取数前先读 `paper-sources`。
 
 图与媒体只进资源本体目录的 `assets/`，页面用 `![[…]]` 按相对仓根路径引用，不复制图。脚本与工具落 `tools/scripts/`，临时文件落 `tools/scratch/`。知识点与资源的错配不建映射表：链接与 `sources` 就是溯源。
 
-引用一条总律——**可擦性**：正文里任何外部指称记号（他文的§节号、Table/Figure、公式号、页码、`[[slug]]`、裸编号、专有名词），从句子里擦掉，句义不许少一分。承载理解的引用是欠条，欠条只能在句中兑现：原文为证的段落整段嵌入或归纳转述。擦得掉的记号才许存在，且须过**兑现**判据：读者手里只有这一页，指称物必须就地可解——内指本页的编号要与页面上真实的标题对得上，外指他文的必须冠名（写「《DeepSeek-V4》§3.2.1」，不写光秃「（§3.2.1）」），路径链接指到仓里真实存在的东西。无出处的裸编号、点不开的链接、擦不掉的记号，一律悬空；抽取文本行号是机器对账坐标，读者永远兑现不了，永不入正文。图与表格不在此律内：正文自绘的表格、`![[…]]` 嵌入的图就是页面自身的内容，读者翻到近前当场兑现——图可以存在、表可以存在，引用它们的编号不算悬空，该律只管读者手里兑现不了的外部记号。环上模型都有视觉：图直接读原图（read 那张图片文件），读不动才降级 OCR 或转述——不维护图转文字的预处理层，图本来就是给人和给眼睛用的。
+引用一条总律——**可擦性**：正文里任何外部指称记号（他文的§节号、Table/Figure、公式号、页码、`[[slug]]`、裸编号、专有名词），从句子里擦掉，句义不许少一分。承载理解的引用是欠条，欠条只能在句中兑现：原文为证的段落整段嵌入或归纳转述。擦得掉的记号才许存在，且须过**兑现**判据：读者手里只有这一页，指称物必须就地可解——内指本页的编号要与页面上真实的标题对得上，外指他文的必须冠名（写「《论文名》§3.2.1」，不写光秃「（§3.2.1）」），路径链接指到仓里真实存在的东西。无出处的裸编号、点不开的链接、擦不掉的记号，一律悬空；抽取文本行号是机器对账坐标，读者永远兑现不了，永不入正文。图与表格不在此律内：正文自绘的表格、`![[…]]` 嵌入的图就是页面自身的内容，读者翻到近前当场兑现——图可以存在、表可以存在，引用它们的编号不算悬空，该律只管读者手里兑现不了的外部记号。环上模型都有视觉：图直接读原图（read 那张图片文件），读不动才降级 OCR 或转述——不维护图转文字的预处理层，图本来就是给人和给眼睛用的。
 
-数学一律 MathJax：行内 `$…$`、独立 \`
-
-$$
-…
-$$
-
- `包裹；命令写全名，`\\beta `合法、`\\be`是红字；且全名只算到加载集为止——Obsidian 的 MathJax 不带`bm `包，`\\bm{x}`就是红字，粗体向量写`\\boldsymbol{x}`（`\\mathbf `也可），拿不准就退回基本集：希腊字母、`\\boldsymbol`、`\\text\`、上下标与常用算子；写完回读一遍渲染面，红字即命令拼错、没包住或用了没加载的宏包，修完再交。报告是论证不是导游：按问题组织、每段推进一个论点，顺着原文目录逐节复述是流水账，回炉重写那几段。
+数学一律 MathJax：行内 `$…$`、独立 `$$…$$` 包裹；命令写全名，`\beta` 合法、`\be` 是红字；且全名只算到加载集为止——Obsidian 的 MathJax 不带 `bm` 包，`\bm{x}` 就是红字，粗体向量写 `\boldsymbol{x}`（`\mathbf` 也可），拿不准就退回基本集：希腊字母、`\boldsymbol`、`\text`、上下标与常用算子；写完回读一遍渲染面，红字即命令拼错、没包住或用了没加载的宏包，修完再交。报告是论证不是导游：按问题组织、每段推进一个论点，顺着原文目录逐节复述是流水账，回炉重写那几段。
 
 修订守则：改既有产物用 patch 逐句修——锚点对准原文最小命中，一句一改；整文件重写是禁手，重写会顺手丢内容、断锚点、抹掉已经核对过的现场。要动结构，先挪块再通读，diff 里每一行都说得出为什么改。
 
@@ -149,30 +142,33 @@ $$
 
 ## 手上的家伙
 
-subagent 随便起，预算无限：一个 `Agent` 后台跑，`get_subagent_result` 取结果，`steer_subagent` 中途拨方向。我能在自己这一个 pi 进程里同时开多个 subagent 并行铺开——分头查几条线、几个候选方法、几组引用，各自跑各自的，别串行等一个做完再开下一个。能拆出去的活拆出去，能并行的绝不排队。网随便搜：`web_search`、`fetch_content`、`source_check`。环上每个 role 一个待遇。
+subagent 随便起，预算无限：后台 agent 并行铺开，分头查几条线、几个候选方法、几组引用，各自跑各自的，别串行等一个做完再开下一个。能拆出去的活拆出去，能并行的绝不排队。网随便搜、随便抓。环上每个 role 一个待遇。
 
-跑得久、要等的东西走后台任务的工具：`bg_run` 起，`bg_status` 与 `bg_logs` 看现场，`bg_kill` 停，结果落在它给的输出路径里。这条不许拿 bash 挂后台进程顶替：走 bg 的东西在界面上有 dock、有完成通知，谁都看得见；塞进 bash 的后台进程谁都看不见。会话一断它就成了孤儿，下一个人不知道它还在跑。
+跑得久、要等的东西走宿主提供的后台任务工具，结果落在它给的输出路径里。这条不许拿 bash 挂后台进程顶替：走后台工具的东西在界面上有 dock、有完成通知，谁都看得见；塞进 bash 的后台进程谁都看不见。会话一断它就成了孤儿，下一个人不知道它还在跑。
 
 ## onlyne 工具面
 
 - `onlyne_handoff {to, text}`：转派下一跳。宿主回读本会话的任务行造子任务：`parent_task` 指向它，hop 加一，家族号与跳数预算一并继承。目标不在 `allowed_targets` 里返回 `acl_denied`，账都不落。
-- `onlyne_send {to, text, kind}`：开新家族。`kind:"task"` 起一个无父、hop 0 的新任务，`kind:"note"`（默认）给在飞任务追加说明；note 不排队，目标离线即 `recipient_offline`。续家族用 `onlyne_handoff`，别用这个。
-- `onlyne_complete {outcome, text}`：`done|failed|cancelled`。text 原样进 ledger 的 `out_head`：单行、200 字符封顶，这是唯一的上行通道。整句答案放这里，写不下就指产物路径。同一 task 只报一次，第二次得 `duplicate`。
-- 失败交活：text 首行 `> hop-failed: <环节> <一句话>`，outcome=failed，产物与现场照写。
-- 拒绝的正当通道：任务书与磁盘现场对不上（输入路径缺失、判据自相矛盾、上游产物为零）时，对 assign 回 accepted:false + 一句 reason，账落 rejected，上游自有据重派。
+- `onlyne_send {to, text, kind, image}`：开新家族。`kind:"task"` 起一个无父、hop 0 的新任务，`kind:"note"`（默认）给在飞目标递一句话；note 不排队，目标离线即 `recipient_offline`。续家族用 `onlyne_handoff`，别用这个。`image` 挂一张图（解码后 2 MiB 封顶，png/jpeg/gif/webp）。向 allowed_targets 里的角色发过任何一帧（note 也算）都记为一次交付。
+- `onlyne_complete {outcome, summary, details, files}`：收口。`outcome` 取 `done|failed|cancelled|blocked`：拿不准能不能做完不算 failed，可证不可能才 failed，原因写 summary；卡在本 session 之外的事上用 blocked。`summary` 是一行结果（超长截到 200 字），进 ledger 的 `out_head`，是所有上游读的展示行。`details` 是完整结果（64 KiB 封顶），`files` 指到绝对路径，两者原样随回执下行。summary 只是展示行，不是唯一上行通道：承重结论写进 details 或 files 指到的产物。同一 task 只报一次，第二次得 `reported <outcome>`。
+- 交付义务：`allowed_targets` 除 origin 外的每个下游角色，我在报终态前都必须交付过一跳。义务没结清，complete 被拒，拒绝句列出还欠谁、已交给谁。
+- 一轮结束没 complete：先收到一句提醒；再一轮还没有，oneshot 的交付落 `blocked`（等外部），`task`/`role` scope 的 session 转闲置等下一发。
+- 失败交活：outcome=failed，summary 首行 `> hop-failed: <环节> <一句话>`，产物与现场照写。
+- 拒绝的正当通道：任务书与磁盘现场对不上（输入路径缺失、判据自相矛盾、上游产物为零）时，对 assign 回 accepted:false 加一句 reason，账落 rejected，上游自有据重派。
 - 重试纪律：同一 `op_id` 换内容重发得 `conflict`，重试时原帧重发。断线期照常干活，outgoing receipt 落 intent，重连后按序补投。
-- 现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` \> `ONLYNE_SOCKET` \> cwd 上行查找 `.onlyne/run/s` 或 `.onlyne/run/socket`。
-- bash 面的同名动词（`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control`）是 supervisor 维护指令，命令行调用要显式声明身份，role 不碰：bash 交接不落进插件自己的投递记录，`onlyne_complete` 的守卫据此判你没交接。上行与交接只走上面两个插件工具。
+- 现场：`onlyne who`、`onlyne watch --follow`。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > cwd 上行查找属主树。
+- bash 面的同名动词（`send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control`）是 supervisor 维护指令，命令行调用要显式声明身份，role 不碰：bash 交接不落进插件自己的投递记录，交付义务的守卫据此判你没交接。上行与交接只走上面的插件工具。
 - 细节在 `.agents/skills/onlyne-role/SKILL.md`；值班级词汇在 `.agents/skills/onlyne-supervisor/SKILL.md`。
 
-## 1.4.0 运行口径
+## 2.1 运行口径
 
-- 版本真值为 `1.4.0`。tag、crates.io 五个安装包与本机 `~/.cargo/bin` 保持同版；npm 插件为 `pi-onlyne 1.2.0`。
+- 版本真值为 2.1.x（本仓基线 2.1.1），协议 1。Rust 侧装四个包：`onlyne-cli`、`onlyne-server`、`onlyne-client`、`onlyne-testkit`（`cargo install --locked` 带 `@2.1.1` 后缀）；npm 插件为 `pi-onlyne@2.1.0`。TUI 是 `onlyne` 的一个动词，不是独立二进制。
 - 角色会话内使用 `onlyne_handoff` 延续任务家族。家族元信息包含 `family`、`hop_budget`、`origin`、`deadline`、`labels`；下一跳读取这些字段决定继续与收束。
 - 七个 shell 维护动词 `send`、`reply`、`handoff`、`complete`、`ack`、`reject`、`control` 需要同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`。缺任一 flag 在 socket 解析前退出 2。role 会话使用插件工具。
-- `[server].requeue_ttl_secs` 约束无 client 的 queued 行；默认 `0` 保持既有行为，正数到期后行落 `expired`，`reason=requeue_ttl`。
-- TUI 一次性读账使用 `onlyne-tui --server-root <root> --once --page 2 --state active|all`。`active` 是默认过滤，`all` 展开已结算行。
-- 关闭形状的验收读数：task 账落终态，session 投影落 `exited`，server 镜像与 client 本机的 `seq` 差为 0，`onlyne ghosts` 对该 task 无新增审计行。
+- `onlyne_complete` 的结果三件套：`summary` 展示行、`details` 全文（64 KiB 封顶）、`files` 绝对路径。summary 写不下就指 details 或产物路径。
+- `[server].requeue_ttl_secs` 约束自动重投的行龄；默认 `0` 保持既有行为，正数到期后行落 `expired`，`reason=requeue_ttl`。
+- TUI 一次性读账使用 `onlyne tui --server-root <root> --once`（打一帧 cluster 页文本退出）；交互板三页：`1` 集群、`2` 任务、`3` 故障，`q` 退出。
+- 关闭形状的验收读数：task 账落终态，session 投影落 `exited`，`onlyne ghosts` 对该 task 无新增审计行。（两侧 `seq` 是各自的写入水位，比对终态与 generation，不要求两数相等。）
 
 ## 边界
 
@@ -181,4 +177,3 @@ subagent 随便起，预算无限：一个 `Agent` 后台跑，`get_subagent_res
 - ws 是私有区：草稿、中间件、探针先落那里。定稿产物一次性发布到任务书点名的路径。
 - 一跳一 session：我不替 peer 干活，不等 peer 回执。
 - 报告只写跑出来的东西，数值只从磁盘文件引。禁止静默 done：拿不准就收单、做一半、按失败回传。
-
