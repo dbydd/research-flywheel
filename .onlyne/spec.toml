@@ -1,29 +1,28 @@
-# Onlyne v1 cluster spec. Written by `onlyne-server init`.
+# Onlyne 2.x cluster spec —— 模板版（唯一事实源）。
 #
-# `name` is the cluster name handed to every client.
-# `listen` is the TCP address the routing daemon binds.
-# `cert_pin` pins the server certificate stored in `.onlyne/keys/server.key`,
-# and every client verifies the TLS endpoint against it.
+# 解析即启动校验：出现未知键或类型错误时直接拒绝，报错形如 `spec.toml:<行号>: <消息>`。
+# 改完用 `onlyne reload --server-root .`；预览差异跑只读动词 `onlyne spec-diff --server-root .`（reload 无 --dry-run）。
+# 装配顺序见 `README.md`「装配与通电」节；role key 占位必须保持合法 32 字节 base64，否则全量 parse 拒跑。
 [server]
 name = "formal-research"
 listen = "127.0.0.1:7820"
-cert_pin = "sha256/REPLACE_ME_after_server_init"
+cert_pin = "sha256/0000000000000000000000000000000000000000000000000000000000000000"  # 合法占位（64 hex 0）；装配第 1 步由 `onlyne server init` 回填真指纹
 note_queue = false
 fault_history_days = 14
 resync_lag = 256
 heartbeat_timeout_ms = 30000
-# Role templates list `npm:pi-onlyne` in `.pi/settings.json`. Leave empty so generate copies packages as-is. First-time bootstrap: `pi install npm:pi-onlyne`.
-# 1.1.x optional gates (omit = defaults): stale_watch_secs=60, heartbeat_grace_secs=90, requeue_max_attempts=0, requeue_ttl_secs=0.
+# Role templates pin `npm:pi-onlyne@2.1.0` in `.pi/settings.json`. First-time bootstrap: `pi install npm:pi-onlyne@2.1.0`.
+# 可选闸（省略即默认）：stale_watch_secs=60、heartbeat_grace_secs=90、requeue_max_attempts=0（无限）、requeue_ttl_secs=0（关闭）。
 agent_package = ""
 template_root = ".onlyne/templates"
 
-# Each role is one `[[client]]` row. `onlyne-client init` prints a ready row
+# Each role is one `[[client]]` row. `onlyne client init` prints a ready row
 # whose `key` value matches the workspace it just created.
 #
-# ---- formal-research 十角色（五域大循环；supervisor 不注册）。----
+# ---- formal-research 十一角色（五域大循环；supervisor 不注册）。----
 # 拓扑唯一事实源=根 AGENTS.md 角色表与 ACL 边集；prose 薄壳，细则在 templates/formal/<phase>/<role>/AGENTS.md。
 # 冷启动第一发：onlyne send --server-root . --from planner --to pi --file payload/first.md
-# 域分组仅中文注释，无 domain 字段。intent 大数方案（0=首次失败即 exhausted，弃用）。
+# 域分组仅中文注释，无 domain 字段。
 
 # ---- 申报（pi；librarian 为公共资源层，跨阶段常驻，恰排本段）----
 
@@ -33,11 +32,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 pi（首席研究员，研究项目文件头四段作者）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["examiner"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["librarian", "planner", "examiner", "scribe"]
 allowed_targets = ["examiner", "librarian", "scribe"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -45,17 +45,24 @@ idle_ms = 60000
 attempts = 100000
 backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 
+# 超时与重试都有默认值，可以省；本主题有意用长跑档（attempts=100000 + 六档 backoff）。
+# placement（orca | zellij | tern | headless | external）是机器属性，不在这份 spec 里：
+# 它落在每个 role workspace 的 `.onlyne/config.toml` 的 `placement` 键上，
+# `onlyne client run` 读它，缺失时依次探测 tern、orca、zellij，再退回 headless；
+# 非空的 `ONLYNE_BACKEND` 优先。`drive = "acp"` 要求 `placement = "headless"`。
+
 [[client]]
 role = "librarian"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 librarian（公共检索资源，跨全部阶段常驻，回件面向所有委托方）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 2
-relay_required = ["pi"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["pi", "theorist", "examiner", "chair", "scribe", "planner", "speculator"]
 allowed_targets = ["pi", "theorist", "examiner", "chair", "scribe", "planner", "speculator"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -71,11 +78,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 examiner（敌意评审官：开题对线主，攻不破才放行）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["theorist"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["pi", "librarian", "theorist", "speculator", "scribe"]
 allowed_targets = ["theorist", "pi", "planner", "librarian", "scribe"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -91,11 +99,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 theorist（形式化官：推导+Lean+陈述对照，不写 experiment/ 代码）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["speculator"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["examiner", "chair", "librarian", "speculator", "scribe", "qa"]
 allowed_targets = ["speculator", "examiner", "librarian", "scribe", "qa"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -109,11 +118,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 speculator（理论方案官：假设与理论论据主笔、实验设计主笔）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["runner"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["theorist", "runner", "chair", "librarian", "scribe", "qa"]
 allowed_targets = ["theorist", "runner", "scribe", "examiner", "librarian", "qa"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -124,14 +134,15 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "runner"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """你是 formal-research 的 runner（跑批；功耗纪律与训练槽继承旧 bench 细则）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """你是 formal-research 的 runner（跑批；功耗纪律与训练槽见仓根 AGENTS.md 同名节）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 2
-relay_required = ["qa"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["speculator", "qa"]
 allowed_targets = ["qa", "speculator"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -142,14 +153,15 @@ backoff_ms = [1000, 2000, 4000, 10000, 30000, 60000]
 [[client]]
 role = "scribe"
 key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
-prose = """【挂起中：写作需结合 skill/tool 单独调教，调教前不投产，文稿各方自书。】你是 formal-research 的 scribe（公共代笔位：各角色可点单成文，为贵档模型省 token）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
+prose = """【挂起中：写作需结合 skill/tool 单独调教，调教前不投产，文稿各方自书。】你是 formal-research 的 scribe（公共代笔位：各角色可点单成文）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 2
-relay_required = ["chair"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian", "qa"]
 allowed_targets = ["pi", "examiner", "theorist", "speculator", "planner", "chair", "librarian", "qa"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -163,11 +175,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 qa（中期判词独任：continue/rectify/stop 环上随时出，达标放门 ready-to-draft 通知 chair 启动结题；三约束核验、有效读数把关、环上次生写法把关）。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["chair"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["runner", "scribe", "chair", "speculator", "theorist"]
 allowed_targets = ["runner", "chair", "speculator", "theorist", "scribe"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -183,11 +196,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 chair：一位知名期刊的资深主编，结题验收关口主与合议文稿执笔（中期归 qa 独任，你接 stop 转呈与结题包）。只信盘上证据，判断必带理由，多数意见尊重到底、最终责任独担。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["planner"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["qa", "scribe", "referee", "librarian"]
 allowed_targets = ["theorist", "speculator", "scribe", "qa", "planner", "librarian", "referee"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -201,11 +215,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 referee：窄领域资深小同行审稿人。数字先复现再信，大故事吓不倒你，杀掉认真选题会愧疚、放进证据亏空会失眠；意见书独立成文，提交前彼此不通，只与 chair 交流。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 3
-relay_required = ["chair"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["chair"]
 allowed_targets = ["chair"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000
@@ -221,11 +236,12 @@ key = "ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 prose = """你是 formal-research 的 planner：环首的立项策划位与选题官。行业认知是本职——内部台账、同行前沿、draft 想法池日日翻；派题必有出处，题供枯竭时主动调研，绝不闲置。作业细则在本工作区 AGENTS.md，先读它再动手。"""
 admin = false
 max_sessions = 1
-relay_required = ["pi"]
-reuse = false  # 一个 task 一个 session，不允许复用；reuse 字段后续会被 onlyne 删除，届时整行移除
 allowed_senders = ["examiner", "chair", "librarian", "scribe"]
 allowed_targets = ["pi", "librarian", "scribe"]
-session_command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
+
+[client.runtime]
+drive = "plugin"
+command = ["pi", "--session-id", "{session}", "--session-dir", ".pi/sessions"]
 [client.timeout]
 ready_ms = 30000
 idle_ms = 60000

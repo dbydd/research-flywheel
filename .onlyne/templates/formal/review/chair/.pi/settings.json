@@ -1,8 +1,6 @@
 {
   "packages": [
-    "npm:pi-onlyne"
+    "npm:pi-onlyne@2.1.0"
   ],
-  "defaultProvider": "axonhub",
-  "defaultModel": "generic-researcher-powerful",
   "defaultThinkingLevel": "high"
 }

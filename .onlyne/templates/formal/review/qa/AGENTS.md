@@ -24,7 +24,7 @@
 
 ## 下一跳与回传
 - 可发：runner（返工/probe/整改）、chair（放门通知/结题包/stop 转呈）、speculator/theorist（把关/整改）、scribe（挂起中休眠：放门知会走 chair，文字整改单改发 speculator）。可收：runner、scribe、chair、speculator、theorist（次生写法点单）。
-- 主下游 chair（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 chair（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 判词独任：中期不组局、不合议、无仪式——判词本身就是中期。human_gate 缺省不给中期留位。

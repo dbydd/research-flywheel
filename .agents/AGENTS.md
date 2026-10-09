@@ -1,4 +1,4 @@
-# formal-research 大循环 — onlyne v1 公共约定
+# formal-research 大循环 — onlyne 2.1 公共约定
 
 这是 formal-research 主题的公共约定正本，树内每个 role session 沿父目录自动拼上下文读到同一份（role ws 在仓根之下）。
 
@@ -8,7 +8,7 @@
 
 一切信息落文件。每个结论都能回溯到项目目录、papers/ 或台账行（`onlyne ledger --server-root .`）。
 
-## 设计哲学（用户裁定 0916 深夜，凌驾全部细则）
+## 设计哲学（凌驾全部细则）
 
 - 造的是有向有环图。theory ⇄ experiment ⇄ 中期检查天然成环，实践中理论-实验-理论反复迭代属常态；角色沿角色表的边自由往返，关口是环上节点。
 - 少约束，多自纠。错误出现时先由环上的边裁决（对线、联名上报、revise、rectify），禁止为个例失败新增兜底条款。
@@ -21,11 +21,11 @@
 
 三个关口（口径与 `research_project/README.md`「关口」节同源）：
 
-- 开题审查=敌意对线：examiner（powerful/max，职责是让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<项目短名>/对线记录.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
+- 开题审查=敌意对线：examiner（deep/max，职责是让项目死掉）持四类攻击（前提崩塌/已被做过/不可测/自相矛盾）与 pi 逐轮攻防，记录追加 `research_project/<项目短名>/对线记录.md`。弹药耗尽 → `pass`（开工令 → theorist 先形式化头四段命题 → speculator 带陈述出假设与方案）；存在化解不了的实心攻击或致命实锤 → `fail`（planner 归案）。攻击必锚到段+句+证据，无锚无效。轮数不设限、不作终止条件，判据只看弹药与证据。
 - 中期检查=环上常驻判词（qa 独任）：理论⇄实验持续环里，qa 随时以判词形式出中期判断 `continue`（继续转环）/ `rectify`（整改单直令 runner/speculator/theorist/scribe，绕 chair 无需合议）/ `stop`（经 chair 归案 planner），落 `research_project/<项目短名>/gates/中期判定.md`（追加式，判词+依据+签字+时刻）。判词原料：它逐条攒的把关记录+三约束+断言对表+有效读数率。设计段目标全部有实测支撑且三约束 pass 时，qa 在同一文件追加**放门判词（ready-to-draft）**：通知 chair 启动结题程序；成稿环节（papers/ 与代笔）挂起中，写作单独调教；无放门=还在环里。
-- 结题验收（规程五步）：① qa 放门后备齐送审包 `packs/结题送审包.md` 六节料：断言对表全量 / 三约束核验（命令+输出）/ 有效读数台账（无效点名）/ 中期判词索引 / measured 关键数字摘要（路径指过去）/ open questions 草节（speculator 供稿）。② chair 程序核验（六节齐+抽一条断言当场重跑）→ 约稿 referee×3：任务书只含包路径+席位号，零倾向语句。③ referee 独立意见书（提交前互不通气，唯一接口 chair）：三节必含——对照「最终验证依据」逐条核对（hit/miss+路径）、四类攻击点列举（前提崩塌/已被做过/不可测/自相矛盾）、建议档位 `accept / minor revise / reject`+理由。④ chair 合议裁决（无记名投票，合议+说理）：读齐三份意见书+磁盘复核，判 `accept / minor revise / reject`；判词与多数意见书建议相悖时，判词必须写理由。minor revise=只动文字与结构、数据断言原样，整改单直发作者（scribe 挂起期=speculator）。reject→planner 归案（死因+负证据+open questions 全留）。⑤ 判词落 `gates/结题判定.md`（判词+依据引意见书与包节号+chair 签+时刻），accept → chair 补结论段（判词指针+回查表）→ handoff planner 填 conclude+新题任务书。human_gate 条款可列结题验收为请示位（列了才请示 Main，缺省未列=全自动，与下文 human_gate 条款同构）。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
+- 结题验收（规程五步）：① qa 放门后备齐送审包 `packs/结题送审包.md` 六节料：断言对表全量 / 三约束核验（命令+输出）/ 有效读数台账（无效点名）/ 中期判词索引 / measured 关键数字摘要（路径指过去）/ open questions 草节（speculator 供稿）。② chair 程序核验（六节齐+抽一条断言当场重跑）→ 约稿 referee×3：任务书只含包路径+席位号，零倾向语句。③ referee 独立意见书（提交前互不通气，唯一接口 chair）：三节必含——对照「最终验证依据」逐条核对（hit/miss+路径）、四类攻击点列举（前提崩塌/已被做过/不可测/自相矛盾）、建议档位 `accept / minor revise / reject`+理由。④ chair 合议裁决（无记名投票，合议+说理）：读齐三份意见书+磁盘复核，判 `accept / minor revise / reject`；判词与多数意见书建议相悖时，判词必须写理由。minor revise=只动文字与结构、数据断言原样，整改单直发作者（scribe 挂起期=speculator）。reject→planner 归案（死因+负证据+open questions 全留）。⑤ 判词落 `gates/结题判定.md`（判词+依据引意见书与包节号+chair 签+时刻），accept → chair 补结论段（判词指针+回查表）→ handoff planner 填 conclude+新题任务书。human_gate 条款可列结题验收为请示位（列了才经 operator 配置的会话路由请示 supervisor，缺省未列=全自动，与下文 human_gate 条款同构）。中期是合规判断（便宜档当场办），结题是价值判断（贵档合议）。
 
-判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管，planner 产出照例不待批。全自动飞轮的意义在此。`human_gate` 条款：用户对特定主线开放请示时通知 supervisor/planner，项目文件头以 `human_gate:` 点名哪些关口可请求；被点名关口的主责角色经 pi-intercom 发 supervisor 会话（本机地址，缺省 `Main`）请示，阻塞等 approve，supervisor 向人开 ask 批复后代落 gates/ 判词。人不在场=人有事，阻塞即正确状态，不设降级兜底。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
+判词落 `research_project/<项目短名>/gates/<关口>判定.md`：判词 + 依据 + 签字 + 时刻。referee 独立意见书落 `research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md`。三个关口默认全自动托管，planner 产出照例不待批。全自动飞轮的意义在此。`human_gate` 条款：用户对特定主线开放请示时通知 supervisor/planner，项目文件头以 `human_gate:` 点名哪些关口可请求；被点名关口的主责角色经 pi-intercom 按 operator 配置的会话路由发 supervisor 请示，阻塞等 approve，supervisor 向人开 ask 批复后代落 gates/ 判词。人不在场=人有事，阻塞即正确状态，不设降级兜底。缺省未列 = 全自动。此条款仅在用户明示的主题生效。
 
 关口防护四条（项目级范围锁/止损线已废止，防护由关口规则承担）：
 
@@ -71,7 +71,6 @@
 - 训练槽协议：抢占成功即 `echo "<task_id> <pid> <ISO>" > .train-slot/holder`。
 - 训练槽协议：槽已存在则读 holder：pid 活着就等待，5-10 min 轮询一次，等待期间先干不需槽的活；pid 死了 `rm -r` 接管，并在 run-log 记一次接管。
 - 训练槽协议：交活/退出前 `rm -r .train-slot` 释放。
-- 功耗纪律与训练槽协议由旧跑批位细则移入（历史参照：commit f36d3de），条款内容不变。
 - 过期护栏继续有效：`research_project/<项目短名>/DEPRECATED.md` 圈定的数字不进稿件/判词；开工先读本节与台账。
 
 ## 干活偏好（工程环境，实验段起手式）
@@ -98,12 +97,12 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - `research/`：证据。其中 `frontier-notes.md` 是联网检索记录，格式为 URL + 单行结论，追加式。
 - `experiment/`：领域代码。`evaluation/`：评测器。`papers/`：成稿，目录名 `<项目短名>/`。
 - `payload/`：注入给起始 role 的任务书落这里（`payload/first.md` 及后续）。
-- `.onlyne/ws/formal/<phase>/<role>/`：角色工作区（路径随模板子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用（`npm:pi-onlyne`）、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
-- `.onlyne/`：v1 集群面。集群真相文件是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
+- `.onlyne/ws/formal/<phase>/<role>/`：角色工作区（路径随模板子路径 `formal/<phase>/<role>`，与 server name 无关），内含细则 AGENTS.md、`.pi/` 三元组+插件引用（`npm:pi-onlyne@2.1.0`）、运行态。`<phase>` 阶段层：initiation={pi,examiner}、common={librarian,scribe}（公共资源层）、theory={speculator,theorist}、experiment=runner、review={chair,referee,qa}、archive=planner。
+- `.onlyne/`：集群面。集群真相文件是 `spec.toml` 与 `templates/formal/<phase>/<role>/`（AGENTS.md+`.pi/settings.json`）。
 - 运行时禁入 git 的目录：`run/` socket、`store/` db、`keys/`、`logs/`、`ws/`（角色工作区，产物零绝对路径）。
 - 台账：账本在 server store，用 `onlyne ledger --server-root .` pull 式读。
 - `.agents/skills/`：预制领域 skill，随树分发（pi 沿父目录链发现，与本文件同机制），**吸收制：外部方法论只进本目录，全局 skill 目录不写入**。清单十件：`paper-figures`（matplotlib conf 绘图 + 三线表 + 面板审计与 VLM 复检环）、`paper-writing`（稿件骨架 + LaTeX 细则 + 主线映射/反向提纲/段落四问/修订三维台账）、`evidence-discipline`（证据等级 L0-L4、引用独立验证阶梯、造假五类、数字保真 raw/derived、hedge 校准、入库门禁——qa/speculator/theorist/pi/examiner）、`review-discipline`（约稿零倾向与盲段承诺、非补偿合议、concern 账本、意见书三节、断言→证据形状硬表——referee/chair/examiner/qa）、`retrieval-contract`（检索契约八字段、完整性八步、DOI 先行、PRISMA 收窄、成本门——librarian 本体）、`ideation-lenses`（选题三 gate、十透镜、致命伤十条+反向保险、四条自洽检查——planner/pi/speculator/examiner）、`experiment-design`（双列主张→实验映射、覆盖双射、基线公平、消融包、切分纪律、统计审查——speculator/runner/qa）、`ml-runbook`（静默失败清单、environment.json 读数器规范、评测红旗、工具登记簿——runner）、`onlyne-supervisor`、`onlyne-role`。各角色模板有「开工技能加载」节点名读哪件哪节；外部仓库的蒸馏笔记在 `.intake-notes/`（gitignored 的本机吸收暂存区，吸收完成后可清）。
-- 入口 role 以角色表 ★ 行为准（本主题 = pi）；v1 没有 flywheel.json 那类状态文件，全部真相 = 文件 + git + 台账。
+- 入口 role 以角色表 ★ 行为准（本主题 = pi）；本设计没有 flywheel.json 那类状态文件，全部真相 = 文件 + git + 台账。
 
 路径约定：本文件与一切任务书里的路径都相对 server-root。配套五条：
 
@@ -153,30 +152,33 @@ session 对下游零等待。下游成果经文件与台账呈现，由接力任
 - 各 role 放开用 pi 本体的一切工具：文件读写、检索、eval、subagent 系统。预算无上限，数量与深度不设配额。能拆的活拆给 subagent 并行干，主会话做判断与整合；会话回收只回收内存，工具与 subagent 每次会话都在。
 - 自带 web_search 与 librarian 的分工：web_search 是自用裸检索，快、散、查完即弃，不落档、不经排队，看个新现象顺手查它。librarian 是专职文献官：同样会 web_search，另加整理分类、对照本工作区历史文件、当前任务与文献存档（`research/frontier-notes.md` 行锚、obsidian draft 索引），产出可被引用与回查的归档行。要「谁做过什么、撞不撞车、证据链」这种判断，派单给她；只要「这东西是什么」，自己搜。
 
-## onlyne v1 工具面
+## onlyne 2.1 工具面
 
 - 命令行为以 `<onlyne 仓>`（onlyne 的源码 checkout）与当期 `--help` 为准，本树只读它。装具与插件的版本口径在 `README.md`「前置」。
-- 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne reload --server-root .`（`reload` 无 `--dry-run`，看待应用差异用只读动词 `onlyne spec_diff --server-root .`，别名 `spec-diff` 同解），运行期零回写。
-- role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`；note 骑在对方已活的 session 上，目标离线或在线无 working session 都直接 `recipient_offline`（本 spec `note_queue = false`；要排队先把该键设 true 并带 `--ttl`，到点记 expired）。`onlyne_complete {outcome:"done"|"failed"|"cancelled", text}` 交活。
+- 集群真相 = `.onlyne/spec.toml`（[server]+[[client]]，deny_unknown_fields，报错 `spec.toml:<行>: <msg>`）；改完 `onlyne reload --server-root .`（`reload` 无 `--dry-run`，看待应用差异用只读动词 `onlyne spec-diff --server-root .`），运行期零回写。
+- role 在 pi 内的通信：`onlyne_send {to, text, kind:"task"|"note"}`；note 骑在对方已活的 session 上，目标离线或在线无 working session 都直接 `recipient_offline`（本 spec `note_queue = false`；要排队先把该键设 true 并带 `--ttl`，到点记 expired）。交活用 `onlyne_complete {outcome, summary, details, files}`：`outcome` 取 `done | failed | cancelled | blocked`（blocked = 等外部条件，task/role 转 idle 显示等待）；`summary` 是唯一上行通道，单行、200 字符封顶，全文与路径走 `details`/`files`。
 - 接力派下一跳用 bash `onlyne handoff --to <role> --task <当前task_id> --text "<任务书>"`（parent_task+hop 血缘顺链；task_id 在注入帧头、`/onlyne` 或 receipt JSON 里查）。
-- 失败交活用 complete outcome=failed，或 handoff 正文首行 `> hop-failed: <原因>`。
-- 产物未齐用 outcome=cancelled（bash 面 `onlyne complete --task <id> --outcome cancelled --head-from local --text "<说明>"`；`--head-from` 必填，`local` 用本行 text 当 head，`ledger` 回读已存 head），或不 complete 等 idle 回收（回收 = 换一个全新 session id，旧档案留 .pi/sessions 可查）。
-- 1.2.1 起：turn 结束时没有结果行，completion 收据仍落账（正文为空文本）。本树十一角色 `session_command` 是交互 pi，结项走 `onlyne_complete` / `onlyne complete --head-from`。ACP 的 payload-v1（`.onlyne/out/<task-id>.md` 写 `hop-done:` / `hop-failed:`）作用于 `backend = "acp"` 会话。
+- 失败交活用 complete outcome=failed，summary 一句话死因，details 带失败命令与日志路径。正文里写 `> hop-failed: <原因>` 首行只是 human 可读习惯，2.x 没有解析方。
+- 产物未齐用 outcome=cancelled，或不 complete 等 idle 回收（回收 = 换一个全新 session id，旧档案留 .pi/sessions 可查）。turn 结束时没有结果行，completion 收据仍落账（正文为空文本）。本树十一角色的会话命令是交互 pi（`[client.runtime]` `drive = "plugin"` + `command` argv，`{session}` 是 session-id 占位），结项一律走 `onlyne_complete`。
 - 观测命令：`onlyne status|roles|sessions|ledger|faults|watch|history --server-root .`；pi 内 `/onlyne`。op_id 换体重发 conflict，重试原帧重发。
 - 角色零上行边：completion 走 origin 免 ACL 特例自动回账，进来源 role 收件箱（queued 行，pull 式），反边不用声明。
-- control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。backend：`ONLYNE_BACKEND` 取 `herdr|orca|zellij|exec|fake|auto`。选择链 env（非空）> 工作区 `config.toml` 的 `backend` > auto。留空或 `auto` 时探测序 herdr→orca→zellij，`exec`/`fake` 只认点名，全无匹配 `onlyne client run` 退 5 并报 NO_SUPPORTED_HOST。`onlyne-client doctor` 只读打印宿主判定，恒退 0。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > cwd 上行查找；规范路径越过 103 字节时绑短派生路径，实际路径写进 `.onlyne/run/socket`。会话结清后宿主资源随会话回收。`stalled` 只报仍在跑的会话。满容量 role 用 `control_only` pull 继续收 control。重连 `hello.live_tasks` 让在跑任务保持 `in_flight`。
+- control：`onlyne control cancel|recycle|probe|snapshot|focus --task <id>`（属主或 admin 角色署名；`--from`/`--task` 是全局 flag，子命令前后都认）。会话放置（placement）是机器属性，写进各 role 工作区 `.onlyne/config.toml` 的 `placement` 键，取 `orca | zellij | tern | headless | external`；非空 `ONLYNE_BACKEND` 优先，缺省时探测序 tern→orca→zellij→headless（`fake` 是进程内测试运行时，只认点名）。全无匹配 `onlyne client run` 退 5 并报 NO_SUPPORTED_HOST；`onlyne client doctor` 只读打印 placement 探测。socket 解析次序 `--socket` > `ONLYNE_SOCKET` > `--server-root` > cwd 上行查找；socket 固定在机器级 `/tmp/onlyne-<uid>/<digest>.sock`，树内 `.onlyne/run/s` 只是打印拼写。会话结清后宿主资源随会话回收。`stalled` 只报仍在跑的会话。满容量 role 用 `control_only` pull 继续收 control。重连 `hello` 声明 `live_sessions` 让在跑任务保持 `in_flight`。
 - 调度参数承接：per-role `[client.timeout]{ready_ms,idle_ms}`（默认 30000/60000）+ `[client.intent]{attempts, backoff_ms}`（默认 attempts=3、backoff 三档；本主题用 attempts=100000 + 六档长跑）。
-- `relay_required`（完成守卫：session 在 complete 前必须已经 handoff 给列出的角色）与角色表 `relay` 列同源；ACL 终表双边互认，边成立需两端都列。
+- `allowed_targets` 一份声明管两件事：既是 ACL 又是完成守卫（session 在 complete 前必须已经向列出的每个角色投递）；空 = 不欠任何投递。ACL 终表双边互认，边成立需两端都列。
 
-## 任务书三段（handoff/send 的 text）
+## 任务书六段（handoff/send 的 text）
 
 ```text
 目标：<一句话，做完算什么>
-输入：<必须读的文件路径，项目目录与 research/ 为准>
+背景：<为什么做这件事：上游发现了什么、卡在哪、这个任务在整体里处于什么位置；两三句；没有就写 无>
+输入：<必须读的文件路径，一条一行，括号里写清这份文件是什么；项目目录与 research/ 为准>
 期望产物：<写到哪里的什么文件，格式要求>
+自由度：<除点名产物外鼓励顺手做什么：补检索、修断链、记负证据、建索引页；或写 按角色表惯例>
+下一跳建议：<完成后用 onlyne handoff 交给谁、干什么；没有就写 无>
 ```
 
-输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。不设「下一跳建议」段：下游由角色表的边决定，写进任务书会带偏方向。任务书发出前由发信方全文追加进所涉项目的 `research_project/<项目短名>/dispatch.md`（一节一封：发信角色+时刻+正文），消息里放正文或路径；一切 relay 任务书同此存档，examiner 与评审回查可翻。
+六段标题字面固定，接收方与校验器按标题找段。段内自由行文；`输入` 保持一条一行。`背景` 与 `自由度` 允许写「无」；写「无」时接收方按角色表与根约定自主判断。接收方带着上下文干活：先读背景，再决定怎么干；点名产物是硬契约，工作路径自己判断。
+输入路径必须真实存在。接收方 session 是全新上下文，任务书里没写的路径它找不到。`下一跳建议` 是建议：接收方按角色表边与现场判断，建议与边冲突时以角色表边为准。任务书发出前由发信方全文追加进所涉项目的 `research_project/<项目短名>/dispatch.md`（一节一封：发信角色+时刻+正文），消息里放正文或路径；一切 relay 任务书同此存档，examiner 与评审回查可翻。
 
 ## 研究项目文件（research_project/）
 
@@ -211,7 +213,7 @@ research_project/<项目短名>/gates/<关口>判定-评审<甲|乙|丙>.md  # �
 
 开题对线中 revise 保持进行中（pi 手里），修后回环继续攻防；fail 只凭化解不了的实心攻击或致命实锤，与轮数无关。新项目才新开 `<项目短名>.md`。
 
-`conclude` 段（ab7d5ae 形态）分两层收口：子命题级终审在环内，断言清单与假设段每条子命题的最终结论由完成验证的 qa 当场落笔（见上「设计段」条，条条要有收口，放门前未收口的行=覆盖缺陷）；项目级归档在终局，planner 的 conclude 只做指针汇总与意义一句话，照 gates/ 判词与 papers/ 材料填写，不补写环内结论。在途写 `—`。成分段：
+`conclude` 段分两层收口：子命题级终审在环内，断言清单与假设段每条子命题的最终结论由完成验证的 qa 当场落笔（见上「设计段」条，条条要有收口，放门前未收口的行=覆盖缺陷）；项目级归档在终局，planner 的 conclude 只做指针汇总与意义一句话，照 gates/ 判词与 papers/ 材料填写，不补写环内结论。在途写 `—`。成分段：
 
 ```markdown
 - conclude:
@@ -226,27 +228,27 @@ failed 形态改用两子条：死因、负证据（各一句+路径）。conclu
 
 角色名与 `.onlyne/spec.toml` 的 `[[client]].role` 一一对应；增删 role 同时改这张表、spec 与 `.onlyne/templates/formal/<phase>/<role>/`。
 
-supervisor 代发 `onlyne send --from <role>`、role 侧 `onlyne_send`/`onlyne handoff --to` 的目标名，都查这张表。
+- supervisor 代发 `onlyne send --from <role>`（bash 面七个动词 `send/reply/handoff/complete/ack/reject/control` 须同时带 `--force` 与 `--yes-i-am-supervisor-not-other-role`；`repair` 族不带）、role 侧 `onlyne_send`/`onlyne handoff --to` 的目标名，都查这张表。
 
-`entry` 列标出第一发的注入对象，全表恰好一个 `★`。`relay` 列是完成守卫（spec 的 `relay_required`：session 在 complete 前必须已经 handoff 给列出的角色），与下游列同源。
+`entry` 列标出第一发的注入对象，全表恰好一个 `★`。完成守卫 = spec 的 `allowed_targets`（session 在 complete 前必须已经向列出的每个角色投递），与下游列同源，表内不另设列。
 
-| role | 职责 | 上游 | 下游 | relay | entry | 档位 |
-|---|---|---|---|---|---|---|
-| pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise）, scribe（成稿回件） | examiner（申报/回应）, librarian（委托检索）, scribe（委托代笔） | examiner | ★ | powerful/max |
-| librarian | 公共检索资源（常驻所有阶段外侧） | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | pi | | supercheap/low |
-| examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行；可点单请示人工 | pi（申报/回应）, theorist, speculator, librarian, scribe | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian, scribe | theorist | | powerful/max |
-| speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, examiner, librarian, qa（把关/整改单） | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian, qa（次生写法点单） | runner | | powerful/max |
-| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe, qa（把关/整改单） | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔）, qa（次生写法点单） | speculator | | powerful/max |
-| runner | 跑批（running_ms=3600000 承接长批；功耗纪律与训练槽见同名节） | speculator, qa（返工/probe/整改派单） | qa（交核验）, speculator（失败回传） | qa | | supercheap/low |
-| qa | 中期独任判词（环上常驻）+ 成稿放门 + 三约束/有效读数核验 + 次生写法把关 | runner, scribe, chair（复核委托/stop 转呈）, speculator/theorist（点单） | runner（返工/probe/整改）, chair（结题包/stop 转呈）, speculator/theorist（把关/整改）, scribe（放门/整改） | chair | | supercheap/medium |
-| scribe | 【挂起】公共代笔位（写作需结合 skill/tool 单独调教，调教前 papers/ 与代笔休眠，文稿由各方自书） | pi, examiner, theorist, speculator, planner, chair, librarian, qa（放门/整改） | 各委托方（成稿回件）, qa（合规核）, librarian | chair | | supercheap/high |
-| chair | 结题验收关口主，合议文稿执笔；stop 转呈与归案交接 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | planner | | powerful/high |
-| referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | chair | | powerful/high |
-| planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | pi | | powerful/medium |
+| role | 职责 | 上游 | 下游 | entry | 档位 |
+|---|---|---|---|---|---|
+| pi | 开题黑盒唯一负责人；头四段作者；对线辩方 | librarian, planner, examiner（攻击/revise）, scribe（成稿回件） | examiner（申报/回应）, librarian（委托检索）, scribe（委托代笔） | ★ | deep/max |
+| librarian | 公共检索资源（常驻所有阶段外侧） | pi, examiner, theorist, speculator, scribe, chair, planner | pi, examiner, theorist, speculator, scribe, chair, planner | | light/low |
+| examiner | 敌意评审官：开题对线主，四类攻击，攻不破才放行；可点单请示人工 | pi（申报/回应）, theorist, speculator, librarian, scribe | pi（攻击/revise）, theorist（pass 开工令）, planner（fail 归案）, librarian, scribe | | deep/max |
+| speculator | 假设/方案/假设段主笔/设计段设计主笔 | theorist, runner（失败回传）, chair, librarian, scribe, qa（把关/整改单） | theorist（对线）, runner, scribe, examiner（僵局上报）, librarian, qa（次生写法点单） | | deep/max |
+| theorist | 形式化（Lean/推导，挂假设段形式化段+附件） | examiner, speculator, chair, librarian, scribe, qa（把关/整改单） | speculator（带陈述出假设）, examiner（复研）, librarian, scribe（委托代笔）, qa（次生写法点单） | | deep/max |
+| runner | 跑批（长批用 `[client.intent]` 长跑档承接；功耗纪律与训练槽见同名节） | speculator, qa（返工/probe/整改派单） | qa（交核验）, speculator（失败回传） | | light/low |
+| qa | 中期独任判词（环上常驻）+ 成稿放门 + 三约束/有效读数核验 + 次生写法把关 | runner, scribe, chair（复核委托/stop 转呈）, speculator/theorist（点单） | runner（返工/probe/整改）, chair（结题包/stop 转呈）, speculator/theorist（把关/整改）, scribe（放门/整改） | | light/medium |
+| scribe | 【挂起】公共代笔位（写作需结合 skill/tool 单独调教，调教前 papers/ 与代笔休眠，文稿由各方自书） | pi, examiner, theorist, speculator, planner, chair, librarian, qa（放门/整改） | pi, examiner, theorist, speculator, planner, chair（各委托方成稿回件）, qa（合规核）, librarian | | light/high |
+| chair | 结题验收关口主，合议文稿执笔；stop 转呈与归案交接 | qa, scribe, referee, librarian | theorist, speculator, scribe, qa, planner, librarian, referee | | deep/high |
+| referee | 意见书独立，提交前彼此不通；只与 chair intercom 交流 | chair | chair | | deep/high |
+| planner | 立项策划位：全局翻项目文件头、大课题策划（立项规划.md）、派题与归案 | examiner（fail）, chair（accept/reject/stop）, librarian, scribe | pi, librarian, scribe（任务书代笔） | | deep/medium |
 
 `档位` 列是语义档位名；实际 `provider/model` 与 effort 路由写在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`，role 读自己工作区 `.pi/settings.json` 的实际值。
 
-theory 域两员：speculator + theorist，由旧 model 位拆来（git 参照 f36d3de 六环推导位）。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。
+theory 域两员：speculator + theorist。`max_sessions`：runner=2，referee=3，librarian=2、scribe=2（公共位接单并发），其余=1。
 
 边义逐条：
 
@@ -265,21 +267,21 @@ theory 域两员：speculator + theorist，由旧 model 位拆来（git 参照 f
 
 supervisor 不在工作环里：没有任何 role 的上游或下游是 root。supervisor 不注册 [[client]]，admin 面代发除外，签名用持边角色。
 
-例外边（开题关口常设请示边，human_gate 条款的实例化）：examiner 在特定开题任务上可经 pi-intercom 向 supervisor 会话发请示（本机地址，缺省 `Main`；触发条件=题目价值存疑或资源取舍超出判据），supervisor 向人开 ask 提请批复，批复结果回 examiner 后代落 gates/。阻塞等批；此边只服务开题裁量，日常攻防不触发。其余关口的请示资格按 human_gate 条款点名制另定。
+例外边（开题关口常设请示边，human_gate 条款的实例化）：examiner 在特定开题任务上可经 pi-intercom 按 operator 配置的会话路由向 supervisor 发请示（触发条件=题目价值存疑或资源取舍超出判据），supervisor 向人开 ask 提请批复，批复结果回 examiner 后代落 gates/。阻塞等批；此边只服务开题裁量，日常攻防不触发。其余关口的请示资格按 human_gate 条款点名制另定。
 
 supervisor 只做工作区维护与传话：idle 判定与报告、配置对表、知识产物 git commit、人机传话（值班细则见 `.pi/SYSTEM.md`）。supervisor 不参与工作流转。
 
-三档模型语义（角色表 `档位` 列的三档 = powerful / weak / supercheap，effort 档 = off…max 中的指定级）：
+三档模型语义（角色表 `档位` 列的三档 = deep / mid / light，effort 档 = off…max 中的指定级）：
 
-- powerful 档：纯理论位，agent 能力齐，职责里不写 `experiment/` 代码。
-- weak 档：科研判断强，能指导 worker 写代码，必要时自己小写两段；supervisor 值班位同档。
-- supercheap 档：写代码强且便宜，容易想多做多把自己绕晕，不适合长时间独立工作；runner 用 low effort（历史上自 minimal 上调一档，目的仍是压住加戏）。
+- deep 档：纯理论位，agent 能力齐，职责里不写 `experiment/` 代码。
+- mid 档：科研判断强，能指导 worker 写代码，必要时自己小写两段；supervisor 值班位同档。
+- light 档：写代码强且便宜，容易想多做多把自己绕晕，不适合长时间独立工作；runner 用 low effort（历史上自 minimal 上调一档，目的仍是压住加戏）。
 
 档位到实际 `provider/model` 的映射存在 settings 里：role 看自己工作区 `.pi/settings.json`（模板正身在 `.onlyne/templates/formal/<phase>/<role>/.pi/settings.json`），supervisor 看仓根 `.pi/settings.json`。
 
 ## 大循环宏观流（接力闭环，从角色表推导）
 
-接力规则按角色表的 `上游` / `下游` / `relay` 列执行。supervisor 不进工作环，只维护工作区。通用条款五条：
+接力规则按角色表的 `上游` / `下游` 列执行（完成守卫 = spec 的 `allowed_targets`，与下游列同源）。supervisor 不进工作环，只维护工作区。通用条款五条：
 
 1. planner：翻项目文件与立项规划.md 定向，委托 librarian 摸同行切法，出立项任务书 handoff pi（新题引上一轮结题验收 open questions 或大课题节）；pi 黑盒作业（与 librarian 内部自由分工），头四段+自证断言出手交 examiner；开题对线逐轮记 `对线记录.md`，弹药耗尽 examiner 落 pass 开工令。
 2. 关口判定：examiner 判开题审查；中期检查与成稿放门=qa 独任判词（环上常驻，gates/中期判定.md 追加式）；结题验收=chair + referee×3 合议落 gates/结题判定.md。判 accept 时 chair 顺手补项目文件结论段（判词指针+逐条回查表），planner 终局写 conclude。
@@ -301,9 +303,9 @@ supervisor 只做工作区维护与传话：idle 判定与报告、配置对表�
 
 - 项目级 conclude 段与立项规划.md 只归 planner；子命题级逐条终审归完成验证的 qa（谁验证谁落笔，环内当场）；项目不设状态行（状态隐含在飞轮，全部真相 = 文件 + git + 台账）。
 - worker 交付当场盘验：交活前对任务书点名的每个产物路径实盘一遍（存在、非空、可读、行数对得上），数值产物另落 `measured/self_checks.json`；接收方对不上即拒收。
-- 过程必落文件（覆盖全角色）：决策、攻防、核验、账目先写文件再上报；`onlyne_complete`/`onlyne handoff` 的 text 放结论+路径清单，消息体量不设限（pi 与 provider 已配无限重试，旧「10KB 禁令」系路由限流时期的误报，废止）。角色间本就互翻文件，指针即通达。
+- 过程必落文件（覆盖全角色）：决策、攻防、核验、账目先写文件再上报；`onlyne_complete`/`onlyne handoff` 的 text 放结论+路径清单，消息体量不设限。角色间本就互翻文件，指针即通达。
 - 改 `experiment/`、`evaluation/` 前先读项目目录 run-log.md 与 measured/ 里的上一手记录；改动在任务产物里写明。
 - 数值只从 measured/ 引，报告只写跑出来的东西。
 - 存在 `<项目短名>/DEPRECATED.md` 的项目，其废弃范围内数字一律不作证据，只可按该文件口径引用为已废弃 baseline。
-- 失败也交活：跑不动的结论写进项目目录（run-log.md 记节），`onlyne_complete outcome:"failed"` 交失败报告（text 首行 `> hop-failed: <原因>` + 现场路径），让下游有据可依。
+- 失败也交活：跑不动的结论写进项目目录（run-log.md 记节），`onlyne_complete outcome:"failed"` 交失败报告（summary 一句话死因，details 带现场路径），让下游有据可依。
 - 运行态（`run/`、`store/`、`keys/`、`logs/`）可正常读，任务与账目走 `onlyne ledger|sessions|watch --server-root .`。

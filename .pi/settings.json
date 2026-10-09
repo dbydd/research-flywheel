@@ -1,6 +1,6 @@
 {
   "packages": [
-    "npm:pi-onlyne"
+    "npm:pi-onlyne@2.1.0"
   ],
   "watch": {
     "autoStart": true

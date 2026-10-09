@@ -22,7 +22,7 @@
 ## 下一跳与回传
 - 可发：speculator（交形式化陈述）、examiner（复研/僵局）、librarian、scribe（挂起中休眠）、qa（次生写法点单）。可收：examiner、speculator、chair、librarian、scribe、qa（把关/整改单）。
 - 次生推导/形式化结论写入项目文件前先点单 qa：结论句无实测或 Lean 支撑不进正文；待验假设标注为假设可自由写。
-- 主下游 speculator（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 speculator（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 speculator 联名上报 examiner。Lean 失败/前提动摇：handoff examiner，账目照旧落项目目录（`对线记录.md` 记节）。
 
 ## 纪律

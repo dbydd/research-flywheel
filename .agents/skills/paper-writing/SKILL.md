@@ -11,7 +11,7 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 
 - Abstract：问题 → 方法一句话 → 最强结果带数字 → 意义。四到六句，零引用，零缩写未定义先用。
 - Introduction：领域地位 → 缺口（现有方法哪里不行，引文献撑住）→ 我们做了什么 → 贡献列表（三条上下，每条可验证）→ 路线图段可选。
-- Related Work：按技术线索分组叙述，每组收一句"与本文的关系"。按时间罗列流水账是拒稿常见理由。
+- Related Work：按技术线索分组叙述，每组收一句"与本文的关系"。按时间罗列流水账是常见拒稿理由。
 - Method：符号先定义后用；一张总览图配数据流叙述；每小节对应一个组件。
 - Experiments：先 setup（数据、指标、实现细节、硬件），后主结果，再消融。每张表/图正文必有指涉与结论句，数字与 `measured/` 一致。
 - Conclusion：局限写诚实，future work 一句一个。
@@ -20,7 +20,7 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 
 - 倒序先答五问：①解决什么技术问题 ②**为什么没有成熟解法**（防「把已有做法当创新」的闸，最重要）③我们的技术贡献是什么 ④本质上为什么可行 ⑤给出的技术优势与新洞察是什么。
 - 正序才落笔：任务 → 借前人方法引出我们要解决的那个挑战 → 贡献若干条 → 贡献的技术优势并明写洞察。
-- Abstract 用同五问的压缩版，不另起一套问题集。五问答不上来 = 稿子还没到能动笔的时候，回设计段补。
+- Abstract 用同五问的压缩版，不另起一套问题集。五问答不上来 = 稿子还没到能动笔的时候，先回设计段补。
 
 ## 主线映射：论证链 → 落笔段
 
@@ -33,7 +33,7 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 
 六步：①写下主 claim ②写下每段主题句 ③写下每段内的证据/解释点 ④逐条查主题句是否挂到主 claim ⑤逐条查证据是否支撑本段主题句且**充分** ⑥挂不上的段落连同其证据一起改写或删除。
 
-- 诊断尺：能轻松写出反向提纲说明组织得好；写不出来，说明主 claim 与主题句本身就不清楚。
+- 诊断尺：能轻松写出反向提纲，说明组织得好；写不出来，说明主 claim 与主题句本身就不清楚。
 - 产出三列可核对表（主 claim | 主题句 | 段内证据）进送审包；进不了表的段落 = 判词里的删除项。
 
 ## 段落四问（逐段返工的最小单元）
@@ -54,13 +54,13 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 - 禁「先摆朴素方案再改它」：不要先给一个 naive 解法再写我们的改进，**工作确实是增量式的也不要这样写**。理由：抹掉读者好奇心，让想法显得「理所当然」，把工作读成低分补丁。
 - 禁 Intro 只讲抽象洞察、藏起具体设计：把**步骤**写成新的，**真洞察**没写成新的；引入大量新词，机制不讲 = novelty illusion，审稿人读成浅/增量。
 - 禁 Related Work 堆引文 / 藏最强 baseline：先列直接竞品与近年 baseline，按技术主题分组不按年份；差异必须用技术语（机制、假设、失效模式），营销语不算。
-- 禁把技术缺陷写成范围限制，也禁把可修瑕疵当结论主题：Technical defect = 关键指标不及强 baseline，或带来不可接受的权衡；Scope limitation = 受当前任务边界约束；边界内在当前 SOTA 里仍有竞争力。结论只围绕后者；判词里「这是局限」与「这是缺陷」按此二分，不许互替。
+- 禁把技术缺陷写成范围限制，也禁把可修瑕疵当结论主题：Technical defect = 关键指标不及强 baseline，或带来不可接受的权衡；Scope limitation = 受当前任务边界约束，且边界内在当前 SOTA 里仍有竞争力。结论只围绕 Scope limitation；判词里「这是局限」与「这是缺陷」按此二分，禁止互替。
 
 ## 文字审计三件（referee 文字席与文稿合规核）
 
-- 七锚点血缘测试：抽出七句原文，只读这七句：①Abstract 动机句 ②Introduction 首个问题句 ③主 gap 句 ④Intro 末条贡献/路线图句 ⑤Methods 首个 rationale 句 ⑥Results 首条 headline finding ⑦Discussion 首条回答句。七句应自己构成一条连贯的 problem→solution→evidence→resolution 弧；弧断在哪个锚点就去改对应节的设计，**先别打磨语言**。锚点定位天然满足「攻击必锚到段+句+证据，无锚无效」。
+- 七锚点血缘测试：抽出七句原文，只读这七句：①Abstract 动机句 ②Introduction 首个问题句 ③主 gap 句 ④Intro 末条贡献/路线图句 ⑤Methods 首个 rationale 句 ⑥Results 首条 headline finding ⑦Discussion 首条回答句。七句应自己构成一条连贯的 problem→solution→evidence→resolution 弧；弧断在哪个锚点，就去改对应节的设计，**先别打磨语言**。锚点定位天然满足「攻击必锚到段+句+证据，无锚无效」。
 - 七类缺陷命名（finding 共享词表，便于合议聚类）：`background-stack`（背景罗列不收口到必要性）/ `gap-vague`（gap 存在、不可测）/ `method-recipe`（只列部件不讲设计需要）/ `metric-dump`（报数不解释它在测哪条承诺）/ `claim-leap`（解读超出证据）/ `discussion-repeat`（Discussion 复述 Results 不解动机）/ `latex-driven`（改版式不动论证）。
-- 浅改比率审计：收文字整改单回件、结题修订回件时，对上一版与本版做归一化（tex/md）后逐段最相似比对，记 `near_identical_ratio`（保旧文太多）/ `addition_heavy`（以追加为主）两项进台账；两项同高 = 本轮无实质修订，退回。配套四条警告各记 Observed?/Evidence/Required Fix：段落顺序未变只做句级打磨、无证据库支撑的新主张、Results 仍是 metric-dump、排版工作挤掉了写作逻辑。
+- 浅改比率审计：收文字整改单回件、结题修订回件时，对上一版与本版做归一化（tex/md）后逐段最相似比对，记 `near_identical_ratio`（保旧文太多）/ `addition_heavy`（以追加为主）两项进台账；两项同高 = 本轮无实质修订，退回。配套四条警告各记 Observed?/Evidence/Required Fix：段落顺序未变只做句级打磨、新主张缺证据库支撑、Results 仍是 metric-dump、排版工作挤掉了写作逻辑。
 
 ## 修订三维台账（替旧「稿件头部一行修订记录」）
 
@@ -70,7 +70,7 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
   - `work_status`（进度与可核验性）：`VERIFIED_DONE` / `REPORTED_DONE_UNVERIFIED` / `TODO_TEXT` / `TODO_ANALYSIS` / `TODO_EXPERIMENT` / `TODO_AUTHOR_CONFIRM` / `NOT_FEASIBLE` / `PROPOSED_DISAGREEMENT`。
   - `readiness`（整包）：`ready_to_submit` / `draft_with_placeholders` / `needs_author_input` / `blocked`。
 - 每行另带四个控制字段：`required_input` / `expected_output` / `verification_evidence` / `blocks_finalization`。
-- 完成红线：有可查验工件（稿面 diff、新文件、`measured/` 路径）才准 `VERIFIED_DONE`；责任角色只口头说「改完了」→ `REPORTED_DONE_UNVERIFIED`；说加了实验、没给工件 → 同样永远不给 `VERIFIED_DONE`。草稿回复存在不是手稿已改的证据。
+- 完成红线：有可查验工件（稿面 diff、新文件、`measured/` 路径）才准 `VERIFIED_DONE`；责任角色只口头说「改完了」→ `REPORTED_DONE_UNVERIFIED`；说加了实验、没给工件 → 同样永远不给 `VERIFIED_DONE`。草稿回复的存在本身不构成手稿已改的证据。
 - `ready_to_submit` 保守推导：零 `blocks_finalization`、零未解占位、所有已完成项皆 `VERIFIED_DONE` 三者齐才成立；任一行处于 `TODO_AUTHOR_CONFIRM` 或 `REPORTED_DONE_UNVERIFIED`，整包至多 `needs_author_input`。
 - 轴义分明：`action` 说回应策略，`work_status` 报进度与核验状态，两者不得互相代填。台账过宽放不下时改成逐条块状，字段一个不减，尤其不得丢掉 `work_status`、`expected_output`、`blocks_finalization`。
 - 稿件头部只放一行指向 `revisions.md` 对应行的锚，不再逐轮堆修订散文。
@@ -78,17 +78,17 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 ## 返修回复与 cover letter 结构（minor revise 回件用）
 
 - 出件顺序：内部策略摘要（标注 not reviewer-facing）→ 逐条台账（上节字段）→ 每席独立逐点回复 → cover letter（被点名或交齐包时才写）→ 标红改动段 → 交付清单与缺料点名。
-- 逐点回复一份一席：`**评审意见**`（原话全引，不改写）→ `**回复**`（先直接答，再写「为此我们做了 X，见 节/页/行/图表号」）→ `**修改后的正文**`（引修改段原文，与稿源逐字一致）。本席之外的事不出现在本席文件里：不提别的席位、不引别的席的意见或编号；同一 concern 多席提出，各文件重复完整回答。
+- 逐点回复一份一席：`**评审意见**`（原话全引，不改写）→ `**回复**`（先直接答，再写「为此我们做了 X，见 节/页/行/图表号」）→ `**修改后的正文**`（引修改段原文，与稿源逐字一致）。本席之外的事不出现在本席文件里：禁止提别的席位、禁止引别的席的意见或编号；同一 concern 多席提出，各文件重复完整回答。
 - 对外文件用本地中性编号（`Comment 1`、`E.1` 给程序性指令），不泄内部 finding 全局编号；跨席重复与冲突只记在内部台账。
 - cover letter 短于逐点回复，四段：致谢 + 稿件号 → 本轮三件主要改动 → 各化解了哪三条主 concern → 指向逐点回复与「现稿更清楚、更有支撑」。
-- 引文即承诺：回复里每段引文必须逐字出现在展开后的手稿源里；正文删了一行，回查信里是否还在描述它（删除有涟漪）。禁写「新增两句/三条新文献」这类会过期的计数，改写成「下面引用的这段」。
-- 标红必须有基线：基线是归档的上一版源文件，不是「感觉新」。为省事复述**已有**文字时，用另一种不标红的样式并在信首声明，用同款标红样式即失真。
+- 引文即承诺：回复里每段引文必须逐字出现在展开后的手稿源里；正文删了一行，回查信里是否还在描述它（删除有涟漪）。禁止写「新增两句/三条新文献」这类会过期的计数，改写成「下面引用的这段」。
+- 标红必须有基线：基线是归档的上一版源文件，「感觉新」无效。为省事复述**已有**文字时，用另一种不标红的样式并在信首声明；用同款标红样式即失真。
 
 ## 样例格式（本 skill 的条款载体）
 
 - 每条写作规程配两件：填空骨架（`We represent ... with ...` 一类句位，中英双注，便于直接落英文稿）+ 一个带逐段角色标签的实例。
 - 实例只写骨架与角色标签（`Module design: data structure` / `Module design: forward process` / `Motivation of this module` / `Technical advantages`），正文用本项目语言。
-- 不抄已发表论文正文，不整段搬第三方样例；复用的是句逻辑不是措辞；引用外部样例时给原论文题录。
+- 禁止抄已发表论文正文，禁止整段搬第三方样例；复用的是句逻辑，措辞另起；引用外部样例时给原论文题录。
 
 ## 措辞纪律
 
@@ -96,7 +96,7 @@ description: 论文写作规范与 LaTeX 细则。scribe 成稿、referee 文字
 - 全篇时态一致：描述已有工作现在时/过去时二选一，本文实验结果过去时或现在时择一。
 - 每个数字出现处，referee 都能指回 `measured/` 一个文件；指不回去的数字删掉。
 - 图表未引用的先删，引用的先补指涉句。
-- 限定语（hedge）不许在字数压力下删：删 hedge 是诚信故障，不是文风问题；词表与判定归 `evidence-discipline`（hedge 校准节）。
+- 限定语（hedge）禁止在字数压力下删：删 hedge 属诚信故障，与文风无关；词表与判定归 `evidence-discipline`（hedge 校准节）。
 - 过程泄漏（第四面墙）：读者可见文字里不出现写作/评审史与规划记号（「为回应评审建议…」「前期初稿缺少…」）；正则表与正本条款归 `evidence-discipline`，本处只留禁令。
 
 ## LaTeX 排版雷区（PDF §2 逐条）

@@ -15,11 +15,11 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 |---|---|---|
 | `schema_version` | 读数器与校验器共同常量（如 `"1"`） | 常量即契约 |
 | `slice_id` `task_id` `pid` `started_at` `finished_at` | 一片一份，时刻用 ISO | 可续跑可追责 |
-| `wall_time_s` | 实测秒数，不用步数折算 | 声明步数是下界，不是耗时 |
+| `wall_time_s` | 实测秒数，禁止用步数折算 | 声明步数只构成下界，耗时以实测为准 |
 | `peak_rss_mib` | 进程树峰值内存 | 预算条证据 |
 | `memory_model` | `unified_cpu_gpu` 或 `discrete` | 统一内存机型（Apple silicon 等）禁把统一内存当独立 VRAM 相加 |
 | `thermal` | 热节流读数按平台取（macOS `pmset -g therm`；Linux `sensors` 或 `/sys/class/thermal/thermal_zone*/`），原文一行 + `throttled: true|false|null`；取不到记 `unavailable` | 热降频迹象 |
-| `limits` | `available_cores` / `effective_capacity_cores` / `quota` / `mem_available_mib`，四类事实分开记 | quota 1.5 是 CPU 时间带宽，不是 1.5 个物理核 |
+| `limits` | `available_cores` / `effective_capacity_cores` / `quota` / `mem_available_mib`，四类事实分开记 | quota 1.5 指 CPU 时间带宽 1.5 核，物理核数以 `available_cores` 为准 |
 | `budget_plan` | 计划值，非实测：`suggested_workers` / `threads_per_worker` / `binding_limits[]` / `warnings[]` | 多天花板取最小值；内存未知退到 1 worker 并记 `MEMORY_UNKNOWN` |
 | `backend` | `accelerator` + `usability: verified|not_verified` | 管理查询可见 ≠ 有调度权与运行时兼容 |
 | `pins` | python 版本、`包@版本` 串、`uv.lock` hash、核对日期 | pin 是与数值同等的断言要素 |
@@ -49,12 +49,12 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 | 5 | 推理侧预处理与训练不一致 | 复用同一 transform 对象，禁手写第二份 |
 | 6 | 标签错 | 噪声检查（cleanlab 类）先在小切片上跑 |
 | 7 | tokenizer 与预训练权重不匹配 | 打印 vocab size 与特殊 token id 对拍 |
-| 8 | NaN / 发散 | 七查：LR 降 3–10×、梯度裁剪、输入含 inf/nan、logit soft-cap、QK-norm、输出投影 zero-init、梯度累积下 loss 是否除过 `grad_accum_steps`（最后一条是常见假 NaN） |
+| 8 | NaN / 发散 | 七查：LR 降 3–10×、梯度裁剪、输入含 inf/nan、logit soft-cap、QK-norm、输出投影 zero-init、梯度累积下 loss 是否除过 `grad_accum_steps`（最后一条是常见假 NaN 来源） |
 | 9 | 影子模块 | 项目脚本不得与被安装包同名（`sklearn.py`、`umap.py`）；用 `find_spec` 当场验 |
 | 10 | 外来 checkpoint | 只 hash + 分类，不 `torch.load`、不反序列化；复现评测禁 `latest`，写具体 hash |
 | 11 | 计时读数无效 | 异步设备先同步再计；kernel 时间与端到端延迟分开报 |
 
-反直觉读数带（别把成功判成失败）：GRPO 的 loss 从 0 开始上升才正常，它是相对初始策略的 KL。看三条带：`reward` 上升、`reward_std` 保持 >0、`kl` 温和增长。报警阈：`reward_std`→0 是模式坍缩；`kl`>0.5 是过冲，降 LR；`reward` 平直是 reward 函数过苛或容量不足。
+反直觉读数带（别把成功判成失败）：GRPO 的 loss 从 0 开始上升才正常，它度量相对初始策略的 KL。看三条带：`reward` 上升、`reward_std` 保持 >0、`kl` 温和增长。报警阈：`reward_std`→0 是模式坍缩；`kl`>0.5 是过冲，降 LR；`reward` 平直是 reward 函数过苛或容量不足。
 监控四项：梯度范数尖峰先于 loss 尖峰、逐层激活统计、死神经元（>50% 零激活）、每步 LR。
 调试次序：先在单个 batch 上过拟合，过不上就是有 bug；此关未过不谈正则与调参。
 
@@ -63,7 +63,7 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 | 读数现象 | 判读 |
 |---|---|
 | 全任务 ≈ 随机水平 | 没训好，或评测解析器没吃进输出 |
-| 生成任务恰好 0% | 格式/解析 bug，不是能力为零 |
+| 生成任务恰好 0% | 格式/解析 bug，读数为零与能力无关 |
 | 跨 seed 方差巨大 | 种子或采样设置未固定 |
 | 样样超已发表最强基线 | 大概率数据污染：先查训练数据里有无基准样本 |
 | 提升落在噪声内 | 已到分辨极限，报不可辨，不写方向 |
@@ -93,11 +93,11 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 ## ⑤ 长批切片操作法（片长、进程数、锁语义见仓根；此处只给步骤）
 
 1. 抢槽：按仓根 `.train-slot` 协议原子抢占并写 holder；槽被活 pid 占时先干不需槽的活。
-2. 定片预算：起跑前读 ① 的快照与 `budget_plan`，按实测吞吐倒推 45 min 内可完成步数，写死每片步数上限，到点自行退出；被 kill 的片没有完整读数。
+2. 定片预算：起跑前读 ① 的快照与 `budget_plan`，按实测吞吐倒推 45 min 内可完成步数，写死每片步数上限，到点自行退出。被 kill 的片没有完整读数。
 3. 落账：每片末写 `environment.<slice_id>.json`、追加 metrics（CSVLogger 主账）、`run-log.md` 一行（slice_id、起止、wall-time、下一步数、异常）。
 4. 续跑：下一片从上一片记录的 checkpoint hash 起，`measured/run.log` 的片进度是唯一续跑指针。
 5. 让机：片间留散热间隔，同刻训练/拟合进程 ≤1，调度冲突宁可晚出数。
-6. 失败三分类，`run-log.md` 记类别 + 失败命令 + 日志路径：`crash`（崩且可修）、`timeout`（超片预算，缩片）、`invalid_reading`（数字在、读数不可信，回 ② 探针重跑）。
+6. 失败三分类，`run-log.md` 记类别 + 失败命令 + 日志路径：`crash`（崩且可修）、`timeout`（超片预算，缩片）、`invalid_reading`（数字在，读数不可信，回 ② 探针重跑）。
 7. 冷启动可重跑：相对路径、以项目目录为准、无交互输入、无手建 venv；全量前先在真数据最小闭环对拍一次。
 8. 交活断言三类：文件存在、计数、关键字段在场；自跑自验后在 `run-log.md` 记一行。
 
@@ -119,7 +119,7 @@ description: runner 跑批工具面手册。开工与交件前加载：measured/
 
 - 功耗纪律与训练槽（单进程、串行、≤45 min 片、`.train-slot` 锁、热节流读数按平台取——macOS `pmset -g therm`，Linux `sensors` 或 `/sys/class/thermal/thermal_zone*/`，取不到记 `unavailable`）正本在仓根 `AGENTS.md`「当前工作模式」节，⑤只补步骤；冲突以仓根为准。
 - 三约束：断言清单字段与切分归 `experiment-design`，核验与判词归 qa 及 `evidence-discipline`/`review-discipline`。① 是确定性条与预算条的证据载体，③ 是泄漏条的机械检查，均不改写判词口径。
-- raw/derived 二分与命名前缀（`derived_`、`subset_`、七态不合并）正本归 `evidence-discipline` ⑤。① 的「缺观察写 `null`」与其「缺失记 unavailable 而非 0」同向：`null` 与 `unavailable` 是状态标记，不是数值，聚合时不得当 0 吃进。
+- raw/derived 二分与命名前缀（`derived_`、`subset_`、七态不合并）正本归 `evidence-discipline` ⑤。① 的「缺观察写 `null`」与其「缺失记 unavailable 而非 0」同向：`null` 与 `unavailable` 是状态标记，都无数值含义，聚合时禁止当 0 吃进。
 - 段权：设计段结果节与 `measured/` 流件只增不改。③ 的「多跑一次 held-out」只能作为新增事故记录，不许覆盖原读数。
 - 红旗表与 ②③ 的检查项是 qa 出 `rectify` 的触发条件之一；是否成立由 qa 判，runner 不自判通过。
 - 路径口径：产物落 `research_project/<项目短名>/measured/`，禁写 `.archive/`；旧 `runs/<run-id>/` 口径已废止。

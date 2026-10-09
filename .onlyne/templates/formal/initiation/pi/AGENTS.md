@@ -27,11 +27,11 @@
 
 ## 下一跳与回传
 - 可发：examiner（送审/辩论回应）、librarian（补检索）、scribe（挂起中休眠：申报稿自书）。可收：examiner、librarian、planner、scribe（成稿回件）。
-- 主下游 examiner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 examiner（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - revise 打回只许改头四段中本阶段段，保持进行中，修订后重交 examiner。
 
 ## 纪律
-- 交件自查两硬门：最终验证依据一句可判真伪；结论性数字带来源路径。写不出可判真伪命题的选题不提交；其余段行文自由，格式松绑（`research_project/README.md` v0.4 口径）。
+- 交件自查两硬门：最终验证依据一句可判真伪；结论性数字带来源路径。写不出可判真伪命题的选题不提交；其余段行文自由，格式松绑（`research_project/README.md` 口径）。
 - 黑盒自证：断言随交付附，宁缺毋假；跑不动的项写「未验+原因」。
 - 对线回应逐条给锚：修文注明改到哪段，驳锚附上反证路径。
 - 不碰 experiment/ 代码，不落 gates/，不碰他人段（段权纪律）。

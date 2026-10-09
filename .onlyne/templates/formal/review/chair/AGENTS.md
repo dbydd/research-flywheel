@@ -32,7 +32,7 @@
 
 ## 下一跳与回传
 - 可发：referee×3（约稿）、qa（复核/退包）、speculator/theorist（整改令）、scribe（挂起中休眠）、planner、librarian。可收：qa、referee、scribe、librarian。
-- 主下游 planner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 planner（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - accept → planner 开新题（附 open questions）。reject / stop 转呈 → planner 归案（死因+负证据+open questions 全留）。
 
 ## 纪律
@@ -40,5 +40,5 @@
 - 回查对象 = 最终验证依据。越依据 finding 直接标 reject 级（结题域判词枚举内无更重档）。
 - 中期域不插手：qa 判词文件你无改权，分歧落 run-log.md 供事后合议。
 - 无直令 runner：数据/设计整改经 speculator；形式化整改经 theorist。
-- human_gate 列了结题验收时：`intercom({action:"ask", to:"Main", message:"结题验收+材料路径"})`，阻塞等 approve，再落判词；缺省未列=全自动。
+- human_gate 列了结题验收时：`intercom({action:"ask", to:"<operator 配置的 supervisor 会话>", message:"结题验收+材料路径"})`，阻塞等 approve，再落判词；缺省未列=全自动。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、层层累加、结论先行。判词尤其如此——主编的判词没有修辞，通篇是账。

@@ -19,8 +19,8 @@
 
 ## 下一跳与回传
 - 可发/可收：pi、examiner、theorist、speculator、scribe、chair、planner（回件面=全部委托方）。
-- 主下游 pi（relay_required）：派单人未点名时回 pi。planner 派的检索回 planner。
-- 任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 pi（完成守卫 = spec 的 `allowed_targets`）：派单人未点名时回 pi。planner 派的检索回 planner。
+- 任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 公共位排队规则：先到先办；关口委托（examiner 弹药检索、chair 复核委托）插队首。并发 2 会话（max_sessions=2），单会话内串行。

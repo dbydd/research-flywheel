@@ -22,7 +22,7 @@
 ## 下一跳与回传
 - 可发：theorist（对线）、runner（设计定稿）、scribe（挂起中休眠）、examiner（可行性质询/僵局）、librarian、qa（次生写法点单）。可收：theorist、runner、chair、librarian、qa（把关/整改单）。
 - 次生理论/假设/实验内容写入项目文件前先点单 qa：结论句无实测支撑不进正文；假设标注为假设可自由写（生长制照常）。
-- 主下游 runner（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 runner（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 对线分歧超出本职权限（根前提动摇、可行性存疑）：与 theorist 联名上报 examiner 复研，不设轮数门槛。
 
 ## 纪律

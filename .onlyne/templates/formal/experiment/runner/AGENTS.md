@@ -21,7 +21,7 @@
 
 ## 下一跳与回传
 - 可发：qa（提测）、speculator（可执行性意见或失败回传）。可收：speculator、qa。
-- 主下游 qa（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 qa（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 - 跑不动：handoff speculator，首行 `> hop-failed:` + 失败命令与日志路径。
 
 ## 纪律

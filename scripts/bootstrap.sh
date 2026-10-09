@@ -8,10 +8,10 @@
 #
 # assemble flags：
 #   --listen <host:port>      缺省用 spec 现值
-#   --provider <name>         重写 11 份模板 settings 的 defaultProvider
-#   --model-powerful <id>     档位映射：现 defaultModel 含 powerful 的角色
-#   --model-supercheap <id>   档位映射：含 supercheap 的角色
-#   --model-weak <id>         含 weak 的角色（一般无；supervisor 位用仓根配置）
+#   --provider <name>         重写 11 份模板 settings 的 defaultProvider（不给则不写，pi 用本机已配默认）
+#   --model-deep <id>         deep 档角色（pi/examiner/theorist/speculator/chair/referee/planner）
+#   --model-light <id>        light 档角色（librarian/runner/qa/scribe）
+#   --model-mid <id>          其余角色（模板无第三档成员，一般无）
 #   --vault <绝对路径>        建仓根 obsidian/ 四软链（论文/reports/draft/templates）
 #
 # 零守护进程：本脚本不起 server / client / tui；结束打印通电动作清单。
@@ -25,7 +25,8 @@ SPEC=".onlyne/spec.toml"
 TPL=".onlyne/templates/formal"
 WSD=".onlyne/ws/formal"
 KEYS_DIR=".onlyne/keys"
-PIN_PLACEHOLDER="sha256/REPLACE_ME_after_server_init"
+# 与 spec.toml 模板占位一致：合法 32 字节全零证书指纹（sha256 后 64 个 hex 0）。
+PIN_PLACEHOLDER="sha256/0000000000000000000000000000000000000000000000000000000000000000"
 KEY_PLACEHOLDER="ed25519/AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
 THIN_TITLE="# 这棵树还没装配 —— 你是 clone 后的第一个会话"
 ROLES=(initiation/pi initiation/examiner common/librarian common/scribe theory/speculator theory/theorist experiment/runner review/qa review/referee review/chair archive/planner)
@@ -41,9 +42,9 @@ while [ $# -gt 0 ]; do
     --listen) LISTEN="${2:-}"; shift ;;
     --vault) VAULT="${2:-}"; shift ;;
     --provider) PROVIDER="${2:-}"; shift ;;
-    --model-powerful) M_POWERFUL="${2:-}"; shift ;;
-    --model-supercheap) M_CHEAP="${2:-}"; shift ;;
-    --model-weak) M_WEAK="${2:-}"; shift ;;
+    --model-deep) M_POWERFUL="${2:-}"; shift ;;
+    --model-light) M_CHEAP="${2:-}"; shift ;;
+    --model-mid) M_WEAK="${2:-}"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "bootstrap: 未知参数 $1" >&2; usage; exit 2 ;;
   esac
@@ -64,11 +65,12 @@ specpy() { python3 - "$SPEC" "$@"; }
 # ---------- 只读门禁 ----------
 gate_toolchain() {
   local missing=0 b
-  for b in onlyne onlyne-server onlyne-client onlyne-gateway onlyne-tui; do
+  # testkit 不装独立命令，产物是 onlyne-agent-fake 与 onlyne-gateway-fake 两个进程内测试运行时。
+  for b in onlyne onlyne-server onlyne-client onlyne-agent-fake; do
     command -v "$b" >/dev/null || { missing=1; break; }
   done
   if [ "$missing" = "1" ]; then
-    bad "五件套不齐（cargo install onlyne-cli onlyne-server onlyne-client onlyne-gateway onlyne-tui）"
+    bad "四件套不齐（cargo install --locked onlyne-cli onlyne-server onlyne-client onlyne-testkit）"
     return
   fi
   local v
@@ -77,11 +79,11 @@ gate_toolchain() {
 import json,sys
 d=json.loads(sys.stdin.read())
 p=tuple(int(x) for x in d["onlyne-cli"].split("+")[0].split("-")[0].split("."))
-assert d["protocol"]==1 and p>=(1,0,0)
+assert d["protocol"]==1 and p>=(2,1)
 ' 2>/dev/null; then
-    ok "onlyne 五件套在 PATH，protocol=1，版本 $(printf '%s' "$v" | python3 -c 'import json,sys;print(json.load(sys.stdin)["onlyne-cli"])')（下限 1.0.0，口径追 latest）"
+    ok "onlyne 四件套在 PATH，protocol=1，版本 $(printf '%s' "$v" | python3 -c 'import json,sys;print(json.load(sys.stdin)["onlyne-cli"])')（2.x，口径追 latest）"
   else
-    bad "onlyne 版本不过闸：需 protocol=1 且 ≥1.0.0（${v}）"
+    bad "onlyne 版本不过闸：需 protocol=1 且 2.x（${v}）"
   fi
 }
 
@@ -91,7 +93,7 @@ gate_pi() {
   out="$(pi list 2>/dev/null || true)"
   case "$out" in
     *"npm:pi-onlyne"*) ok "pi 插件 npm:pi-onlyne 在册" ;;
-    *) warn "pi 插件缺 npm:pi-onlyne：通电前由 supervisor 跑 pi install npm:pi-onlyne（用户级安装，不属本脚本的写盘动作）" ;;
+    *) warn "pi 插件缺 npm:pi-onlyne：通电前由 supervisor 跑 pi install npm:pi-onlyne@2.1.0（用户级安装，不属本脚本的写盘动作）" ;;
   esac
 }
 
@@ -114,15 +116,8 @@ for c in clients:
     for s in c.get("allowed_senders", []):
         if s not in byname:
             print(f"  {c['role']}: sender {s} 不在册"); sys.exit(1)
-    for r in c.get("relay_required", []):
-        if r not in byname:
-            print(f"  {c['role']}: relay {r} 不在册"); sys.exit(1)
-        elif r not in c.get("allowed_targets", []):
-            print(f"  relay 边不闭合：{c['role']}→{r}，但 {c['role']} 的 allowed_targets 缺 {r}"); sys.exit(1)
-        elif c["role"] not in byname[r].get("allowed_senders", []):
-            print(f"  relay 边不闭合：{c['role']}→{r}，但 {r} 的 allowed_senders 缺 {c['role']}"); sys.exit(1)
 PY
-  then ok "$SPEC 可 parse：11 role、relay/ACL 双向闭合、_supervisor 零上行"; else bad "$SPEC 结构门禁未过（原因见上行）"; fi
+  then ok "$SPEC 可 parse：11 role、ACL 双向闭合"; else bad "$SPEC 结构门禁未过（原因见上行）"; fi
 }
 
 gate_templates() {
@@ -172,23 +167,23 @@ gate_workspaces() {
     python3 - "$WSD/$p/.pi/settings.json" <<'PY' || bad_pkgs=$((bad_pkgs+1))
 import json,sys
 d=json.load(open(sys.argv[1]))
-assert d.get("packages")==["npm:pi-onlyne"], d.get("packages")
+assert d.get("packages")==["npm:pi-onlyne@2.1.0"], d.get("packages")
 PY
   done
   if [ "$n" = "11" ] && [ "$bad_pkgs" = "0" ] && [ "$nokey" = "0" ]; then
-    ok "11 份角色工作区在盘（.pi/settings.json + .onlyne/keys/role.key），packages 全为 npm:pi-onlyne"
+    ok "11 份角色工作区在盘（.pi/settings.json + .onlyne/keys/role.key），packages 全为 npm:pi-onlyne@2.1.0"
   else
     bad "角色工作区：渲染 $n/11，packages 不过闸 $bad_pkgs 份，缺 role.key $nokey 份（跑 --assemble）"
   fi
 }
 
-gate_backend() {
-  if command -v onlyne-client >/dev/null; then
+gate_placement() {
+  if command -v onlyne >/dev/null; then
     local out
-    out="$(onlyne-client doctor 2>&1 || true)"
-    if printf '%s' "$out" | grep -qiE 'herdr|orca|zellij'; then ok "会话后端可探测：$(printf '%s\n' "$out" | tail -1)"; else warn "doctor 未见 herdr/orca/zellij：client run 会退 5（除非点名 ONLYNE_BACKEND=exec）"; fi
+    out="$(onlyne client doctor 2>&1 || true)"
+    if printf '%s' "$out" | grep -qiE 'tern|orca|zellij|headless'; then ok "placement 可探测：$(printf '%s\n' "$out" | tail -1)"; else warn "doctor 未见 tern/orca/zellij：client run 会退 5（除非点名 ONLYNE_BACKEND=external）"; fi
   else
-    warn "onlyne-client doctor 不可用，跳过后端探测"
+    warn "onlyne client doctor 不可用，跳过 placement 探测"
   fi
 }
 
@@ -216,9 +211,10 @@ PY
 gate_hygiene() {
   if ! git rev-parse --git-dir >/dev/null 2>&1; then skip "非 git 工作树，跳过文档卫生门禁"; return; fi
   local hits
-  hits="$(git grep --untracked -nIE '/Users/|/home/[a-z]|OneDrive|\bdbydd\b|/Applications/|onlyne/harness|~/\.cargo|\bmlx\b|MLX' -- \
+  # 模板不得携带装机机器的个人痕迹：家目录绝对路径、同步盘、应用目录、私有工具链路径。
+  hits="$(git grep --untracked -nIE '/Users/|/home/[a-z]|OneDrive|/Applications/|\.cargo/' -- \
       ':!scripts/bootstrap.sh' 2>/dev/null || true)"
-  if [ -z "$hits" ]; then ok "文档卫生：跟踪文件零本机路径、零装机者标识、零 mlx 栈字样"; else bad "文档卫生门禁命中："; printf '%s\n' "$hits" | sed 's/^/     /'; fi
+  if [ -z "$hits" ]; then ok "文档卫生：跟踪文件零本机路径、零装机者标识"; else bad "文档卫生门禁命中："; printf '%s\n' "$hits" | sed 's/^/     /'; fi
 }
 
 gate_vault() {
@@ -233,14 +229,14 @@ gate_vault() {
 run_check() {
   echo "== bootstrap check（只读门禁）=="
   gate_toolchain; gate_pi; gate_spec; gate_templates; gate_cert; gate_keys
-  gate_workspaces; gate_backend; gate_port; gate_hygiene; gate_vault
+  gate_workspaces; gate_placement; gate_port; gate_hygiene; gate_vault
   if [ "$FAILS" = "0" ]; then echo "== 门禁全绿：可 --promote，然后通电 =="; else echo "== 门禁 $FAILS 项未过：按各行提示修完重跑 =="; return 1; fi
 }
 
 # ---------- 装配 ----------
 asm_toolchain() {
   if command -v onlyne >/dev/null && command -v pi >/dev/null; then skip "装具在 PATH（版本闸交给 check）"; return; fi
-  bad "装具缺失：先装 onlyne 五件套与 pi（README「前置」节），再重跑"
+  bad "装具缺失：先装 onlyne 四件套与 pi（README「前置」节），再重跑"
 }
 
 asm_cert() {
@@ -255,14 +251,14 @@ import sys, tomllib
 print(tomllib.load(open(sys.argv[1],"rb"))["server"]["listen"])
 PY
 )"; fi
-  echo "装配 1/6 证书：onlyne-server init --root . --listen ${LISTEN}（spec.toml 暂移，init 见 spec 即拒）"
+  echo "装配 1/6 证书：onlyne server init --root . --listen ${LISTEN}（spec.toml 暂移，init 见 spec 即拒）"
   if [ "$DRY" = "1" ]; then echo "DRY  mv $SPEC → 临时 → init → 还原 → 替换 cert_pin"; return; fi
   local out
   cp "$SPEC" "$SPEC.pre-bootstrap" || die "$0: 暂移前存不下改前备份，拒绝改动拓扑真相"
   trap 'cp "$SPEC.pre-bootstrap" "$SPEC" 2>/dev/null; rm -f "$SPEC.pre-assemble"' EXIT
   mv "$SPEC" "$SPEC.pre-assemble"
-  if ! out="$(onlyne-server init --root . --listen "$LISTEN" 2>/dev/null)"; then
-    mv "$SPEC.pre-assemble" "$SPEC"; bad "onlyne-server init 失败：$out"; return
+  if ! out="$(onlyne server init --root . --listen "$LISTEN" 2>/dev/null)"; then
+    mv "$SPEC.pre-assemble" "$SPEC"; bad "onlyne server init 失败：$out"; return
   fi
   local newpin; newpin="$(printf '%s\n' "$out" | tail -1)"
   mv "$SPEC.pre-assemble" "$SPEC"
@@ -310,9 +306,9 @@ PY
 )"
     if [ -n "$key" ] && [ "$key" != "$KEY_PLACEHOLDER" ]; then skip "[$i/11] $role key 已在 spec"; continue; fi
     ws="$WSD/$p"
-    echo "装配 2/6 密钥 [$i/11] ${role}：onlyne-client init --workspace $ws --role $role"
+    echo "装配 2/6 密钥 [$i/11] ${role}：onlyne client init --workspace $ws --role $role"
     if [ "$DRY" = "1" ]; then echo "DRY  init + 回填 key"; continue; fi
-    if ! out="$(onlyne-client init --workspace "$ws" --role "$role" --server-root . 2>&1)"; then
+    if ! out="$(onlyne client init --workspace "$ws" --role "$role" --server-root . 2>&1)"; then
       bad "[$i/11] $role client init 失败：$(printf '%s' "$out" | tail -2 | tr '\n' ' ')"; continue
     fi
     key="$(printf '%s\n' "$out" | sed -n 's/.*key = "\([^"]*\)".*/\1/p' | tail -1)"
@@ -333,22 +329,24 @@ PY
 
 asm_models() {
   if [ -z "$PROVIDER" ] && [ -z "$M_POWERFUL" ] && [ -z "$M_CHEAP" ] && [ -z "$M_WEAK" ]; then
-    skip "模型档位：未给 --provider/--model-* flag，保留模板现值"; return
+    skip "模型档位：未给 --provider/--model-* flag，模板不预设 provider/model，交运行时默认"; return
   fi
   echo "装配 3/6 模型档位写入 11 份模板 settings.json"
   local p
   for p in "${ROLES[@]}"; do
-    act python3 - "$TPL/$p/.pi/settings.json" "$PROVIDER" "$M_POWERFUL" "$M_CHEAP" "$M_WEAK" <<'PY'
+    act python3 - "$TPL/$p/.pi/settings.json" "$PROVIDER" "$M_POWERFUL" "$M_CHEAP" "$M_WEAK" "${p##*/}" <<'PY'
 import json, sys
-path, provider, mp, mc, mw = sys.argv[1:6]
+path, provider, mp, mc, mw, role = sys.argv[1:7]
 d = json.load(open(path, encoding="utf-8"))
-cur = d.get("defaultModel", "")
+# 档位映射按角色名单定档，不读模板现值：模板不携带任何默认模型。
+DEEP = {"pi", "examiner", "theorist", "speculator", "chair", "referee", "planner"}
+LIGHT = {"librarian", "runner", "qa", "scribe"}
 if provider:
     d["defaultProvider"] = provider
-tgt = mp if "powerful" in cur else (mc if "supercheap" in cur else (mw if "weak" in cur else ""))
+tgt = mp if role in DEEP else (mc if role in LIGHT else mw)
 if tgt:
     d["defaultModel"] = tgt
-d["packages"] = ["npm:pi-onlyne"]
+d["packages"] = ["npm:pi-onlyne@2.1.0"]
 json.dump(d, open(path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 open(path, "a", encoding="utf-8").write("\n")
 PY
@@ -361,9 +359,9 @@ asm_generate() {
   for p in "${ROLES[@]}"; do
     role="${p##*/}"; i=$((i+1))
     echo "装配 4/6 渲染 [$i/11] $p"
-    if [ "$DRY" = "1" ]; then echo "DRY  onlyne server generate --root . --template formal/${p} --role ${role} --force"; continue; fi
+    if [ "$DRY" = "1" ]; then echo "DRY  onlyne generate --root . --template formal/${p} --role ${role} --force"; continue; fi
     # generate 会把该 role 的 [[client]] 行原样打到 stdout，装机日志里不需要，只留 stderr
-    if onlyne server generate --root . --template "formal/$p" --role "$role" --force >/dev/null; then
+    if onlyne generate --root . --template "formal/$p" --role "$role" --force >/dev/null; then
       ok "[$i/11] $p 渲染到 $WSD/$p"
     else
       bad "[$i/11] $p generate 失败（看上一行 stderr）"
@@ -395,7 +393,7 @@ run_assemble() {
 
 下一步（本脚本不起守护进程）：
   1) scripts/bootstrap.sh --promote     # .agents/AGENTS.md → 仓根 AGENTS.md
-  2) 可见前台 tab 起 server：onlyne server start --root .
+  2) 可见前台 tab 起 server：onlyne server run --root .
   3) 各一个可见 tab 起 11 个 client：onlyne client run --workspace .onlyne/ws/formal/<phase>/<role>
   4) 第一发：onlyne send --server-root . --from planner --to pi --file payload/first.md
 EOF

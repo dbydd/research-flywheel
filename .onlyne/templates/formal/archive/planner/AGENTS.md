@@ -33,7 +33,7 @@
 
 ## 下一跳与回传
 - 可发：pi（派题）、librarian（调研委托）、scribe（挂起中休眠：任务书自写）。可收：examiner、chair、librarian、scribe。
-- 主下游 pi（relay_required）。任务书三段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
+- 主下游 pi（完成守卫 = spec 的 `allowed_targets`）。任务书六段见仓根 AGENTS.md（发出前先入 dispatch.md 存档）。
 
 ## 纪律
 - 只写立项规划.md 与项目文件的 conclude 段；不碰正文论证段（那是各阶段的段权）。

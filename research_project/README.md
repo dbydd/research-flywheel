@@ -1,6 +1,6 @@
 # research_project/ — 研究项目文件区
 
-一项目一文件，随阶段自由生长。全部为人类可读文档，无中心账本：项目全貌就写在各自文件头（不设状态行，状态隐含在飞轮，全部真相=文件+git+台账），planner 翻目录知全局（把 agent 当人用，人能读懂的都能读懂）。替代旧 `pool/` 与 `registry.json`（v0.4 起废止，git 参照 15c9049）。
+一项目一文件，随阶段自由生长。全部为人类可读文档，无中心账本：项目全貌就写在各自文件头（不设状态行，状态隐含在飞轮，全部真相=文件+git+台账），planner 翻目录知全局（把 agent 当人用，人能读懂的都能读懂）。替代旧 `pool/` 与 `registry.json`（已废止）。
 
 ## 目录布局
 
@@ -19,7 +19,7 @@ research_project/
     data/                                       # 大数据档外用区（见下）
 ```
 
-过程件（lean/、measured/、run-log.md、对线记录.md、revisions.md、dispatch.md）落 `<项目短名>/`：追加式只增不改，版本交给 git。run-id、轮次与开题存底文书废止（2026-09-16 用户裁定）。
+过程件（lean/、measured/、run-log.md、对线记录.md、revisions.md、dispatch.md）落 `<项目短名>/`：追加式只增不改，版本交给 git。不用 run-id、轮次计数与开题存底文书。
 
 ## 文档制两条原则
 
@@ -56,7 +56,7 @@ budget：单项目算力与时间预算一句话 ｜ human_gate：无（缺省�
 
 ## 关口
 
-- 开题审查（敌意对线）：examiner 四类攻击（前提崩塌/已被做过/不可测/自相矛盾）必带锚；弹药耗尽 pass（开工令→theorist），化解不了的实心攻击或致命实锤 fail（归案 planner）；轮数不设限。特定任务价值存疑走 examiner→Main 请示边。
+- 开题审查（敌意对线）：examiner 四类攻击（前提崩塌/已被做过/不可测/自相矛盾）必带锚；弹药耗尽 pass（开工令→theorist），化解不了的实心攻击或致命实锤 fail（归案 planner）；轮数不设限。特定任务价值存疑走 examiner→supervisor 请示边。
 - 中期检查=qa 独任环上判词：continue/rectify（整改单直令 runner/speculator/theorist，文字类挂起期也发 speculator）/stop（经 chair 归案）落 gates/中期判定.md 追加式；设计段目标全部有实测支撑且三约束 pass→放门（ready-to-draft）通知 chair 启动结题。不组局不合议。
 - 结题验收五步（规程详见仓根 AGENTS.md「三个关口」段）：qa 备六节料包 → chair 程序核验+约稿 referee×3（零倾向任务书）→ 三份独立意见书（依据核对/攻击点/建议档）→ chair 合议判 accept / minor revise / reject（与多数相悖须写理由）→ 判词落 gates/结题判定.md，accept 补结论段→planner 开新题。中期=合规判断（便宜档），结题=价值判断（贵档合议）。
 - scribe 挂起中（写作单独调教）：papers/ 成稿与代笔线休眠，申报书/报告/文稿由责任角色自书；本区 proposals/ 两份报告挂起期归 speculator（结题报告）与 pi（开题申报）。

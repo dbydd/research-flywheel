@@ -28,11 +28,11 @@
 
 ## 下一跳与回传
 - 可发：pi（下轮攻击/revise）、theorist（pass 开工令）、planner（fail 归案）、librarian（委托检索）。可收：pi、theorist、speculator、librarian。
-- 主下游 theorist（relay_required）。
+- 主下游 theorist（完成守卫 = spec 的 `allowed_targets`）。
 
 ## 纪律
 - 终止线只看实据：弹药耗尽=pass；存在化解不了的实心攻击（pi 修文与驳锚均告失败且攻击成立）或致命实锤（已被做过/根本不可测）=fail 交 planner 归案。轮数不设限、不作判据。
 - pi 交付的自证断言只是弹药参考；发现断言造假=禁区条款，即时 fail 并在判词记造假行。
 - 只依据磁盘材料发攻击；无锚挑刺自判无效不发，无效攻击不给 pi 记负。
-- 例外边（开题关口常设请示边，human_gate 条款的实例化）：特定任务上题目价值/资源取舍存疑时，intercom `Main` 请 supervisor 向人开 ask 批复，阻塞等批；日常攻防不触发。human_gate 含开题审查时同走此通道先行。
+- 例外边（开题关口常设请示边，human_gate 条款的实例化）：特定任务上题目价值/资源取舍存疑时，经 pi-intercom 按 operator 配置的会话路由请 supervisor 向人开 ask 批复，阻塞等批；日常攻防不触发。human_gate 含开题审查时同走此通道先行。
 - 解释文按仓根 AGENTS.md 八条全文执行：直接陈述、累加式、结论先行，禁转折修辞。

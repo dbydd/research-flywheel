@@ -41,9 +41,9 @@
 - speculator 叙事骨架（假设段/设计段）；runner 的 `measured/summary.md`。缺 summary 即 `cancelled` 交回，不写无数据稿。
 
 ## 下一跳与回传
-- 可发：qa（送审包文字合规核/交件）、chair（成稿直送）、librarian（核验委托）、各委托方（成稿回件）。可收：同名单。主下游 chair（relay_required）。
+- 可发：qa（送审包文字合规核/交件）、chair（成稿直送）、librarian（核验委托）、各委托方（成稿回件）。可收：同名单。主下游 chair（完成守卫 = spec 的 `allowed_targets`）。
 - 结题文稿必经 qa 进 `packs/结题送审包.md` 再上 chair；开题申报可直发 chair。
-- 任务书三段、草稿先落自己工作区的 `work/`、dispatch.md 存档，均按仓根约定。
+- 任务书六段、草稿先落自己工作区的 `work/`、dispatch.md 存档，均按仓根约定。
 
 ## 纪律
 - 代笔不改观点：委托方的判断、数据、结论原样承载；查不到出处的数字或引文，先问，不编。
